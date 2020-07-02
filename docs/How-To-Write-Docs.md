@@ -243,4 +243,14 @@ Will Result in the following Markdown:
 > Type: [function][2]
 >### Parameters
 >*   `eventType` **([EVENT_TYPE]() | [string]())** The kind of Event Type that needs to be logged- should be a js var compatible string.
-     Some s
+     Some standard event types are available as `EVENT_TYPE`.
+>*   `count` **[number]()** > \=0
+>### Examples
+>To log that user clicked searchButton 5 times:
+>```javascript
+>Metrics.countEvent(Metrics.EVENT_TYPE.UI, 5);
+>```
+
+### 6. More tags
+
+Additional tags can be found at the JSDocs docs at [JSDocs](https://jsdoc.app/)
