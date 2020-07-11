@@ -624,4 +624,315 @@ define(function (require, exports, module) {
 
         // Optionally prompt for a base URL if no server was found but the
         // file is a known server file extension
-        showBaseUrlPrompt = !_server && LiveDevelopmentUtils.isServerHtmlFileExt(doc.file.fullPa
+        showBaseUrlPrompt = !_server && LiveDevelopmentUtils.isServerHtmlFileExt(doc.file.fullPath);
+
+        if (showBaseUrlPrompt) {
+            // Prompt for a base URL
+            PreferencesDialogs.showProjectPreferencesDialog("", Strings.LIVE_DEV_NEED_BASEURL_MESSAGE)
+                .done(function (id) {
+                    if (id === Dialogs.DIALOG_BTN_OK && ProjectManager.getBaseUrl()) {
+                        // If base url is specifed, then re-invoke _prepareServer() to continue
+                        _prepareServer(doc).then(deferred.resolve, deferred.reject);
+                    } else {
+                        deferred.reject();
+                    }
+                });
+        } else if (_server) {
+            // Startup the server
+            var readyPromise = _server.readyToServe();
+            if (!readyPromise) {
+                _showLiveDevServerNotReadyError();
+                deferred.reject();
+            } else {
+                readyPromise.then(deferred.resolve, function () {
+                    _showLiveDevServerNotReadyError();
+                    deferred.reject();
+                });
+            }
+        } else {
+            // No server found
+            deferred.reject();
+        }
+
+        return deferred.promise();
+    }
+
+    /**
+     * @private
+     * MainViewManager.currentFileChange event handler.
+     * When switching documents, close the current preview and open a new one.
+     */
+    function _onFileChange() {
+        let doc = DocumentManager.getCurrentDocument();
+        if (!isActive() || !doc || livePreviewUrlPinned) {
+            return;
+        }
+
+        // close the current session and begin a new session
+        let docUrl = _resolveUrl(doc.file.fullPath),
+            isViewable = _server && _server.canServe(doc.file.fullPath);
+
+        if (_liveDocument.doc.url !== docUrl && isViewable) {
+            // clear live doc and related docs
+            _closeDocuments();
+            // create new live doc
+            _createLiveDocumentForFrame(doc);
+            _setStatus(STATUS_RESTARTING);
+            _open(doc);
+
+        }
+    }
+
+
+    /**
+     * Open a live preview on the current docuemnt.
+     */
+    function open() {
+        // TODO: need to run _onDocumentChange() after load if doc != currentDocument here? Maybe not, since activeEditorChange
+        // doesn't trigger it, while inline editors can still cause edits in doc other than currentDoc...
+        _getInitialDocFromCurrent().done(function (doc) {
+            var prepareServerPromise = (doc && _prepareServer(doc)) || new $.Deferred().reject();
+
+            // wait for server (StaticServer, Base URL or file:)
+            prepareServerPromise
+                .done(function () {
+                    _setStatus(STATUS_CONNECTING);
+                    _doLaunchAfterServerReady(doc);
+                })
+                .fail(function () {
+                    console.log("Live preview: no document to preview.");
+                });
+        });
+    }
+
+    /**
+     * For files that don't support as-you-type live editing, but are loaded by live HTML documents
+     * (e.g. JS files), we want to reload the full document when they're saved.
+     * @param {$.Event} event
+     * @param {Document} doc
+     */
+    function _onDocumentSaved(event, doc) {
+        if (!isActive() || !_server) {
+            return;
+        }
+
+        var absolutePath            = doc.file.fullPath,
+            liveDocument            = absolutePath && _server.get(absolutePath),
+            liveEditingEnabled      = liveDocument && liveDocument.isLiveEditingEnabled  && liveDocument.isLiveEditingEnabled();
+
+        // Skip reload if the saved document has live editing enabled
+        if (liveEditingEnabled) {
+            return;
+        }
+
+        // reload the page if the given document is a JS file related
+        // to the current live document.
+        if (_liveDocument.isRelated(absolutePath)) {
+            if (doc.getLanguage().getId() === "javascript") {
+                _setStatus(STATUS_RELOADING);
+                _protocol.reload();
+            }
+        }
+    }
+
+    /**
+     * For files that don't support as-you-type live editing, but are loaded by live HTML documents
+     * (e.g. JS files), we want to show a dirty indicator on the live development icon when they
+     * have unsaved changes, so the user knows s/he needs to save in order to have the page reload.
+     * @param {$.Event} event
+     * @param {Document} doc
+     */
+    function _onDirtyFlagChange(event, doc) {
+        if (!isActive() || !_server) {
+            return;
+        }
+
+        var absolutePath = doc.file.fullPath;
+
+        if (_liveDocument.isRelated(absolutePath)) {
+            // Set status to out of sync if dirty. Otherwise, set it to active status.
+            _setStatus(_docIsOutOfSync(doc) ? STATUS_OUT_OF_SYNC : STATUS_ACTIVE);
+        }
+    }
+
+    /**
+     * Sets the current transport mechanism to be used by the live development protocol
+     * (e.g. socket server, iframe postMessage, etc.)
+     * The low-level transport. Must provide the following methods:
+     *
+     * - start(): Initiates transport (eg. creates Web Socket server).
+     * - send(idOrArray, string): Dispatches the given protocol message (provided as a JSON string) to the given client ID
+     *   or array of client IDs. (See the "connect" message for an explanation of client IDs.)
+     * - close(id): Closes the connection to the given client ID.
+     * - getRemoteScript(): Returns a script that should be injected into the page's HTML in order to handle the remote side
+     *   of the transport. Should include the "<script>" tags. Should return null if no injection is necessary.
+     *
+     * It must also dispatch the following jQuery events:
+     *
+     * - "connect": When a target browser connects back to the transport. Must provide two parameters:
+     *   - clientID - a unique number representing this connection
+     *   - url - the URL of the page in the target browser that's connecting to us
+     * - "message": When a message is received by the transport. Must provide two parameters:
+     *   - clientID - the ID of the client sending the message
+     *   - message - the text of the message as a JSON string
+     * - "close": When the remote browser closes the connection. Must provide one parameter:
+     *   - clientID - the ID of the client closing the connection
+     *
+     * @param {{launch: function(string), send: function(number|Array.<number>, string), close: function(number), getRemoteScript: function(): ?string}} transport
+     */
+    function setTransport(transport) {
+        _protocol.setTransport(transport);
+    }
+
+    /**
+     * Initialize the LiveDevelopment module.
+     */
+    function init(config) {
+        exports.config = config;
+        MainViewManager
+            .on("currentFileChange", _onFileChange);
+        DocumentManager
+            .on("documentSaved", _onDocumentSaved)
+            .on("dirtyFlagChange", _onDirtyFlagChange);
+        ProjectManager
+            .on("beforeProjectClose beforeAppClose", close);
+
+        // Default transport for live connection messages - can be changed
+        setTransport(ServiceWorkerTransport);
+
+        // Initialize exports.status
+        _setStatus(STATUS_INACTIVE);
+    }
+
+    function getLiveDocForEditor(editor) {
+        if (!editor) {
+            return null;
+        }
+        return getLiveDocForPath(editor.document.file.fullPath);
+    }
+
+    /**
+     *  Enable highlighting
+     */
+    function showHighlight() {
+        var doc = getLiveDocForEditor(EditorManager.getActiveEditor());
+
+        if (doc && doc.updateHighlight) {
+            doc.updateHighlight();
+        }
+    }
+
+    /**
+     * Hide any active highlighting
+     */
+    function hideHighlight() {
+        if (_protocol) {
+            _protocol.evaluate("_LD.hideHighlight()");
+        }
+    }
+
+    /**
+     * Redraw highlights
+     */
+    function redrawHighlight() {
+        if (_protocol) {
+            _protocol.evaluate("_LD.redrawHighlights()");
+        }
+    }
+
+    /**
+     * Originally unload and reload agents. It doesn't apply for this new implementation.
+     * @return {jQuery.Promise} Already resolved promise.
+     */
+    function reconnect() {
+        return $.Deferred().resolve();
+    }
+
+    /**
+     * Reload current page in all connected browsers.
+     */
+    function reload() {
+        if (_protocol) {
+            _protocol.reload();
+        }
+    }
+
+    /**
+     * @param urlPinned {boolean}
+     */
+    function setLivePreviewPinned(urlPinned) {
+        livePreviewUrlPinned = urlPinned;
+    }
+
+    /**
+     * Returns current project server config. Copied from original LiveDevelopment.
+     */
+    function getCurrentProjectServerConfig() {
+        return {
+            baseUrl: ProjectManager.getBaseUrl(),
+            pathResolver: ProjectManager.makeProjectRelativeIfPossible,
+            root: ProjectManager.getProjectRoot().fullPath
+        };
+    }
+
+    /**
+     * @private
+     * Returns the base URL of the current server serving the active live document, or null if
+     * there is no active live document.
+     * @return {?string}
+     */
+    function getServerBaseUrl() {
+        return _server && _server.getBaseUrl();
+    }
+
+    // for unit testing only
+    function getCurrentLiveDoc() {
+        return _liveDocument;
+    }
+
+    /**
+     * Returns an array of the client IDs that are being managed by this live document.
+     * @return {Array.<number>}
+     */
+    function getConnectionIds() {
+        return _protocol.getConnectionIds();
+    }
+
+    function getLivePreviewDetails() {
+        return {
+            liveDocument: _liveDocument,
+            URL: _liveDocument ? _resolveUrl(_liveDocument.doc.file.fullPath) : null
+        };
+    }
+
+    EventDispatcher.makeEventDispatcher(exports);
+
+    // For unit testing
+    exports._server                   = _server;
+    exports._getInitialDocFromCurrent = _getInitialDocFromCurrent;
+
+    // Events
+    exports.EVENT_OPEN_PREVIEW_URL = EVENT_OPEN_PREVIEW_URL;
+    exports.EVENT_CONNECTION_CLOSE = EVENT_CONNECTION_CLOSE;
+    exports.EVENT_STATUS_CHANGE = EVENT_STATUS_CHANGE;
+    exports.EVENT_LIVE_PREVIEW_CLICKED = EVENT_LIVE_PREVIEW_CLICKED;
+
+    // Export public functions
+    exports.open                = open;
+    exports.close               = close;
+    exports.reconnect           = reconnect;
+    exports.reload              = reload;
+    exports.getLiveDocForPath   = getLiveDocForPath;
+    exports.showHighlight       = showHighlight;
+    exports.hideHighlight       = hideHighlight;
+    exports.redrawHighlight     = redrawHighlight;
+    exports.init                = init;
+    exports.isActive            = isActive;
+    exports.setLivePreviewPinned= setLivePreviewPinned;
+    exports.getServerBaseUrl    = getServerBaseUrl;
+    exports.getCurrentLiveDoc   = getCurrentLiveDoc;
+    exports.getLivePreviewDetails = getLivePreviewDetails;
+    exports.getCurrentProjectServerConfig = getCurrentProjectServerConfig;
+    exports.getConnectionIds = getConnectionIds;
+    exports.setTransport        = setTransport;
+});
