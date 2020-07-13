@@ -40,4 +40,78 @@ List of features added to phoenix:
 ## Beautify code
 `Added on August,2022`
 
-Beautify HTML, CSS, JS, Json, Markdown, Typescript and other language code with `Ctrl-B` (`Cmd-B` in mac
+Beautify HTML, CSS, JS, Json, Markdown, Typescript and other language code with `Ctrl-B` (`Cmd-B` in mac.).
+
+<iframe allow="fullscreen;" width="100%" height="315"
+src="https://www.youtube.com/embed/DMMPfIuUGGs">
+</iframe>
+
+## Javascript Lint with JSHint
+`Added on August,2022`
+
+Detect errors and potential problems in your JavaScript code while editing your code in Phoenix.
+
+![jshint](https://user-images.githubusercontent.com/5336369/190146369-db510c3d-2a72-4f00-918b-4889b23e20ab.gif)
+
+## Javascript Code Intelligence
+`Added on July-August,2022`
+
+* Javascript code hints, auto complete.
+* Javascript variable refactoring(press `f2` to rename variable).
+* Highlight Variable references under cursor.
+* `Ctrl+Click`(Windows/Linux) or `Cmd+Click`(Mac) to jump to variable/function definition.
+
+![refactor](https://user-images.githubusercontent.com/5336369/190147482-691e2fd2-84d4-4d27-b37b-cfbae3c335a6.gif)
+
+## Instant Search and Large Projects Support in browsers
+`Added on June,2022`
+
+Open large projects right from your browser.
+Instant search across all files in your project (Click on the search icon at top left).
+
+<iframe allow="fullscreen;" width="100%" height="315"
+src="https://www.youtube.com/embed/pw7vJ_l5A44">
+</iframe>
+
+## File and project icons
+`Added on June,2022`
+
+We have applied a fresh coat of paint to the icons in files panel.
+
+## New Project Welcome Screen
+`Added on May,2022`
+
+Open local folders and projects from GitHub; Quick start templates with HTML, blog, and bootstrap projects.
+More templates coming soon.
+
+<iframe allow="fullscreen;" width="100%" height="315"
+src="https://www.youtube.com/embed/Nqukd9oU060">
+</iframe>
+
+## Share and Publish your Website
+`Added on Apr,2022`
+
+Quickly preview changes and share your website with others on the web with a single click.
+
+
+<iframe allow="fullscreen;" width="100%" height="315"
+src="https://www.youtube.com/embed/dJTZ2iduagg">
+</iframe>
+
+## Live HTML Preview
+`Added on Apr,2022`
+
+Code real-time in your browser. Make changes to CSS and HTML and you'll instantly see those changes on screen.
+
+<iframe allow="fullscreen;" width="100%" height="315"
+src="https://www.youtube.com/embed/RIslg6XQwLA">
+</iframe>
+
+## Live Markdown Preview
+`Added on Apr,2022`
+
+Live preview but for markdown files!
+
+<iframe allow="fullscreen;" width="100%" height="315"
+src="https://www.youtube.com/embed/buDeBgf-B60">
+</iframe>
