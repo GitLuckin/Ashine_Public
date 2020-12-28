@@ -281,4 +281,73 @@ A S C I I C A M
         /**
          */
         const get_character_dimensions = () => {
-       
+          const span = document.createElement('span');
+          span.textContent = 'X';
+          span.style.position = 'absolute';
+          span.style.left = '-100px';
+
+          document.querySelector('#ascii-cam pre').appendChild(span);
+          const dimensions = span.getBoundingClientRect();
+          span.remove();
+
+          return dimensions;
+        };
+
+        /**
+         */
+        const get_screen_dimensions = char_dims => {
+          return {
+            width: window.innerWidth,
+            height: window.innerHeight,
+            char_width: Math.ceil(window.innerWidth / char_dims.width),
+            char_height: Math.ceil(window.innerHeight / char_dims.height)
+          };
+        };
+
+        /**
+         */
+        const set_canvas_dimensions = (video, canvas, ctx) => {
+          console.log('setting canvas dimensions');
+          const char_dims = get_character_dimensions();
+          const screen_dims = get_screen_dimensions(char_dims);
+
+          let width = Math.floor(screen_dims.width / char_dims.width);
+          let height = Math.max(width * 0.75, screen_dims.char_height);
+
+          if (height > screen_dims.char_height) {
+            canvas.dataset.voffset = Math.floor((height - screen_dims.char_height) / 2);
+            canvas.dataset.hoffset = 0;
+          } else {
+            width = (height / 3) * 4;
+            canvas.dataset.hoffset = Math.floor((width - screen_dims.char_width) / 2);
+            canvas.dataset.voffset = 0;
+          }
+
+          video.width = canvas.width = width;
+          video.height = canvas.height = height;
+
+          // Reset scale if context exists
+          ctx && ctx.scale(-1, 1);
+        };
+
+        // Onload
+        window.addEventListener('load', () => {
+          if (navigator && navigator.mediaDevices) {
+            // Grab layers
+            r_layer = document.getElementById('r-output');
+            g_layer = document.getElementById('g-output');
+            b_layer = document.getElementById('b-output');
+
+            const constraints = { audio: false, video: {} };
+            navigator.mediaDevices
+              .getUserMedia(constraints)
+              .then(handle_video)
+              .catch(handle_error);
+          } else {
+            handle_no_video();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

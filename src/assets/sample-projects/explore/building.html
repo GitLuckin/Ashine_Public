@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .scene {
+            position: relative;
+            min-height: 100vh;
+            background-color: #A6CFFF;
+        }
+
+        .scene__price {
+            position: absolute;
+            background-color: #999;
+            color: #FFF;
+            top: 50px;
+            left: 50px;
+            padding: 20px;
+            border-radius: 30px;
+            font-size: 48px;
+        }
+
+        .scene__building {
+            background-image: linear-gradient(to bottom, transparent 50%, #e2d570 50%), linear-gradient(to right, #573098 50%, #e2d570 50%);
+            background-size: 30px 30px, 30px 30px;
+            background-position: 15px 15px;
+            height: 105px;
+            width: 105px;
+            min-width: 75px;
+            min-height: 75px;
+            max-width: 915px;
+            max-height: 615px;
+            position: absolute;
+            bottom: 30px;
+            left: 15%;
+            z-index: 5;
+        }
+
+        .scene__building__draggable {
+ 
