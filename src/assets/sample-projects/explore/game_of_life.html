@@ -202,4 +202,50 @@
       drawBoard();
       drawBoard();
 
-      canvas.addEventListe
+      canvas.addEventListener('mousedown', event => {
+	  let rect = canvas.getBoundingClientRect();
+	  const x = event.clientX - rect.left;
+	  const y = event.clientY - rect.top;
+	  const square = chooseSquare(x,y);
+	  const cell = board.find(c => c.x == square.left && c.y == square.top);
+	  if(cell != undefined){
+	      let i = board.indexOf(cell);
+	      board.splice(i, 1);
+	      context.fillStyle = "#FFFFFF";
+	      context.fillRect(square.left, square.top, 10, 10);
+	      context.fillStyle = "#000000";
+	      drawBoard();
+	  } else{
+	      board.push({x: square.left, y: square.top});
+	      context.fillRect(square.left, square.top, 10, 10);
+	  }
+      });
+
+      start_button.onclick =  () => {
+	  start_button.style.cssText = "background-color:grey;cursor:not-allowed;";
+	  start_button.innerHTML = "Running!";
+	  if (!interval) {
+	      interval = setInterval(() => {
+		  board = nextGeneration(board);
+		  drawGeneration(board);
+	      }, 300);
+	  }
+      };
+
+      stop_button.onclick = () => {
+	  clearInterval(interval);
+	  interval = null;
+	  start_button.style.cssText = "background-color:white;";
+	  start_button.innerHTML = "Start";
+      };
+
+      clear_button.onclick = () => {
+	  board = [];
+	  drawGeneration(board);
+      };
+
+
+    </script>
+  </body>
+  
+</html>
