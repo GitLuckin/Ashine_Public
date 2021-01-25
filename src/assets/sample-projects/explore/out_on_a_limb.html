@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Out On A Limb</title>
+    <style>
+        button {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            font-size: 20px;
+            font-family: "Verdana", sans-serif;
+        }
+
+        h1 {
+            color: white;
+            font-family: "Verdana", sans-serif;
+            font-size: 28px;
+        }
+
+        body {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .container {
+            width: 700px;
+            position: absolute;
+        }
+
+        .falling {
+            animation: falling-animation 5s linear forwards;
+        }
+
+        @keyframes falling-animation {
+            from {
+                transform: translateY(-3rem);
+            }
+
+            to {
+                transform : translateY(3rem);
+            }
+        }
+
+        .fade-in {
+            position: absolute;
+            animation: fadeIn ease 0.5s;
+            -webkit-animation: fadeIn ease 0.5s;
+            -moz-animation: fadeIn ease 0.5s;
+            -o-animation: fadeIn ease 0.5s;
+            -ms-animation: fadeIn ease 0.5s;
+        }
+        @keyframes fadeIn {
+            0% {
+                opacity:0;
+            }
+            100% {
+                opacity:1;
+            }
+        }
+
+        @-moz-keyframes fadeIn {
+            0% {
+                opacity:0;
+            }
+            100% {
+                opacity:1;
+            }
+        }
+
+        @-webkit-keyframes fadeIn {
+            0% {
+                opacity:0;
+            }
+            100% {
+                opacity:1;
+            }
+        }
+
+        @-o-keyframes fadeIn {
+            0% {
+                opacity:0;
+            }
+            100% {
+                opacity:1;
+            }
+        }
+
+        @-ms-keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .fade-out {
+            position: absolute;
+            animation: fadeOut ease 0.5s;
+            -webkit-animation: fadeOut ease 0.5s;
+            -moz-animation: fadeOut ease 0.5s;
+            -o-animation: fadeOut ease 0.5s;
+            -ms-animation: fadeOut ease 0.5s;
+        }
+        @keyframes fadeOut {
+            0% {
+                opacity:1;
+            }
+            100% {
+                opacity:0;
+            }
+        }
+
+        @-moz-keyframes fadeOut {
+            0% {
+                opacity:1;
+            }
+            100% {
+                opacity:0;
+            }
+        }
+
+        @-webkit-keyframes fadeOut {
+            0% {
+                opacity:1;
+            }
+            100% {
+                opacity:0;
+            }
+        }
+
+        @-o-keyframes fadeOut {
+            0% {
+                opacity:1;
+            }
+            100% {
+                opacity:0;
+            }
+        }
+
+        @-ms-keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="render_area">
+    <button id="toggle" onclick="playSong()">Start</button>
+</div>
+<script>
+
+    const script = {
+    	3: "Out on a limb",
+        18.8: "Conversations hardly make it out",
+        23.2: "Negative with bank accounts",
+        25.5: "way too low",
+        27.7: "way too long",
+        30.5: "This the life that I chose",
+        32: "all my dreams is about being rich",
+        34: "My nightmares about losing my soul",
+        36: "She just wanna call when I'm home,",
+        38.1: "Ay that sun ain't gon' shine forever",
+        40.5: "I'm trying to get my shit together ay",
+        42: "This the life that I chose",
+        42.9: "I've been putting on for my bros",
+        45.8: "Oh, my soul finna be rich",
+        47.7: "ay",
+        49.6: "I ain't putting up with your shit no more",
+        51.8: "I can handle all this shit solo",
+		52.3: "Oh, my soul finna be rich",
+		55.3: "ay",
+        57: "yeah",
+        61.1: "I been putting on for my team",
+        63.3: "I'mma put us all on that map",
+        65.1: "Know some niggas never be free",
+        67: "Man this life been looking like traps",
+        68.8: "I've been trying to duck the police",
+        70.6: "Bro, them holla, fuck the lowkey",
+        72.4: "Drinking water 'til I OD",
+        74.4: "I been rapping since like four feet",
+        76.4: "On my flow, they say I show'd out",
+        78.4: "In the corner probably blowed out",
+        80.1: "On the E-way I don't slow down",
+        82: "Then it balling 'til I'm zoned out",
+		84: "Dodging problems 'till I'm drowsy",
+		86: "Yo that loud, it took me way back",
+        88: "53rd was where I got robbed",
+        90: "49th was where I laid back",
+        91.8: "I was cool and always laid back",
+        93.7: "This for shorty talking that shit",
+        95.5: "This where shit 'gon be the payback",
+        97.2: "That's on my soul, she finna be pissed",
+        99.2: "I got some, hoes inside my phone",
+        101: "I hardly hit 'em up, I can't fall",
+        103.3: "Say that little one A1",
+        105.3: "Might just hit it then I stay gone, I go",
+        107.5: "way too hard with this shit",
+		109.1: "Conversations hardly make it out",
+        111.5: "Lose a job for this shit",
+        112.9: "ay",
+        113.4: "Negative with bank accounts",
+        115.1: "I'm spending time with that shit",
+        116.8: "If I'm popping out",
+        118: "I'm staying out",
+        119.2: "way too long",
+        120.1: "We about to be way too on",
+        122.2: "ay ay",
+		123: "This the life that I chose",
+		124.5: "all my dreams is about being rich",
+		126.3: "My nightmares about losing my soul",
+		128.2: "She just wanna call when I'm home,",
+		130.2: "Ay that sun ain't gon' shine forever",
+		132.6: "I'm trying to get my shit together ay",
+		134.5: "This the life that I chose",
+		136: "I've been putting on for my bros",
+		137.7: "Oh, my soul finna be rich",
+		139.8: "ay",
+		141.8: "I ain't putting up with your shit no more",
+		144.2: "I can handle all this shit solo",
+		146: "Oh, my soul finna be rich",
+		147.5: "ay",
+        149.6: "yeah",
+        151.4: "yeah",
+        152.3: "ay",
+
+        153.7: "Where were yooooooouuu",
+        155.1: "when your nigga needed help?",
+        157.3: "Mama told if I want it done",
+        159.4: "then do it by myself",
+        162.4: "Liquor in my liver",
+        163.3: "worried 'bout my health",
+        165: "Drinking way too long",
+        166.6: "my thoughts is way too gone",
+        168.5: "I wanna..."
+
+	}
+    const base64Music = "SUQzAwAAAAAAPlRTU0UAAAA0AAAATEFNRSAzMmJpdHMgdmVyc2lvbiAzLjk4LjIgKGh0dHA6Ly93d3cubXAzZGV2Lm9yZy8p//sQZAAAADUAy0UAAAwNIAlAoIAAAlgjMJhRgABShKiDDiAAACgAAPLg+D4P8uD4Pg+CHBMH37gAQEA0IAAPIxm4AXw4MNlDDf6DHmlAcSqFRwHHluD/D3w/9QYB/80mIKaimZccnAD/+xJkAAHwigVQzxggCBEhCiDnjAFByBEsAQhgADoCpoAWMA0AEKAgADvNVoB0yGj62qM/+j4jquGhYiMNPt+vDiQ4g02bQkAHrBQUMKwq9DP/FP9cjJ4ggAkgBydUiBFho0UmIKaigAD/+xBkAA/whgDJAEEYAA7gCTAEAAABsAckFCGAADSAJMKAMAAIJmGLBT7rn6HuajRhoarSNETDRhK8meqvi8733I/qSKYXX3Lo1a3u606vvwjWyOe+XUj8K4tu6M37kxBTUUzLjk4LgP/7EmQAAACGHkwGBKAADOTJkMAIAAJIdWoYIQAASY6uAwQgAbH13///Vv/Ix//FHIAYH/hj6/nEH/xe//n//+QgB6hvAvt9V/0/k0B/MQq2DU+7K9bboBG2/RX+2nnyPRfuTOgZw5MQQP/7EGQACfB7BFoHHAAADyCLUOQIAAJcFWqgHEBAMwMswAWYAOBM05BS0sp3/6xuzW93xB+cIpageLSyNpj/WE8RPrNiBrlCAABXyVHu6OmRCtLrx8LSL0HYEC9ktWQo/0U3piCmooAA//sSZAAL8JEE28AhMAAMwJtAAOkAApQVaAAlIEAzgi0AAyQIwAoAAFgTLYOmHFlHd3//3esMQNNMTGnABhuqJvI/10BwrfYySE52YyiCn0pAcaigr9Iorgge4jZ0Eyqcqkr+ramIKaig//sQZAAL8IIF3CgCMAgOANtQAQAIAdwVagAFIAA6gu3AApgAAcAENIqATTbffcQ+x9ZpWmAMs4k20khjp8jYp9mI4wEGhxeKSnbF9jOm7HL1wkAE8EcHs/dezvs1dPh9MQU1FMy45OD/+xJkAA/wcATbAAwYEBCAy0AJ6BICWBdmACWAAEIDLUAGCBjUNgUk4ILNGNe8Zd0V6+LFkgWX4ChyUkylmZ/bzda7EI5h6R1ydhg4I2sY92/yemjkNGshGGHtx6j7lzRv3Vs8llExBTT/+xBkAA/wdANagAFgAA9gy4AAqQACGBlsABUgAEYKrgAGCCCAHyUfBMSnCLVY6T6ozthEjV1bBuCAaIUMt+6p39UJIUbYYRxTQqFqFtRJ7c7/XLBDFL8cu4Xfqbhd9W8voN61piCmgP/7EkQAD/CCBlwACTgwDmD7YAEmBAH0G3QAJAEASoNtgASYCOWIBpodiWhEqQ2pt2RY/4W6YwuSCWJYTjFbhFiz/JehgRIFdX5UT9evXk/LvwR51GAoNdtwZgZDjYpep9WIXfwsmIKaiv/7EGQAD/B8DtwACxBADgHbsAEiFgJEP2wAJKEARgpuAFYIWOUySkMrq0sFb/bBv9Hq4cULuHsjZFjN+vwfyXlOzxB9CIwl0WM4CkX9/Gj9mjy/RwuEOTNV0FCbj7er+D9PxvT0JiCA//sSRAAB8IgE4EgDACgP4dtgASUIAcgZdACkwkBBA+1AALAAIAQ8qAA7QVENPK83W/0+V5LlmBOKVLuzOBnVvRm4x//VyWCzA5EaNnV6cju3+zXEPA1vrYlmn3+PqTm7dTo9aYgpqKAA//sQRAAP8HoGXQACSAAQwQtgASgGAggZcAAJgABEhC2AArAAgjgjQI9W5qeTkcj93n9b+XSEhOzqODdQvawLRkvv92qCgEE2Gfp9QJ3kcjudO+d74RK4aOHVVryP/POSXUJdH31JiCD/+xJkAA+QggfagAkoQA6A+4AFhxQCOB9qAAmAAEQDLlQCpAD2B4HHRNIpprA/oq+n1cj6OOgcKyd7MN5T9XbT6mZGDHkfzUbMvVQJ08uqvV00+vkTOhNMHkLulYkU2RkdnfPe3vTEFND/+xBkAA+QcgfagCwwkBDAy5UBhgQCACFoADChAD6D7cAApADOkDtcGJgHYf0T6u70esAZgSlhHtEMYvhdnZo77vbq2wXEglFvWPRYQp2Pt+32aoHgqRR6uiS6Q8U7shFfV2JiCmooAP/7EmQAD/B6B9oADyggD4D7cAGCCAJIO2gAJODARAMtwAKwAPIpjcaivYyA+F3xbX0U+mUh0KFxb440t4rqRW7RT6akB4OkJE0rCSpRqbX2yvRV6+iEjgTFp977phOoVZku6c8X7kxBTf/7EGQACbB3BFzAATAID+DLhQApAQI4O2YAMKEARIdtwASIIAADMQCYGB2MABe1Gx1v3AKACJwLoSTq8nvXs29s77JhqKisHsFtJlwGe7FajeNfpp5cqAqMGeosKFlb9Pg+mny3QmII//sSZAAP8IMH2YAsOKAN4MuAASUEAjQ/ZAA8QQA9Ay1AALAA5iYCSQP7swd4i+6t+mn18lyq4HEUbwHnuzJ96/t7sthvFWuSmxnScwJvZLO+o+jRXhMiF9kO5IkapFMnt3f1piCmooAA//sQZAAP8HsH2YCsKLANoNtQFYAWAfQfZAC8wkA/A20AdgBY4U+FJ+YXowd4LoQ5l+j9XCkwF0NJrDJ2L8U1/+rJnqSC5SqqAT8c9u5yvp9fBQgBSZgY16hgTvYKO/p9aYgpqKAAAAD/+xJkAAnwiARcSAEwCBCg+0AJ6RIB7B9mBrCkgEAHbYAEiCAAAwiIACYkcQkVLwAn7PnP6+KmHInjRSK8LxxmbcWdvpynK2CvQhnCxqTB3XM1O9Hq5cQioUG9hIgqj/78E7TR6kxBTUX/+xBkAA/wcAfZgCwwkBCB21AB4ggCFB9kAD0gQEcH7QAUiFjhFSgtkalyD90D+vu/6+vtpM204rxtMdCJb/wTvX6+2H8OwqJEytFPJGevF01u9PQWIQHEqx2IUa7V/1uNry3f1JiCmv/7EmQAD/ByCFkATDCgD4DLUADvAAIgO2QGmESASQfswAQIKOCTtng2cOKF+TMXGcl64UO4wJCs1A6LsSqjJd32s6QdQ6gwm1wBPDr0/wbqEUevApg+BQSkKBlws7ZtvDjaESHrTEFNRf/7EGQACfBzDtiADBBIDUHbYAWHFAIEF20gJECgSwdswAYoGJOxxLyoM6F1uHBP0qvwfEPIOsDu/rhff/byv0mBNHTKANE1CWLEP19NPp5KSuJMRPA1fIYLXZ3dfyr4wnT5ZMQU1FAA//sSZAAP8IAIWQABYAAOIMswAO8AAjwhYAA8QMA/g2yAB6QQoHiuYlir9IZ9rkJtyf//6oKthIkiwa3VEv3yX7/29gWhbdmLIrTBsBV6l8n33f/q70uy2eAzWFcAbmo+t2/I0JiCmooA//sQZAALkIQH2SgLSBgPYMswAO8AAfgfYAAwwIBCAy0UA7AAASAGoLw8ESOw91d7Q76P/uhAoiQqZNW1ZEw83Jadv9G2AqCTARFA8gXY0MLTfV9IbQMK5qfBHsEkq5HyOrf7dSYgpoD/+xJkAA/wfghYgAwQQA6g+zABgggCSCFgADzAgEGDLMACpADWywBMqqm3dhxTTHs+7/+uTokhcyLsb8RSR7ZXV10ZbyoP2OeGCoFfjdQKyej/2aB0JkoNikMM42FoYIptyHfb7ExBTUX/+xBkAA/wdwfYgAtIEA/g+yAB6QQCACFeACThAD2ELAAGCCXRA8BwiCLS9HfjwpA3u9PSa8Z+SsZOKgjmtnXo1emmiAExASAXF2iLDBYM5PR/okeQLAwAslYHuEKsQ4Zh+SYgpqKAAP/7EmQAD/CBB9gADDgwEKD7EAHpBAHUIWAAFSAARQPsQAWkCMKQahetG7y6ENBe17td3/VhgQQ7HxFnTzQE+SZ5zeWdohQVLk5RdeJF8Qb+S7v9ECwFReMg0qRUDXxJzWFyvyViYgpqKP/7EGQAD/CDB9iADDAgEADLIACsAAIEI2AAMGEARYPsgAekENbJAdQlBo4L9PuRuX0U/qMwGJITlcdKJ+H2dSp6UfdymlMTDfiq/9y0dwcmCmK//qyxmgXSETVwYbCT9WfftTxb0JiC//sSZAAJ8HUGWQAJQBAPoQsgASYEAggRayAEwCA/A+yAB6QQtQZEKBaWU0sHw2lHfR9V4AwKAYFVooBCeIwaU8f6DvCCRNSYdJaHXtGXyX/3/r7CtHq8K6isx6u9KjP9NPrTEFNRQAAA//sQZAAP8IAH2AAMEEAQgPsAAQwAAggfYAAxIEBGA+wAB6QQgKQ0kJL1WdLNgF1wt///6WBwG4BQnG8KSwt55xZSw168aJovYCFHHE2aTIud3f//pweiZGgxlgs1g/vbHqe279Hl0wD/+xJkAAHwXghYgAkQSA9hCxABgggCRAN5gARAMEqELAAHpBC1woI5M2jozicirkJKw+huWAgWJaoGEy1//8yACSaJANiwZe56QabQup3//0pyxnIO9EKflJBLaO4lQ7p177sgmIKaigD/+xBkAAsQeQfYgAkoMA3BCwABggkB2CFfADyhMESDLvQBiBy1SYAlD00UMxzqG6nf//ToWkIfUEb+3hrhnTe7IkB1wTNhbaUX8rWDqmKcgABkPvAMB0wmyPHmb3gdVn+hMQU1FAAAAP/7EmQAD7CBB9eADyggEMD7NQEiCQHoIWAAJEEARgPsQAekCMKYmJ/wWiAjhmBMQK7v6/cAoAOojbQjkts9jq7aXf/mlU8SCo5HGoH6Aeob3//0deEwpyBkYRjli9c8AaT6f4t/QmIKaP/7EGQACbCGBFrIAkgID6DLNQBmAQHEGWAAJEDAQQPswAYUGAAAfCgAIMYWp6ylmo9o/9WoBAAQMQFBUvujYEdHp//9VlQGJSo8qpFyTVejt/6pbJAqSFph+G4oTjenp9lnqTEFNRQA//sSZAAJsIYGWCgJEDAQ4QslASAKAdAbXgA9IEBEA+vAB6QIAIcFuAcSyCJ7YiypH/+n9SQEgBw+sXiJ0MJDla2unkfg/leKvBYI2h03x+wM/1f09Ss5IQDlqpwTvkiZMWf/JOemIKaA//sQZAAP8HIGV4AMSBAPoQsQASIIAjQhXAAwAUBHg+wABIgg5cTRlwbgW1iecMV3//p6gDgQbBiithF4eb+z7iHXKcajlcGXt4jtzuB0V/v/u7a+WOAoHgZipY+8FMxTR2U7333piCD/+xJkAAnwggbXgAYQMBDhCvABaQIB5BlgoCRAgD2ELAAHoEhjRwYmVkQCbS4BO0a//Vf6dIwBcKBvd4MfCuJWA/7l2/REdKE6h0cvD3YU2o//2ebbSYuRjLMgT8qVL9nfdp9aYgpqKAD/+xBkAAnwhQZXAAdIAA7A+wABIggCABtgoBhAgEGELEABMACBhVoQAz8mgZx6EL//WR+417ZAIG3s1wxhX55///p9RfvQTYEPmi/NuqV18v27fTBwAtww7fJ/y9bMly1v/i2pMQU1FP/7EmQAD/CEB9cACRAwEQD7IAEmAgIcH1oALMAANoPsQAWYCEwfPNnQ7NOIxepmrWn/yfk+mXBMbONYAdka0SzldX/ezpkXvYkhysP7kG0s1d9Hb7u1OyRecT2uA/C+nT/9n+xMQU1FAP/7EGQABfB7BlcABlgQEEELIAEiCAG4A4OgjGAwPoMtAAKkAOChR0CTmUFH3fZ/p6FeYT0gcBQnNTuhRUbu1L/rP2SFTUEADcRTDv/rf//6wvCigwz4fSO/hin+p7Luj5lMQU1FAAAA//sSZAABEHwGWQADMAAQ4Mu5ACMAAfALb4CUQCBFgy4UARgAgubKB53TCbuj/pTHBnq4
