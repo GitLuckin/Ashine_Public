@@ -1,0 +1,254 @@
+<html>
+<head>
+<title>Web Minesweeper</title>
+<style type="text/css">
+.minetbl { border: solid #008800 2px;
+  cursor: crosshair;
+ }
+
+body {
+  background-color: #000000;
+  color: #aaFFaa;
+  }
+
+input {
+  background-color: #330033;
+  color: #aaFFaa;
+  border: solid #00FF00 1px;
+  text-align: center;
+  }
+
+select {
+  background-color: #330033;
+  color: #aaFFaa;
+  border: solid #00FF00 1px;
+  text-align: center;
+  }
+
+#headingBox {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  width: auto;
+  overflow: visible;
+  }
+H1, H2 { margin: 0px; padding: 0px; }
+
+#face {
+  border: none;
+  text-decoration:none;
+  color: #FFFF00;
+  font-size: 52px;
+  }
+#modeBox {
+  position: absolute;
+  border: solid green 1px;
+  top: 0px;
+  right: 0px;
+  z-index: 101;
+  padding-top: 8px;
+  padding-right: 8px;
+  padding-left: 8px;
+  padding-bottom: 0px;
+  }
+
+#modeBoxHandle {
+  border: solid green 1px;
+  text-align: center;
+  -moz-border-radius: 10 10 0 0;
+  }
+
+#modeBoxHandleText {
+  color: #44ff44;
+  text-decoration: none;
+  }
+.minecell {
+  height: 2EM;
+  width: 2EM;
+  text-align:center;
+  font-size: 1.5EM;
+  vertical-align: center;
+  }
+</style>
+<script>
+var i,j,count; // Counter variables
+var firstMove = 1; // flag to indicate if the first move is made yet
+// Create the board
+
+var boardRows = 9;   // these three variables represent the size of the board,
+var boardCols = 9;   // and the number of mines found on it - once the auto-
+var boardMines = 10; // build feature (and multiple diff. lvls) are used, they
+                     // will determine how the board is built.
+var board = new Array(boardRows);
+var flags = new Array(boardRows);
+var clockFlag = "nothing running";
+var clockAt = 0;
+var minesLeft = boardMines; // the dynamic count
+var tilesLeft = boardRows*boardCols - minesLeft;
+var totalClicks = 0; // Tracking how many clicks used so far (right and left both)
+var totalSquares = 0; // Tracking how many squares have been opened
+var hitBlankOrMine = 0; // For tracking how many "number" squares are hit before the
+                        // first "blank" area opens up, or a mine is hit.
+
+var tiles = new Array(); // Default font set: Full Emoji Support
+tiles[0]= "&nbsp;"; // Blank Space
+tiles[1]= "<span style='color:#0000FF'>1</span>";
+tiles[2]= "<span style='color:#00FF00'>2</span>";
+tiles[3]= "<span style='color:#FF0000'>3</span>";
+tiles[4]= "<span style='color:#000088'>4</span>";
+tiles[5]= "<span style='color:#008800'>5</span>";
+tiles[6]= "<span style='color:#880000'>6</span>";
+tiles[7]= "<span style='color:#008888'>7</span>";
+tiles[8]= "<span style='color:#888800'>8</span>";
+tiles[9]= "<span style='color:#008800'>	&#9971;</span>"; // Planted Flag
+tiles[10]= "<span style='color:#FFFF00'>&#128165;</span>"; // Exploded Mine
+tiles[11]= "<span style='color:#FF0000'>&#128711;</span>"; // False Flag
+tiles[12]= "<span style='color:#000000'>&#128163;</span>"; // Unexploded Mine
+tiles[13]= "<span style='color:#00FF00'>?</span>"; // Unknown marking
+tiles[14]= "&#128578;"; // Happy face
+tiles[15]= "&#128534;"; // Dead face
+tiles[16]= "&#128526;"; // Victory face
+
+
+function setMode(mode) {
+  switch(mode) {
+    case "Beginner":
+      boardRows = 9;
+      boardCols = 9;
+      boardMines = 10;
+      break;
+    case "Intermediate":
+      boardRows = 16;
+      boardCols = 16;
+      boardMines = 40;
+      break;
+    case "Expert":
+      boardRows = 16;
+      boardCols = 30;
+      boardMines = 99;
+      break;
+    case "Custom":
+      boardRows =  parseInt(document.forms.modes.nRows.value);
+      boardCols =  parseInt(document.forms.modes.nCols.value);
+      boardMines = parseInt(document.forms.modes.nMines.value);
+    default:
+    };
+  document.getElementById("modeTitle").innerHTML = mode + " Mode";
+  document.forms.modes.nRows.value = boardRows;
+  document.forms.modes.nCols.value = boardCols;
+  document.forms.modes.nMines.value = boardMines;
+  resetBoard();
+  };
+
+
+
+function updateMines(incr) {
+  var mineStr = "Mines:<br />";
+  minesLeft += incr;
+  mineStr += minesLeft;
+  document.getElementById("mineCount").innerHTML = mineStr;
+  };
+
+function updateClock() {
+  var clockStr = "Time:<br />";
+  clockAt += 1;
+  if (clockAt < 10) {
+    clockStr += "0";
+    };
+  if (clockAt < 100) {
+    clockStr += "0";
+    };
+  clockStr += clockAt;
+  document.getElementById("timeCount").innerHTML = clockStr;
+  };
+
+
+
+function rebuildBoard() {
+  var cR,cC;
+  var tableStr = "<table class=\"minetbl\" cellspacing=\"0\" cellpadding=\"0\">\n";
+  for (cR=0;cR<boardRows;cR++) {
+    tableStr += "<tr>\n";
+    for (cC=0;cC<boardCols;cC++) {
+      tableStr += "<td class=\"minecell\" id=\"c"+cR+":"+cC+"\" style=\"border: outset #aaaaaa 0.1EM; background-color: #888888;\" onclick=\"lClick('"+cR+":"+cC+"')\" oncontextmenu=\"return rClick('"+cR+":"+cC+"')\">&nbsp;</td>\n";
+      };
+    tableStr += "</tr>";
+    };
+  tableStr += "</table>\n";
+  document.getElementById("theTable").innerHTML = tableStr;
+  };
+
+
+
+function resetBoard() {
+  // Reset everything - the flags and board arrays, the mines, the images, and the cell style properties.
+  document.getElementById("face").innerHTML = tiles[14];
+  rebuildBoard();
+  if (clockFlag != "nothing running") { // Stop the clock if needed.
+    clearInterval(clockFlag);
+    };
+  clockAt = -1; // Now reset the clock to show 000
+  updateClock();
+  minesLeft = boardMines;
+  totalClicks = 0;
+  totalSquares = 0;
+  hitBlankOrMine = 0;
+  updateMines(0);
+  firstMove = 1;
+  for (i=0;i<boardRows;i++) {
+    board[i] = new Array(boardCols);
+    flags[i] = new Array(boardCols);
+    for (j=0;j<boardCols;j++) {
+      board[i][j]=" ";
+      flags[i][j]=" ";
+      document.getElementById("c"+i+":"+j).innerHTML="&nbsp;";
+      document.getElementById("c"+i+":"+j).style.backgroundColor="#888888";
+      document.getElementById("c"+i+":"+j).style.borderStyle="outset";
+      };
+    };
+  // Now place the mines
+  for (count=0;count<minesLeft;count++) {
+    i = Math.round(Math.random()*(boardRows - 1));
+    j = Math.round(Math.random()*(boardCols - 1));
+    while (board[i][j] == "M") {
+      // picked bad numbers, pick new ones.
+      i = Math.round(Math.random()*(boardRows - 1));
+      j = Math.round(Math.random()*(boardCols - 1));
+      };
+    board[i][j] = "M";
+    };
+  tilesLeft = boardRows*boardCols - minesLeft;
+  return false;
+  };
+
+
+function lClick(whichOne) {
+  // most of the gameplay goes on here.
+  var row,col; // local position variables
+  var nrow,ncol,neighbors, theName, theMode;
+  row = parseInt(whichOne);
+  col = parseInt(whichOne.substring(whichOne.indexOf(":")+1,whichOne.length));
+
+  if ((flags[row][col] == "F") || (flags[row][col] == "C")) {
+    // don't allow clicks on flagged squares, or even count them.
+    return false;
+    };
+  totalClicks++;
+  totalSquares++;
+  if (firstMove) {
+    firstMove = 0; // Only ever do this once per game.
+    clockFlag = setInterval("updateClock()",1000);
+    if (board[row][col] == "M") {
+      // Don't allow the user to click on a mine with their first click,
+      // if they did, then move the mine before finishing the click.
+      board[row][col] = " ";
+      nrow = Math.round(Math.random()*(boardRows - 1));
+      ncol = Math.round(Math.random()*(boardCols - 1));
+      while (board[nrow][ncol] == "M") { // make sure the new place for this
+        nrow = Math.round(Math.random()*(boardRows - 1)); // displaced mine is actually
+        ncol = Math.round(Math.random()*(boardCols - 1)); // empty first ...
+        };
+      board[nrow][ncol] = "M";  
+      };
+ 
