@@ -50,4 +50,16 @@
         <h1 id="heading">Enable or Disable Phoenix Dev site.</h1>
         <div id="enableStatus">Checking if dev site is enabled...</div>
         <br />
-        <button id="enableBtn"
+        <button id="enableBtn" onclick="toggleLocalStorageItem('devDomainsEnabled')">Click me</button>
+
+        <h2>Enable or disable debug logs.</h2>
+        <div id="enableStatusDebugLogs">Checking if debug logs are enabled...</div>
+        <br />
+        <button id="enableBtnDebugLogs" onclick="toggleLocalStorageItem('logToConsole')">Click me</button>
+
+        <h2>Enable or disable debug live preview logs.</h2>
+        <div id="enableStatusDebugLivePreview">Checking if debug logs are enabled...</div>
+        <br />
+        <button id="enableBtnDebugLivePreview" onclick="toggleLocalStorageItem('logLivePreview')">Click me</button>
+    </body>
+</html>
