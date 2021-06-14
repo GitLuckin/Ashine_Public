@@ -193,4 +193,374 @@ define(function (require, exports, module) {
                 selStr = _formatCountable(cols, Strings.STATUSBAR_SELECTION_CH_SINGULAR, Strings.STATUSBAR_SELECTION_CH_PLURAL);
             }
         }
-        $cursorInfo.text(cursorStr 
+        $cursorInfo.text(cursorStr + selStr);
+    }
+
+    /**
+     * Change indent size
+     * @param {string} fullPath Path to file in current editor
+     * @param {string} value Size entered into status bar
+     */
+    function _changeIndentWidth(fullPath, value) {
+        $indentWidthLabel.removeClass("hidden");
+        $indentWidthInput.addClass("hidden");
+
+        // remove all event handlers from the input field
+        $indentWidthInput.off("blur keyup");
+
+        // restore focus to the editor
+        MainViewManager.focusActivePane();
+
+        var valInt = parseInt(value, 10);
+        if (Editor.getUseTabChar(fullPath)) {
+            if (!Editor.setTabSize(valInt, fullPath)) {
+                return;     // validation failed
+            }
+        } else {
+            if (!Editor.setSpaceUnits(valInt, fullPath)) {
+                return;     // validation failed
+            }
+        }
+
+        // update indicator
+        _updateIndentSize(fullPath);
+
+        // column position may change when tab size changes
+        _updateCursorInfo();
+    }
+
+    /**
+     * Update insert/overwrite label
+     * @param {Event} event (unused)
+     * @param {Editor} editor Current editor
+     * @param {string} newstate New overwrite state
+     * @param {boolean=} doNotAnimate True if state should not be animated
+     */
+    function _updateOverwriteLabel(event, editor, newstate, doNotAnimate) {
+        if ($statusOverwrite.text() === (newstate ? Strings.STATUSBAR_OVERWRITE : Strings.STATUSBAR_INSERT)) {
+            // label already up-to-date
+            return;
+        }
+
+        $statusOverwrite.text(newstate ? Strings.STATUSBAR_OVERWRITE : Strings.STATUSBAR_INSERT);
+
+        if (!doNotAnimate) {
+            AnimationUtils.animateUsingClass($statusOverwrite[0], "flash", 1500);
+        }
+    }
+
+    /**
+     * Update insert/overwrite indicator
+     * @param {Event} event (unused)
+     */
+    function _updateEditorOverwriteMode(event) {
+        var editor = EditorManager.getActiveEditor(),
+            newstate = !editor._codeMirror.state.overwrite;
+
+        // update label with no transition
+        _updateOverwriteLabel(event, editor, newstate, true);
+        editor.toggleOverwrite(newstate);
+    }
+
+    /**
+     * Initialize insert/overwrite indicator
+     * @param {Editor} currentEditor Current editor
+     */
+    function _initOverwriteMode(currentEditor) {
+        currentEditor.toggleOverwrite($statusOverwrite.text() === Strings.STATUSBAR_OVERWRITE);
+        $statusOverwrite.attr("title", Strings.STATUSBAR_INSOVR_TOOLTIP);
+    }
+
+    /**
+     * Handle active editor change event
+     * @param {Event} event (unused)
+     * @param {Editor} current Current editor
+     * @param {Editor} previous Previous editor
+     */
+    function _onActiveEditorChange(event, current, previous) {
+        if (previous) {
+            previous.off(".statusbar");
+            previous.document.off(".statusbar");
+            previous.document.releaseRef();
+        }
+
+        if (!current) {
+            StatusBar.hideAllPanes();
+        } else {
+            var fullPath = current.document.file.fullPath;
+            StatusBar.showAllPanes();
+
+            current.on("cursorActivity.statusbar", _updateCursorInfo);
+            current.on("optionChange.statusbar", function () {
+                _updateIndentType(fullPath);
+                _updateIndentSize(fullPath);
+            });
+            current.on("change.statusbar", function () {
+                // async update to keep typing speed smooth
+                window.setTimeout(function () { _updateFileInfo(current); }, 0);
+            });
+            current.on("overwriteToggle.statusbar", _updateOverwriteLabel);
+
+            current.document.addRef();
+            current.document.on("languageChanged.statusbar", function () {
+                _updateLanguageInfo(current);
+            });
+
+            _updateCursorInfo(null, current);
+            _updateLanguageInfo(current);
+            _updateEncodingInfo(current);
+            _updateFileInfo(current);
+            _initOverwriteMode(current);
+            _updateIndentType(fullPath);
+            _updateIndentSize(fullPath);
+        }
+    }
+
+    /**
+     * Populate the languageSelect DropdownButton's menu with all registered Languages
+     */
+    function _populateLanguageDropdown() {
+        // Get all non-binary languages
+        var languages = _.values(LanguageManager.getLanguages()).filter(function (language) {
+            return !language.isBinary();
+        });
+
+        // sort dropdown alphabetically
+        languages.sort(function (a, b) {
+            return a.getName().toLowerCase().localeCompare(b.getName().toLowerCase());
+        });
+
+        languageSelect.items = languages;
+
+        // Add option to top of menu for persisting the override
+        languageSelect.items.unshift("---");
+        languageSelect.items.unshift(LANGUAGE_SET_AS_DEFAULT);
+    }
+
+    /**
+     * Change the encoding and reload the current document.
+     * If passed then save the preferred encoding in state.
+     */
+    function _changeEncodingAndReloadDoc(document) {
+        var promise = document.reload();
+        promise.done(function (text, readTimestamp) {
+            encodingSelect.$button.text(document.file._encoding);
+            // Store the preferred encoding in the state
+            var projectRoot = ProjectManager.getProjectRoot(),
+                context = {
+                    location: {
+                        scope: "user",
+                        layer: "project",
+                        layerID: projectRoot.fullPath
+                    }
+                };
+            var encoding = PreferencesManager.getViewState("encoding", context);
+            encoding[document.file.fullPath] = document.file._encoding;
+            PreferencesManager.setViewState("encoding", encoding, context);
+        });
+        promise.fail(function (error) {
+            console.log("Error reloading contents of " + document.file.fullPath, error);
+        });
+    }
+
+
+    /**
+     * Populate the encodingSelect DropdownButton's menu with all registered encodings
+     */
+    function _populateEncodingDropdown() {
+        encodingSelect.items = SupportedEncodings;
+    }
+
+    /**
+     * Initialize
+     */
+    function _init() {
+
+        $cursorInfo         = $("#status-cursor");
+        $fileInfo           = $("#status-file");
+        $indentType         = $("#indent-type");
+        $indentWidthLabel   = $("#indent-width-label");
+        $indentWidthInput   = $("#indent-width-input");
+        $statusOverwrite    = $("#status-overwrite");
+
+        languageSelect      = new DropdownButton("", [], function (item, index) {
+            var document = EditorManager.getActiveEditor().document,
+                defaultLang = LanguageManager.getLanguageForPath(document.file.fullPath, true);
+
+            if (item === LANGUAGE_SET_AS_DEFAULT) {
+                var label = _.escape(StringUtils.format(Strings.STATUSBAR_SET_DEFAULT_LANG, LanguageManager.getCompoundFileExtension(document.file.fullPath)));
+                return { html: label, enabled: document.getLanguage() !== defaultLang };
+            }
+
+            var html = _.escape(item.getName());
+
+            // Show indicators for currently selected & default languages for the current file
+            if (item === defaultLang) {
+                html += " <span class='default-language'>" + Strings.STATUSBAR_DEFAULT_LANG + "</span>";
+            }
+            if (item === document.getLanguage()) {
+                html = "<span class='checked-language'></span>" + html;
+            }
+            return html;
+        });
+
+        languageSelect.dropdownExtraClasses = "dropdown-status-bar";
+        languageSelect.$button.addClass("btn-status-bar");
+        $("#status-language").append(languageSelect.$button);
+        languageSelect.$button.attr("title", Strings.STATUSBAR_LANG_TOOLTIP);
+
+
+        encodingSelect = new DropdownButton("", [], function (item, index) {
+            var document = EditorManager.getActiveEditor().document;
+            var html = _.escape(item);
+
+            // Show indicators for currently selected & default languages for the current file
+            if (item === "utf8") {
+                html += " <span class='default-language'>" + Strings.STATUSBAR_DEFAULT_LANG + "</span>";
+            }
+            if (item === document.file._encoding) {
+                html = "<span class='checked-language'></span>" + html;
+            }
+            return html;
+        });
+
+        encodingSelect.dropdownExtraClasses = "dropdown-status-bar";
+        encodingSelect.$button.addClass("btn-status-bar");
+        $("#status-encoding").append(encodingSelect.$button);
+        encodingSelect.$button.attr("title", Strings.STATUSBAR_ENCODING_TOOLTIP);
+
+
+        // indentation event handlers
+        $indentType.on("click", _toggleIndentType);
+        $indentWidthLabel
+            .on("click", function () {
+                // update the input value before displaying
+                var fullPath = EditorManager.getActiveEditor().document.file.fullPath;
+                $indentWidthInput.val(_getIndentSize(fullPath));
+
+                $indentWidthLabel.addClass("hidden");
+                $indentWidthInput.removeClass("hidden");
+                $indentWidthInput.focus();
+
+                $indentWidthInput
+                    .on("blur", function () {
+                        _changeIndentWidth(fullPath, $indentWidthInput.val());
+                    })
+                    .on("keyup", function (event) {
+                        if (event.keyCode === KeyEvent.DOM_VK_RETURN) {
+                            $indentWidthInput.blur();
+                        } else if (event.keyCode === KeyEvent.DOM_VK_ESCAPE) {
+                            _changeIndentWidth(fullPath, false);
+                        }
+                    });
+            });
+
+        $indentWidthInput.focus(function () { $indentWidthInput.select(); });
+
+        // Language select change handler
+        languageSelect.on("select", function (e, lang) {
+            var document = EditorManager.getActiveEditor().document,
+                fullPath = document.file.fullPath;
+
+            var fileType = (document.file instanceof InMemoryFile) ? "newFile" : "existingFile",
+                filelanguageName = lang ? lang._name : "";
+
+            Metrics.countEvent(
+                Metrics.EVENT_TYPE.EDITOR,
+                "languageChange",
+                `${filelanguageName.toLowerCase()}-${fileType}`
+            );
+
+            if (lang === LANGUAGE_SET_AS_DEFAULT) {
+                // Set file's current language in preferences as a file extension override (only enabled if not default already)
+                var fileExtensionMap = PreferencesManager.get("language.fileExtensions");
+                fileExtensionMap[LanguageManager.getCompoundFileExtension(fullPath)] = document.getLanguage().getId();
+                PreferencesManager.set("language.fileExtensions", fileExtensionMap);
+
+            } else {
+                // Set selected language as a path override for just this one file (not persisted)
+                var defaultLang = LanguageManager.getLanguageForPath(fullPath, true);
+                // if default language selected, pass null to clear the override
+                LanguageManager.setLanguageOverrideForPath(fullPath, lang === defaultLang ? null : lang);
+            }
+        });
+
+        // Encoding select change handler
+        encodingSelect.on("select", function (e, encoding) {
+            var document = EditorManager.getActiveEditor().document,
+                originalPath = document.file.fullPath,
+                originalEncoding = document.file._encoding;
+
+            document.file._encoding = encoding;
+            if (!(document.file instanceof InMemoryFile) && document.isDirty) {
+                CommandManager.execute(Commands.FILE_SAVE_AS, {doc: document}).done(function () {
+                    var doc = DocumentManager.getCurrentDocument();
+                    if (originalPath === doc.file.fullPath) {
+                        _changeEncodingAndReloadDoc(doc);
+                    } else {
+                        document.file._encoding = originalEncoding;
+                    }
+                }).fail(function () {
+                    document.file._encoding = originalEncoding;
+                });
+            } else if (document.file instanceof InMemoryFile) {
+                encodingSelect.$button.text(encoding);
+            } else if (!document.isDirty) {
+                _changeEncodingAndReloadDoc(document);
+            }
+        });
+
+        $statusOverwrite.on("click", _updateEditorOverwriteMode);
+    }
+
+    // Initialize: status bar focused listener
+    EditorManager.on("activeEditorChange", _onActiveEditorChange);
+
+    function _checkFileExistance(filePath, index, encoding) {
+        var deferred = new $.Deferred(),
+            fileEntry = FileSystem.getFileForPath(filePath);
+
+        fileEntry.exists(function (err, exists) {
+            if (!err && exists) {
+                deferred.resolve();
+            } else {
+                delete encoding[filePath];
+                deferred.reject();
+            }
+        });
+
+        return deferred.promise();
+    }
+
+    ProjectManager.on("projectOpen", function () {
+        var projectRoot = ProjectManager.getProjectRoot(),
+            context = {
+                location: {
+                    scope: "user",
+                    layer: "project",
+                    layerID: projectRoot.fullPath
+                }
+            };
+        var encoding = PreferencesManager.getViewState("encoding", context);
+        if (!encoding) {
+            encoding = {};
+            PreferencesManager.setViewState("encoding", encoding, context);
+        }
+        Async.doSequentially(Object.keys(encoding), function (filePath, index) {
+            return _checkFileExistance(filePath, index, encoding);
+        }, false)
+            .always(function () {
+                PreferencesManager.setViewState("encoding", encoding, context);
+            });
+    });
+
+    AppInit.htmlReady(_init);
+    AppInit.appReady(function () {
+        // Populate language switcher with all languages after startup; update it later if this set changes
+        _populateLanguageDropdown();
+        _populateEncodingDropdown();
+        LanguageManager.on("languageAdded languageModified", _populateLanguageDropdown);
+        _onActiveEditorChange(null, EditorManager.getActiveEditor(), null);
+        StatusBar.show();
+    });
+});
