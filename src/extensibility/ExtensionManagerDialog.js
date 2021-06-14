@@ -542,4 +542,76 @@ define(function (require, exports, module) {
                     isValidDrop = false,
                     zipMimeTypes = ["application/zip",
                         "application/x-zip",
-                     
+                        "application/octet-stream",
+                        "application/x-zip-compressed"];
+
+                isValidDrop = _.every(items, function (item) {
+                    return item.kind === "file" && zipMimeTypes.includes(item.type);
+                });
+
+                if (isValidDrop) {
+                    // Set an absolute width to stabilize the button size
+                    $dropzone.width($dropzone.width());
+
+                    // Show drop styling and message
+                    $dropzone.removeClass("drag");
+                    $dropzone.addClass("drop");
+                } else {
+                    event.originalEvent.dataTransfer.dropEffect = "none";
+                }
+            })
+            .on("drop", _stopEvent);
+
+        $dropmask
+            .on("dragover", function (event) {
+                _stopEvent(event);
+                event.originalEvent.dataTransfer.dropEffect = "copy";
+            })
+            .on("dragleave", function () {
+                $dropzone.removeClass("drop");
+                $dropzone.addClass("drag");
+            })
+            .on("drop", function (event) {
+                _stopEvent(event);
+
+                if (event.originalEvent.dataTransfer.files) {
+                    // Attempt install
+                    _installUsingDragAndDrop(event.originalEvent.dataTransfer.files).fail(function (errorFiles) {
+                        var message = Strings.INSTALL_EXTENSION_DROP_ERROR;
+
+                        message += "<ul class='dialog-list'>";
+                        for(let fileKey of Object.keys(errorFiles)){
+                            message += "<li><span class='dialog-filename'>";
+                            message += StringUtils.breakableUrl(errorFiles[fileKey].name);
+                            message += "</span>: " + Strings.CANT_DROP_ZIP + "</li>";
+                        }
+                        message += "</ul>";
+
+                        Dialogs.showModalDialog(
+                            DefaultDialogs.DIALOG_ID_ERROR,
+                            Strings.EXTENSION_MANAGER_TITLE,
+                            message
+                        );
+                    }).always(function () {
+                        $dropzone.removeClass("validating");
+                        $dropzone.addClass("drag");
+                    });
+
+                    // While installing, show validating message
+                    $dropzone.removeClass("drop");
+                    $dropzone.addClass("validating");
+                }
+            });
+
+        return new $.Deferred().resolve(dialog).promise();
+    }
+
+    CommandManager.register(Strings.CMD_EXTENSION_MANAGER, Commands.FILE_EXTENSION_MANAGER, _showDialog);
+
+    AppInit.appReady(function () {
+        $("#toolbar-extension-manager").click(_showDialog);
+    });
+
+    // Unit tests
+    exports._performChanges = _performChanges;
+});
