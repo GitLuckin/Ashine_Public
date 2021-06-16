@@ -350,3 +350,179 @@ define(function (require, exports, module) {
 
         context.isMarkedForRemoval = ExtensionManager.isMarkedForRemoval(info.metadata.name);
         context.isMarkedForDisabling = ExtensionManager.isMarkedForDisabling(info.metadata.name);
+        context.isMarkedForUpdate = ExtensionManager.isMarkedForUpdate(info.metadata.name);
+        var hasPendingAction = context.isMarkedForDisabling || context.isMarkedForRemoval || context.isMarkedForUpdate;
+
+        context.showInstallButton = (this.model.source === this.model.SOURCE_REGISTRY || this.model.source === this.model.SOURCE_THEMES) && !context.updateAvailable;
+        context.showUpdateButton = context.updateAvailable && !context.isMarkedForUpdate && !context.isMarkedForRemoval;
+        context.showApplyButton = !!context.metadata.theme && !context.disabled;
+        context.isCurrentTheme = entry.installInfo &&
+            (entry.installInfo.metadata.name === ThemeManager.getCurrentTheme().name);
+
+        context.defaultFeature = warnExtensionIDs.includes(info.metadata.name);
+
+        context.allowInstall = context.isCompatible && !context.isInstalled;
+
+        if (Array.isArray(info.metadata.i18n) && info.metadata.i18n.length > 0) {
+            context.translated = true;
+            context.translatedLangs =
+                info.metadata.i18n.map(function (value) {
+                    if (value === "root") {
+                        value = "en";
+                    }
+                    return { name: LocalizationUtils.getLocalizedLabel(value), locale: value };
+                })
+                .sort(function (lang1, lang2) {
+                    // List users language first
+                    var locales         = [lang1.locale, lang2.locale],
+                        userLangIndex   = locales.indexOf(lang);
+                    if (userLangIndex > -1) {
+                        return userLangIndex;
+                    }
+                    userLangIndex = locales.indexOf(shortLang);
+                    if (userLangIndex > -1) {
+                        return userLangIndex;
+                    }
+
+                    return lang1.name.localeCompare(lang2.name);
+                })
+                .map(function (value) {
+                    return value.name;
+                })
+                .join(", ");
+            context.translatedLangs = StringUtils.format(Strings.EXTENSION_TRANSLATED_LANGS, context.translatedLangs);
+
+            // If the selected language is System Default, match both the short (2-char) language code
+            // and the long one
+            var translatedIntoUserLang =
+                (brackets.isLocaleDefault() && info.metadata.i18n.indexOf(shortLang) > -1) ||
+                info.metadata.i18n.indexOf(lang) > -1;
+            context.extensionTranslated = StringUtils.format(
+                translatedIntoUserLang ? Strings.EXTENSION_TRANSLATED_USER_LANG : Strings.EXTENSION_TRANSLATED_GENERAL,
+                info.metadata.i18n.length
+            );
+        }
+
+        var isInstalledInUserFolder = (entry.installInfo && entry.installInfo.locationType === ExtensionManager.LOCATION_USER);
+        context.allowRemove = isInstalledInUserFolder;
+        context.allowUpdate = context.showUpdateButton && context.isCompatible && context.updateCompatible && isInstalledInUserFolder;
+        if (!context.allowUpdate) {
+            context.updateNotAllowedReason = isInstalledInUserFolder ? Strings.CANT_UPDATE : Strings.CANT_UPDATE_DEV;
+        }
+
+        context.removalAllowed = context.isInstalled &&
+            !context.failedToStart && !hasPendingAction;
+        var isDefaultOrInstalled = this.model.source === "default" || this.model.source === "installed";
+        var isDefaultAndTheme = this.model.source === "default" && context.metadata.theme;
+        context.disablingAllowed = isDefaultOrInstalled && !isDefaultAndTheme && !context.disabled
+            && !hasPendingAction && !context.metadata.theme;
+        context.enablingAllowed = isDefaultOrInstalled && !isDefaultAndTheme && context.disabled
+            && !hasPendingAction && !context.metadata.theme;
+
+        // Copy over helper functions that we share with the registry app.
+        ["lastVersionDate", "authorInfo"].forEach(function (helper) {
+            context[helper] = registry_utils[helper];
+        });
+
+        // Do some extra validation on homepage url to make sure we don't end up executing local binary
+        if (context.metadata.homepage) {
+            var parsed = PathUtils.parseUrl(context.metadata.homepage);
+
+            // We can't rely on path-utils because of known problems with protocol identification
+            // Falling back to Browsers protocol identification mechanism
+            _tmpLink.href = context.metadata.homepage;
+
+            // Check if the homepage refers to a local resource
+            if (_tmpLink.protocol === "file:") {
+                var language = LanguageManager.getLanguageForExtension(parsed.filenameExtension.replace(/^\./, ''));
+                // If identified language for the local resource is binary, don't list it
+                if (language && language.isBinary()) {
+                    delete context.metadata.homepage;
+                }
+            }
+        }
+
+        return $(this._itemTemplate(context));
+    };
+
+    /**
+     * @private
+     * Display an optional message (hiding the extension list if displayed)
+     * @return {boolean} Returns true if a message is displayed
+     */
+    ExtensionManagerView.prototype._updateMessage = function () {
+        if (this.model.message) {
+            this._$emptyMessage.css("display", "block");
+            this._$emptyMessage.html(this.model.message);
+            this._$infoMessage.css("display", "none");
+            this._$table.css("display", "none");
+
+            return true;
+        }
+        this._$emptyMessage.css("display", "none");
+        this._$infoMessage.css("display", this.model.infoMessage ? "block" : "none");
+        this._$table.css("display", "");
+
+        return false;
+
+    };
+
+    /**
+     * @private
+     * Renders the extension entry table based on the model's current filter set. Will create
+     * new items for entries that haven't yet been rendered, but will not re-render existing items.
+     */
+    ExtensionManagerView.prototype._render = function () {
+        var self = this;
+
+        this._$table.empty();
+        this._updateMessage();
+
+        this.model.filterSet.forEach(function (id) {
+            var $item = self._itemViews[id];
+            if (!$item) {
+                $item = self._renderItem(self.model.extensions[id], self.model._getEntry(id));
+                self._itemViews[id] = $item;
+            }
+            $item.appendTo(self._$table);
+        });
+
+        this.trigger("render");
+    };
+
+    /**
+     * @private
+     * Install the extension with the given ID using the install dialog.
+     * @param {string} id ID of the extension to install.
+     */
+    ExtensionManagerView.prototype._installUsingDialog = function (id, _isUpdate) {
+        var entry = this.model.extensions[id];
+        if (entry && entry.registryInfo) {
+            const compatInfo = ExtensionManager.getCompatibilityInfo(entry.registryInfo, brackets.metadata.apiVersion),
+                url = ExtensionManager.getExtensionURL(id, compatInfo.compatibleVersion),
+                versionToInstall = entry.registryInfo.metadata.version;
+
+            fetch(`https://publish.phcode.dev/countDownload?extensionName=${id}&extensionVersion=${versionToInstall}`)
+                .catch(console.error);
+            // TODO: this should set .done on the returned promise
+            if (_isUpdate) {
+                // save to metric id as it is from public extension store.
+                Metrics.countEvent(Metrics.EVENT_TYPE.EXTENSIONS, "install", id);
+                InstallExtensionDialog.updateUsingDialog(url).done(ExtensionManager.updateFromDownload);
+            } else {
+                Metrics.countEvent(Metrics.EVENT_TYPE.EXTENSIONS, "update", id);
+                InstallExtensionDialog.installUsingDialog(url);
+            }
+        }
+    };
+
+    /**
+     * Filters the contents of the view.
+     * @param {string} query The query to filter by.
+     */
+    ExtensionManagerView.prototype.filter = function (query) {
+        this.model.filter(query);
+    };
+
+    exports.ExtensionManagerView = ExtensionManagerView;
+});
