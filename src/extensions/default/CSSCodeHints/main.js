@@ -419,4 +419,58 @@ define(function (require, exports, module) {
                     // before we locate the colon following it.
                     TokenUtils.moveNextToken(ctx);
                 }
-                if (TokenUtils.moveSkippingWhitespace(TokenUtils.moveNextToken, ctx) && ctx.
+                if (TokenUtils.moveSkippingWhitespace(TokenUtils.moveNextToken, ctx) && ctx.token.string === ":") {
+                    adjustCursor = true;
+                    newCursor = { line: cursor.line,
+                        ch: cursor.ch + (hint.length - this.info.name.length) };
+                    // Adjust cursor to the position after any whitespace that follows the colon, if there is any.
+                    if (TokenUtils.moveNextToken(ctx) && ctx.token.string.length > 0 && !/\S/.test(ctx.token.string)) {
+                        newCursor.ch += ctx.token.string.length;
+                    }
+                } else {
+                    hint += ": ";
+                }
+            }
+        } else {
+            if (!this.info.isNewItem && this.info.index !== -1) {
+                // Replacing an existing property value or partially typed value
+                end.ch = start.ch + this.info.values[this.info.index].length;
+            } else {
+                // Inserting a new property value
+                end.ch = start.ch;
+            }
+
+            var parenMatch = hint.match(/\(.*?\)/);
+            if (parenMatch) {
+                // value has (...), so place cursor inside opening paren
+                // and keep hints open
+                adjustCursor = true;
+                newCursor = { line: cursor.line,
+                    ch: start.ch + parenMatch.index + 1 };
+                keepHints = true;
+            }
+        }
+
+        // HACK (tracking adobe/brackets#1688): We talk to the private CodeMirror instance
+        // directly to replace the range instead of using the Document, as we should. The
+        // reason is due to a flaw in our current document synchronization architecture when
+        // inline editors are open.
+        this.editor._codeMirror.replaceRange(hint, start, end);
+
+        if (adjustCursor) {
+            this.editor.setCursorPos(newCursor);
+        }
+
+        return keepHints;
+    };
+
+    AppInit.appReady(function () {
+        var cssPropHints = new CssPropHints();
+        CodeHintManager.registerHintProvider(cssPropHints, ["css", "scss", "less"], 1);
+
+        ExtensionUtils.loadStyleSheet(module, "styles/brackets-css-hints.css");
+
+        // For unit testing
+        exports.cssPropHintProvider = cssPropHints;
+    });
+});
