@@ -1,0 +1,16 @@
+{     
+    "a":          { "attributes": ["href", "hreflang", "media", "rel", "target", "type"] },
+    "abbr":       { "attributes": [] },
+    "address":    { "attributes": [] },
+    "area":       { "attributes": ["alt", "coords", "href", "hreflang", "media", "rel", "shape", "target", "type"] },
+    "article":    { "attributes": [] },
+    "aside":      { "attributes": [] },
+    "audio":      { "attributes": ["autoplay", "controls", "loop", "mediagroup", "muted", "preload", "src"] },
+    "b":          { "attributes": [] },
+    "base":       { "attributes": ["href", "target"] },
+    "bdi":        { "attributes": [] },
+    "bdo":        { "attributes": [] },
+    "big":        { "attributes": [] },
+    "blockquote": { "attributes": ["cite"] },
+    "body":       { "attributes": ["onafterprint", "onbeforeprint", "onbeforeunload", "onhashchange", "onmessage", "onoffline", "ononline",
+                                   "onpagehide", "onpageshow", "onpopstate", "onredo", "onresize
