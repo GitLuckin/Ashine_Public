@@ -923,4 +923,453 @@ define(function (require, exports, module) {
                 it("should increase value by 7.5% on shift up arrow", function () {
                     testKey({
                         item: "$selectionBase",
-                        key: KeyEvent.
+                        key: KeyEvent.DOM_VK_UP,
+                        shift: true,
+                        param: "v",
+                        delta: 0.075,
+                        tolerance: 0.01
+                    });
+                });
+                it("should clip max value on shift up arrow", function () {
+                    testKey({
+                        color: "hsla(50, 25%, 100%, 0.5)",
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_UP,
+                        shift: true,
+                        param: "v",
+                        delta: 0,
+                        tolerance: 0.01
+                    });
+                });
+                it("should decrease value by 1.5% on down arrow", function () {
+                    testKey({
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        param: "v",
+                        delta: -0.015,
+                        tolerance: 0.01
+                    });
+                });
+                it("should clip min value on down arrow", function () {
+                    testKey({
+                        color: "hsla(50, 25%, 0%, 0.5)",
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        param: "v",
+                        delta: 0,
+                        tolerance: 0.01
+                    });
+                });
+                it("should decrease value by 7.5% on shift down arrow", function () {
+                    testKey({
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        shift: true,
+                        param: "v",
+                        delta: -0.075,
+                        tolerance: 0.01
+                    });
+                });
+                it("should clip min value on shift down arrow", function () {
+                    testKey({
+                        color: "hsla(50, 25%, 0%, 0.5)",
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        shift: true,
+                        param: "v",
+                        delta: 0,
+                        tolerance: 0.01
+                    });
+                });
+                it("should increase hue by 3.6 on up arrow", function () {
+                    testKey({
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_UP,
+                        param: "h",
+                        delta: 3.6,
+                        tolerance: 1
+                    });
+                });
+                it("should wrap around max hue on up arrow", function () {
+                    testKey({
+                        color: "hsla(359, 25%, 50%, 0.5)",
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_UP,
+                        param: "h",
+                        delta: -359 + 3.6,
+                        tolerance: 1
+                    });
+                });
+                it("should increase hue by 18 on shift up arrow", function () {
+                    testKey({
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_UP,
+                        shift: true,
+                        param: "h",
+                        delta: 18,
+                        tolerance: 1
+                    });
+                });
+                it("should wrap around max hue on shift up arrow", function () {
+                    testKey({
+                        color: "hsla(359, 25%, 50%, 0.5)",
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_UP,
+                        shift: true,
+                        param: "h",
+                        delta: -359 + 18,
+                        tolerance: 1
+                    });
+                });
+                it("should decrease hue by 3.6 on down arrow", function () {
+                    testKey({
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        param: "h",
+                        delta: -3.6,
+                        tolerance: 1
+                    });
+                });
+                it("should wrap around min hue on down arrow", function () {
+                    testKey({
+                        color: "hsla(0, 25%, 50%, 0.5)",
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        param: "h",
+                        delta: 360 - 3.6,
+                        tolerance: 1
+                    });
+                });
+                it("should decrease hue by 18 on shift down arrow", function () {
+                    testKey({
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        shift: true,
+                        param: "h",
+                        delta: -18,
+                        tolerance: 1
+                    });
+                });
+                it("should wrap around min hue on shift down arrow", function () {
+                    testKey({
+                        color: "hsla(0, 25%, 50%, 0.5)",
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        shift: true,
+                        param: "h",
+                        delta: 360 - 18,
+                        tolerance: 1
+                    });
+                });
+                it("should increase opacity by 0.01 on up arrow", function () {
+                    testKey({
+                        item: "$opacitySelector",
+                        key: KeyEvent.DOM_VK_UP,
+                        param: "a",
+                        delta: 0.01,
+                        tolerance: 0.005
+                    });
+                });
+                it("should clip max opacity on up arrow", function () {
+                    testKey({
+                        color: "hsla(90, 25%, 50%, 1.0)",
+                        item: "$opacitySelector",
+                        key: KeyEvent.DOM_VK_UP,
+                        param: "a",
+                        delta: 0,
+                        tolerance: 0.005
+                    });
+                });
+                it("should increase opacity by 0.05 on shift up arrow", function () {
+                    testKey({
+                        item: "$opacitySelector",
+                        key: KeyEvent.DOM_VK_UP,
+                        shift: true,
+                        param: "a",
+                        delta: 0.05,
+                        tolerance: 0.005
+                    });
+                });
+                it("should clip max opacity on shift up arrow", function () {
+                    testKey({
+                        color: "hsla(90, 25%, 50%, 1.0)",
+                        item: "$opacitySelector",
+                        key: KeyEvent.DOM_VK_UP,
+                        shift: true,
+                        param: "a",
+                        delta: 0,
+                        tolerance: 0.005
+                    });
+                });
+                it("should decrease opacity by 0.01 on down arrow", function () {
+                    testKey({
+                        item: "$opacitySelector",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        param: "a",
+                        delta: -0.01,
+                        tolerance: 0.005
+                    });
+                });
+                it("should clip min opacity on down arrow", function () {
+                    testKey({
+                        color: "hsla(90, 25%, 50%, 0)",
+                        item: "$opacitySelector",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        param: "a",
+                        delta: 0,
+                        tolerance: 0.005
+                    });
+                });
+                it("should decrease opacity by 0.05 on shift down arrow", function () {
+                    testKey({
+                        item: "$opacitySelector",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        shift: true,
+                        param: "a",
+                        delta: -0.05,
+                        tolerance: 0.005
+                    });
+                });
+                it("should clip min opacity on shift down arrow", function () {
+                    testKey({
+                        color: "hsla(90, 25%, 50%, 0)",
+                        item: "$opacitySelector",
+                        key: KeyEvent.DOM_VK_DOWN,
+                        shift: true,
+                        param: "a",
+                        delta: 0,
+                        tolerance: 0.005
+                    });
+                });
+
+                // For #2138
+                it("should increase hue by 18 on shift up arrow even if saturation is 0", function () {
+                    testKey({
+                        color: "hsl(180, 0, 0)",
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_UP,
+                        shift: true,
+                        param: "h",
+                        delta: 18,
+                        tolerance: 1,
+                        exact: true
+                    });
+                });
+                it("should increase hue by 18 on shift up arrow for a near-gray hex color", function () {
+                    testKey({
+                        color: "#5c5b56",
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_UP,
+                        shift: true,
+                        param: "h",
+                        delta: 18,
+                        tolerance: 1,
+                        exact: true
+                    });
+                });
+                it("should not change value when hue changes", function () {
+                    testKey({
+                        color: "#8e8247",
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_UP,
+                        shift: true,
+                        param: "v",
+                        delta: 0,
+                        tolerance: 0.01,
+                        exact: true
+                    });
+                });
+
+                // For #2193 and #2229
+                it("should prevent default on the key event for an unhandled arrow key on non-text-field", function () {
+                    testPreventDefault({
+                        color: "#8e8247",
+                        item: "$hueBase",
+                        key: KeyEvent.DOM_VK_RIGHT,
+                        expected: true
+                    });
+                });
+                it("should prevent default on left arrow at the start of the text field", function () {
+                    testPreventDefault({
+                        color: "#8e8247",
+                        item: "$colorValue",
+                        selection: [0, 0],
+                        key: KeyEvent.DOM_VK_LEFT,
+                        expected: true
+                    });
+                });
+                it("should not prevent default on left arrow in the middle of the text field", function () {
+                    testPreventDefault({
+                        color: "#8e8247",
+                        item: "$colorValue",
+                        selection: [3, 3],
+                        key: KeyEvent.DOM_VK_LEFT,
+                        expected: false
+                    });
+                });
+                it("should not prevent default on left arrow at the end of the text field", function () {
+                    testPreventDefault({
+                        color: "#8e8247",
+                        item: "$colorValue",
+                        selection: [7, 7],
+                        key: KeyEvent.DOM_VK_LEFT,
+                        expected: false
+                    });
+                });
+                it("should not prevent default on left arrow with a range selection", function () {
+                    testPreventDefault({
+                        color: "#8e8247",
+                        item: "$colorValue",
+                        selection: [0, 7],
+                        key: KeyEvent.DOM_VK_LEFT,
+                        expected: false
+                    });
+                });
+                it("should not prevent default on right arrow at the start of the text field", function () {
+                    testPreventDefault({
+                        color: "#8e8247",
+                        item: "$colorValue",
+                        selection: [0, 0],
+                        key: KeyEvent.DOM_VK_RIGHT,
+                        expected: false
+                    });
+                });
+                it("should not prevent default on right arrow in the middle of the text field", function () {
+                    testPreventDefault({
+                        color: "#8e8247",
+                        item: "$colorValue",
+                        selection: [3, 3],
+                        key: KeyEvent.DOM_VK_RIGHT,
+                        expected: false
+                    });
+                });
+                it("should prevent default on right arrow at the end of the text field", function () {
+                    testPreventDefault({
+                        color: "#8e8247",
+                        item: "$colorValue",
+                        selection: [7, 7],
+                        key: KeyEvent.DOM_VK_RIGHT,
+                        expected: true
+                    });
+                });
+                it("should not prevent default on right arrow with a range selection", function () {
+                    testPreventDefault({
+                        color: "#8e8247",
+                        item: "$colorValue",
+                        selection: [0, 7],
+                        key: KeyEvent.DOM_VK_RIGHT,
+                        expected: false
+                    });
+                });
+
+            });
+
+            describe("color swatches and original color", function () {
+
+                it("should restore to original color when clicked on", function () {
+                    makeUI("#abcdef");
+                    colorEditor.setColorFromString("#0000ff");
+                    colorEditor.$originalColor.trigger("click");
+                    expect(tinycolor(colorEditor.getColor()).toHexString()).toBe("#abcdef");
+                });
+
+                it("should create swatches", function () {
+                    makeUI("#abcdef");
+                    expect($(".swatch").length).toBe(2);
+                });
+
+                it("should set color to a swatch when clicked on", function () {
+                    makeUI("#fedcba");
+                    $($(".swatch")[0]).trigger("click");
+                    expect(tinycolor(colorEditor.getColor()).toHexString()).toBe("#abcdef");
+                });
+
+            });
+
+            describe("input text field syncing", function () {
+
+                it("should commit valid changes made in the input field on the input event", function () {
+                    makeUI("#abcdef");
+                    colorEditor.$colorValue.val("#fedcba");
+                    colorEditor.$colorValue.trigger("input");
+                    expect(tinycolor(colorEditor.getColor()).toHexString()).toBe("#fedcba");
+                });
+                it("should commit valid changes made in the input field on the change event", function () {
+                    makeUI("#abcdef");
+                    colorEditor.$colorValue.val("#fedcba");
+                    colorEditor.$colorValue.trigger("change");
+                    expect(tinycolor(colorEditor.getColor()).toHexString()).toBe("#fedcba");
+                });
+                it("should not commit changes on the input event while the value is invalid, but should keep them in the text field", function () {
+                    makeUI("#abcdef");
+                    colorEditor.$colorValue.val("rgb(0, 0, 0");
+                    colorEditor.$colorValue.trigger("input");
+                    expect(tinycolor(colorEditor.getColor()).toHexString()).toBe("#abcdef");
+                    expect(colorEditor.$colorValue.val()).toBe("rgb(0, 0, 0");
+                });
+                it("should revert to the previous value on the change event while the value is invalid", function () {
+                    makeUI("#abcdef");
+                    colorEditor.$colorValue.val("rgb(0, 0, 0");
+                    colorEditor.$colorValue.trigger("change");
+                    expect(tinycolor(colorEditor.getColor()).toHexString()).toBe("#abcdef");
+                    expect(colorEditor.$colorValue.val()).toBe("#abcdef");
+                });
+
+                it("should convert percentage RGB values to normal values", function () {
+                    makeUI("#abcdef");
+                    expect(colorEditor._convertToNormalRGB("rgb(25%, 50%, 75%)")).toBe("rgb(64, 128, 191)");
+                });
+                it("should normalize a string to match tinycolor's format", function () {
+                    makeUI("#abcdef");
+                    //Percentage based colors are now supported: the following test is obsolete
+                    //expect(colorEditor._normalizeColorString("rgb(25%,50%,75%)")).toBe("rgb(64, 128, 191)");
+                    expect(colorEditor._normalizeColorString("rgb(10,20,   30)")).toBe("rgb(10, 20, 30)");
+                });
+            });
+
+            describe("undo/redo", function () {
+
+                function triggerCtrlKey($element, key, shift) {
+                    var ctrlKeyProperty = (brackets.platform === "mac" ? "metaKey": "ctrlKey"),
+                        eventProps = {keyCode: key, shiftKey: shift};
+                    eventProps[ctrlKeyProperty] = true;
+                    $element.trigger($.Event("keydown", eventProps));
+                }
+
+                it("should undo when Ctrl-Z is pressed on a focused element in the color editor", async function () {
+                    makeUI("#abcdef");
+                    colorEditor.setColorFromString("#a0a0a0");
+                    colorEditor.$hueBase.focus();
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Z);
+                    expect(getColorString()).toBe("#abcdef");
+                });
+
+                it("should redo when Ctrl-Shift-Z is pressed on a focused element in the color editor", async function () {
+                    makeUI("#abcdef");
+                    colorEditor._commitColor("#a0a0a0", true);
+                    colorEditor.$hueBase.focus();
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Z);
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Z, true);
+                    expect(getColorString()).toBe("#a0a0a0");
+                });
+
+                it("should redo when Ctrl-Y is pressed on a focused element in the color editor", async function () {
+                    makeUI("#abcdef");
+                    colorEditor._commitColor("#a0a0a0", true);
+                    colorEditor.$hueBase.focus();
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Z);
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Y);
+                    expect(getColorString()).toBe("#a0a0a0");
+                });
+
+                it("should redo when Ctrl-Y is pressed after two Ctrl-Zs (only one Ctrl-Z should take effect)", async function () {
+                    makeUI("#abcdef");
+                    colorEditor._commitColor("#a0a0a0", true);
+                    colorEditor.$hueBase.focus();
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Z);
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Z);
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Y);
+                    expect(getColorString()).toBe("#a0a0a0");
+                });
+
+                it("should undo when Ctrl-Z
