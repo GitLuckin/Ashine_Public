@@ -510,4 +510,417 @@ define(function (require, exports, module) {
                 it("should use uppercase colors", function () {
                     expect(PreferencesManager.get("uppercaseColors")).toBe(true);
                 });
-                it("should convert a hex color to rgb in uppercase when
+                it("should convert a hex color to rgb in uppercase when mode button clicked", function () {
+                    testConvert("#112233", "rgba", "RGB(17, 34, 51)");
+                });
+                it("should convert a hex color to hsl in uppercase when mode button clicked", function () {
+                    testConvert("#112233", "hsla", "HSL(210, 50%, 13%)");
+                });
+                it("should convert an rgb color to hex in uppercase when mode button clicked", function () {
+                    testConvert("RGB(15, 160, 21)", "hex", "#0FA015");
+                });
+                it("should convert an rgba color to hex with alpha in uppercase when mode button clicked", function () {
+                    testConvert("RGBA(15, 160, 21, 0.5)", "hex", "#0FA01580");
+                });
+                it("should convert an rgb color to hsl in uppercase when mode button clicked", function () {
+                    testConvert("RGB(15, 160, 21)", "hsla", "HSL(122, 83%, 34%)");
+                });
+                it("should convert an rgba color to hsla in uppercase when mode button clicked", function () {
+                    testConvert("RGBA(15, 160, 21, 0.3)", "hsla", "HSLA(122, 83%, 34%, 0.3)");
+                });
+                it("should convert an hsl color to hex in uppercase when mode button clicked", function () {
+                    testConvert("HSL(152, 12%, 22%)", "hex", "#313F39");
+                });
+                it("should convert an hsla color to hex with alpha in uppercase when mode button clicked", function () {
+                    testConvert("HSLA(152, 12%, 22%, 0.7)", "hex", "#313F39B3");
+                });
+                it("should convert an hsl color to rgb in uppercase when mode button clicked", function () {
+                    testConvert("HSL(152, 12%, 22%)", "rgba", "RGB(49, 63, 57)");
+                });
+                it("should convert an hsla color to rgba in uppercase when mode button clicked", function () {
+                    testConvert("HSLA(152, 12%, 22%, 0.7)", "rgba", "RGBA(49, 63, 57, 0.7)");
+                });
+                it("should convert a mixed case hsla color to rgba in uppercase when mode button clicked", function () {
+                    testConvert("HsLa(152, 12%, 22%, 0.7)", "rgba", "RGBA(49, 63, 57, 0.7)");
+                });
+                it("should convert a mixed case hex color to rgb in uppercase when mode button clicked", function () {
+                    testConvert("#fFfFfF", "rgba", "RGB(255, 255, 255)");
+                });
+
+            });
+
+            describe("parameter editing with mouse", function () {
+
+                /**
+                 * Test a mouse down event on the given UI element.
+                 * @param {object} opts The parameters to test:
+                 *     item: The (string) name of the member of ColorEditor that references the element to test.
+                 *     clickAt: An [x, y] array specifying the simulated x/y mouse position as a fraction of the
+                 *          item's width/height. For example, [0.5, 0.5] would specify a click exactly in the
+                 *          center of the element.
+                 *     param: The (string) parameter whose value we're testing (h, s, v, or a).
+                 *     expected: The expected value for the parameter.
+                 *     tolerance: The tolerance in variation for the expected value.
+                 */
+                function testMousedown(opts) {
+                    makeUI("#0000ff");
+                    eventAtRatio("mousedown", colorEditor[opts.item], opts.clickAt);
+                    checkNear(tinycolor(colorEditor.getColor()).toHsv()[opts.param], opts.expected, opts.tolerance);
+                    colorEditor[opts.item].trigger("mouseup");  // clean up drag state
+                }
+
+                /**
+                 * Test a drag event on the given UI element.
+                 * @param {object} opts The parameters to test:
+                 *     item: The (string) name of the member of ColorEditor that references the element to test.
+                 *     clickAt: An [x, y] array specifying the simulated x/y mouse position for the initial mouse down
+                 *          as a fraction of the item's width/height. For example, [0.5, 0.5] would specify a click
+                 *          exactly in the center of the element.
+                 *     dragTo: An [x, y] array specifying the location to drag to, using the same convention as clickAt.
+                 *     param: The (string) parameter whose value we're testing (h, s, v, or a).
+                 *     expected: The expected value for the parameter.
+                 *     tolerance: The tolerance in variation for the expected value.
+                 */
+                function testDrag(opts) {
+                    makeUI("#0000ff");
+                    eventAtRatio("mousedown", colorEditor[opts.item], opts.clickAt);
+                    eventAtRatio("mousemove", colorEditor[opts.item], opts.dragTo);
+                    checkNear(tinycolor(colorEditor.getColor()).toHsv()[opts.param], opts.expected, opts.tolerance);
+                    colorEditor[opts.item].trigger("mouseup");  // clean up drag state
+                }
+
+                it("should set saturation on mousedown", function () {
+                    testMousedown({
+                        item: "$selection",
+                        clickAt: [0.25, 0], // x: saturation, y: 1.0 - value
+                        param: "s",
+                        expected: 0.25,
+                        tolerance: 0.1
+                    });
+                });
+                it("should set saturation on drag", function () {
+                    testDrag({
+                        item: "$selection",
+                        clickAt: [0.25, 0], // x: saturation, y: 1.0 - value
+                        dragTo: [0.75, 0],
+                        param: "s",
+                        expected: 0.75,
+                        tolerance: 0.1
+                    });
+                });
+                it("should clip saturation to min value", function () {
+                    testDrag({
+                        item: "$selection",
+                        clickAt: [0.25, 0], // x: saturation, y: 1.0 - value
+                        dragTo: [-0.25, 0],
+                        param: "s",
+                        expected: 0,
+                        tolerance: 0.1
+                    });
+                });
+                it("should clip saturation to max value", function () {
+                    testDrag({
+                        item: "$selection",
+                        clickAt: [0.25, 0], // x: saturation, y: 1.0 - value
+                        dragTo: [1.25, 0],
+                        param: "s",
+                        expected: 1,
+                        tolerance: 0.1
+                    });
+                });
+                it("should set value on mousedown", function () {
+                    testMousedown({
+                        item: "$selection",
+                        clickAt: [1.0, 0.75], // x: saturation, y: 1.0 - value
+                        param: "v",
+                        expected: 0.25,
+                        tolerance: 0.1
+                    });
+                });
+                it("should set value on drag", function () {
+                    testDrag({
+                        item: "$selection",
+                        clickAt: [1.0, 0.75], // x: saturation, y: 1.0 - value
+                        dragTo: [1.0, 0.25],
+                        param: "v",
+                        expected: 0.75,
+                        tolerance: 0.1
+                    });
+                });
+                it("should clip value to min value", function () {
+                    testDrag({
+                        item: "$selection",
+                        clickAt: [1.0, 0.75], // x: saturation, y: 1.0 - value
+                        dragTo: [1.0, 1.25],
+                        param: "v",
+                        expected: 0,
+                        tolerance: 0.1
+                    });
+                });
+                it("should clip value to max value", function () {
+                    testDrag({
+                        item: "$selection",
+                        clickAt: [1.0, 0.75],
+                        dragTo: [1.0, -0.25],
+                        param: "v",
+                        expected: 1,
+                        tolerance: 0.1
+                    });
+                });
+                it("should set hue on mousedown", function () {
+                    testMousedown({
+                        item: "$hueSlider",
+                        clickAt: [0, 0.75], // x: unused, y: 1.0 - (hue / 360)
+                        param: "h",
+                        expected: 90,
+                        tolerance: 1
+                    });
+                });
+                it("should set hue on drag", function () {
+                    testDrag({
+                        item: "$hueSlider",
+                        clickAt: [0, 0.75], // x: unused, y: 1.0 - (hue / 360)
+                        dragTo: [0, 0.25],
+                        param: "h",
+                        expected: 270,
+                        tolerance: 1
+                    });
+                });
+                it("should clip hue to min value", function () {
+                    testDrag({
+                        item: "$hueSlider",
+                        clickAt: [0, 0.75], // x: unused, y: 1.0 - (hue / 360)
+                        dragTo: [0, 1.25],
+                        param: "h",
+                        expected: 0,
+                        tolerance: 1
+                    });
+                });
+                it("should clip hue to max value", function () {
+                    testDrag({
+                        item: "$hueSlider",
+                        clickAt: [0, 0.75], // x: unused, y: 1.0 - (hue / 360)
+                        dragTo: [0, -0.25],
+                        param: "h",
+                        expected: 0,
+                        tolerance: 1
+                    });
+                });
+                it("should set opacity on mousedown", function () {
+                    testMousedown({
+                        item: "$opacitySlider",
+                        clickAt: [0, 0.75], // x: unused, y: 1.0 - opacity
+                        param: "a",
+                        expected: 0.25,
+                        tolerance: 0.1
+                    });
+                });
+                it("should set opacity on drag", function () {
+                    testDrag({
+                        item: "$opacitySlider",
+                        clickAt: [0, 0.75], // x: unused, y: 1.0 - opacity
+                        dragTo: [0, 0.25],
+                        param: "a",
+                        expected: 0.75,
+                        tolerance: 0.1
+                    });
+                });
+                it("should clip opacity to min value", function () {
+                    testDrag({
+                        item: "$opacitySlider",
+                        clickAt: [0, 0.75], // x: unused, y: 1.0 - opacity
+                        dragTo: [0, 1.25],
+                        param: "a",
+                        expected: 0,
+                        tolerance: 0.1
+                    });
+                });
+                it("should clip opacity to max value", function () {
+                    // A increases going up, so a clientY at -0.25 of the item's height corresponds to >100%.
+                    testDrag({
+                        item: "$opacitySlider",
+                        clickAt: [0, 0.75], // x: unused, y: 1.0 - opacity
+                        dragTo: [0, -0.25],
+                        param: "a",
+                        expected: 1,
+                        tolerance: 0.1
+                    });
+                });
+
+            });
+
+            describe("parameter editing with keyboard", function () {
+
+                function makeKeyEvent(opts) {
+                    return $.Event("keydown", { keyCode: opts.key, shiftKey: !!opts.shift });
+                }
+
+                /**
+                 * Test a key event on the given UI element.
+                 * @param {object} opts The parameters to test:
+                 *     color: An optional initial value to set in the ColorEditor. Defaults to "hsla(50, 25%, 50%, 0.5)".
+                 *     item: The (string) name of the member of ColorEditor that references the element to test.
+                 *     key: The KeyEvent key code to simulate.
+                 *     shift: Optional boolean specifying whether to simulate the shift key being down (default false).
+                 *     param: The (string) parameter whose value we're testing (h, s, v, or a).
+                 *     delta: The expected change in value for the parameter.
+                 *     tolerance: The tolerance in variation for the expected value.
+                 *     exact: True to compare the actual values stored in the _hsv object, false (default) to
+                 *          compare tinycolor's normalization of the color value.
+                 */
+                function testKey(opts) {
+
+                    function getParam() {
+                        if (opts.exact) {
+                            var result = colorEditor._hsv[opts.param];
+                            // Because of #2201, this is sometimes a string with a percentage value.
+                            if (typeof result === "string" && result.charAt(result.length - 1) === "%") {
+                                result = Number(result.substr(0, result.length - 1));
+                            }
+                            return result;
+                        }
+                        return tinycolor(colorEditor.getColor()).toHsv()[opts.param];
+
+                    }
+
+                    makeUI(opts.color || "hsla(50, 25%, 50%, 0.5)");
+
+                    var before = getParam();
+                    colorEditor[opts.item].trigger(makeKeyEvent(opts));
+
+                    var after = getParam();
+                    checkNear(after, before + opts.delta, opts.tolerance);
+                }
+
+                /**
+                 * Test whether the given event's default is or isn't prevented on a given key.
+                 * @param {object} opts The parameters to test:
+                 *     color: An optional initial value to set in the ColorEditor. Defaults to "hsla(50, 25%, 50%, 0.5)".
+                 *     item: The (string) name of the member of ColorEditor that references the element to test.
+                 *     selection: An optional array ([start, end]) specifying the selection to set in the given element.
+                 *     key: The KeyEvent key code to simulate.
+                 *     shift: Optional boolean specifying whether to simulate the shift key being down (default false).
+                 *     expected: Whether the default is expected to be prevented.
+                 */
+                function testPreventDefault(opts) {
+                    var event, $item;
+
+                    // The color picker needs to be displayed for this test; otherwise the
+                    // selection won't be properly set, because you can only set the selection
+                    // when the text field has focus.
+                    makeUI(opts.color || "hsla(50, 25%, 50%, 0.5)", function () { }, defaultSwatches, false);
+
+                    $item = colorEditor[opts.item];
+                    $item.focus();
+                    if (opts.selection) {
+                        $item[0].setSelectionRange(opts.selection[0], opts.selection[1]);
+                    }
+
+                    event = makeKeyEvent(opts);
+                    $item.trigger(event);
+                    expect(event.isDefaultPrevented()).toBe(opts.expected);
+                }
+
+                it("should increase saturation by 1.5% on right arrow", function () {
+                    testKey({
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_RIGHT,
+                        param: "s",
+                        delta: 0.015,
+                        tolerance: 0.01
+                    });
+                });
+                it("should clip max saturation on right arrow", function () {
+                    testKey({
+                        color: "hsla(50, 100%, 50%, 0.5)",
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_RIGHT,
+                        param: "s",
+                        delta: 0,
+                        tolerance: 0.01
+                    });
+                });
+                it("should increase saturation by 7.5% on shift right arrow", function () {
+                    testKey({
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_RIGHT,
+                        shift: true,
+                        param: "s",
+                        delta: 0.075,
+                        tolerance: 0.01
+                    });
+                });
+                it("should clip max saturation on shift right arrow", function () {
+                    testKey({
+                        color: "hsla(50, 100%, 50%, 0.5)",
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_RIGHT,
+                        shift: true,
+                        param: "s",
+                        delta: 0,
+                        tolerance: 0.01
+                    });
+                });
+                it("should decrease saturation by 1.5% on left arrow", function () {
+                    testKey({
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_LEFT,
+                        param: "s",
+                        delta: -0.015,
+                        tolerance: 0.01
+                    });
+                });
+                it("should clip min saturation on left arrow", function () {
+                    testKey({
+                        color: "hsla(50, 0%, 50%, 0.5)",
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_LEFT,
+                        param: "s",
+                        delta: 0,
+                        tolerance: 0.01
+                    });
+                });
+                it("should decrease saturation by 7.5% on shift left arrow", function () {
+                    testKey({
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_LEFT,
+                        shift: true,
+                        param: "s",
+                        delta: -0.075,
+                        tolerance: 0.01
+                    });
+                });
+                it("should clip min saturation on shift left arrow", function () {
+                    testKey({
+                        color: "hsla(50, 0%, 50%, 0.5)",
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_LEFT,
+                        shift: true,
+                        param: "s",
+                        delta: 0,
+                        tolerance: 0.01
+                    });
+                });
+                it("should increase value by 1.5% on up arrow", function () {
+                    testKey({
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_UP,
+                        param: "v",
+                        delta: 0.015,
+                        tolerance: 0.01
+                    });
+                });
+                it("should clip max value on up arrow", function () {
+                    testKey({
+                        color: "hsla(50, 25%, 100%, 0.5)",
+                        item: "$selectionBase",
+                        key: KeyEvent.DOM_VK_UP,
+                        param: "v",
+                        delta: 0,
+                        tolerance: 0.01
+                    });
+                });
+                it("should increase value by 7.5% on shift up arrow", function () {
+                    testKey({
+                        item: "$selectionBase",
+                        key: KeyEvent.
