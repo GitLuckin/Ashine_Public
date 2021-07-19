@@ -1372,4 +1372,73 @@ define(function (require, exports, module) {
                     expect(getColorString()).toBe("#a0a0a0");
                 });
 
-                it("should undo when Ctrl-Z
+                it("should undo when Ctrl-Z is pressed after two Ctrl-Ys (only one Ctrl-Y should take effect)", async function () {
+                    makeUI("#abcdef");
+                    colorEditor._commitColor("#a0a0a0", true);
+                    colorEditor.$hueBase.focus();
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Z);
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Y);
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Y);
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Z);
+                    expect(getColorString()).toBe("#abcdef");
+                });
+
+                it("should undo an rgba conversion", async function () {
+                    makeUI("#abcdef");
+                    colorEditor.$rgbaButton.click();
+                    triggerCtrlKey(colorEditor.$rgbaButton, KeyEvent.DOM_VK_Z);
+                    expect(getColorString()).toBe("#abcdef");
+                });
+                it("should undo an hsla conversion", async function () {
+                    makeUI("#abcdef");
+                    colorEditor.$hslButton.click();
+                    triggerCtrlKey(colorEditor.$hslButton, KeyEvent.DOM_VK_Z);
+                    expect(getColorString()).toBe("#abcdef");
+                });
+                it("should undo a hex conversion", async function () {
+                    makeUI("rgba(12, 32, 65, 0.2)");
+                    colorEditor.$hexButton.trigger("click");
+                    triggerCtrlKey(colorEditor.$hexButton, KeyEvent.DOM_VK_Z);
+                    expect(getColorString()).toBe("rgba(12, 32, 65, 0.2)");
+                });
+
+                it("should undo a saturation/value change", async function () {
+                    makeUI("rgba(100, 150, 200, 0.3)");
+                    eventAtRatio("mousedown", colorEditor.$selectionBase, [0.5, 0.5]);
+                    triggerCtrlKey(colorEditor.$selectionBase, KeyEvent.DOM_VK_Z);
+                    expect(getColorString()).toBe("rgba(100, 150, 200, 0.3)");
+                    colorEditor.$selectionBase.trigger("mouseup");  // clean up drag state
+                });
+                it("should undo a hue change", async function () {
+                    makeUI("rgba(100, 150, 200, 0.3)");
+                    eventAtRatio("mousedown", colorEditor.$hueBase, [0, 0.5]);
+                    triggerCtrlKey(colorEditor.$hueBase, KeyEvent.DOM_VK_Z);
+                    expect(getColorString()).toBe("rgba(100, 150, 200, 0.3)");
+                    colorEditor.$hueBase.trigger("mouseup");  // clean up drag state
+                });
+                it("should undo an opacity change", async function () {
+                    makeUI("rgba(100, 150, 200, 0.3)");
+                    eventAtRatio("mousedown", colorEditor.$opacitySelector, [0, 0.5]);
+                    triggerCtrlKey(colorEditor.$opacitySelector, KeyEvent.DOM_VK_Z);
+                    expect(getColorString()).toBe("rgba(100, 150, 200, 0.3)");
+                    colorEditor.$opacitySelector.trigger("mouseup");  // clean up drag state
+                });
+
+                it("should undo a text field change", async function () {
+                    makeUI("rgba(100, 150, 200, 0.3)");
+                    colorEditor.$colorValue.val("rgba(50, 50, 50, 0.9)");
+                    triggerCtrlKey(colorEditor.$colorValue, KeyEvent.DOM_VK_Z);
+                    expect(getColorString()).toBe("rgba(100, 150, 200, 0.3)");
+                });
+                it("should undo a swatch click", async function () {
+                    makeUI("rgba(100, 150, 200, 0.3)");
+                    var $swatch = $(colorEditor.$swatches.find("li")[0]);
+                    $swatch.trigger("click");
+                    triggerCtrlKey($swatch, KeyEvent.DOM_VK_Z);
+                    expect(getColorString()).toBe("rgba(100, 150, 200, 0.3)");
+                });
+
+            });
+        });
+    });
+});
