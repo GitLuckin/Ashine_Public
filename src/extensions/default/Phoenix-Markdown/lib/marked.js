@@ -1071,4 +1071,213 @@ function global() {
         case 'paragraph': {
             return this.renderer.paragraph(this.inline.output(this.token.text));
         }
-        case 'te
+        case 'text': {
+            return this.renderer.paragraph(this.parseText());
+        }
+        }
+    };
+
+    /**
+ * Helpers
+ */
+
+    function escape(html, encode) {
+        return html
+            .replace(!encode ? /&(?!#?\w+;)/g : /&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function unescape(html) {
+        return html.replace(/&([#\w]+);/g, function(_, n) {
+            n = n.toLowerCase();
+            if (n === 'colon') { return ':'; }
+            if (n.charAt(0) === '#') {
+                return n.charAt(1) === 'x'
+                    ? String.fromCharCode(parseInt(n.substring(2), 16))
+                    : String.fromCharCode(+n.substring(1));
+            }
+            return '';
+        });
+    }
+
+    function replace(regex, opt) {
+        regex = regex.source;
+        opt = opt || '';
+        return function self(name, val) {
+            if (!name) { return new RegExp(regex, opt); }
+            val = val.source || val;
+            val = val.replace(/(^|[^\[])\^/g, '$1');
+            regex = regex.replace(name, val);
+            return self;
+        };
+    }
+
+    function noop() {}
+    noop.exec = noop;
+
+    function merge(obj) {
+        var i = 1,
+            target,
+            key;
+
+        for (; i < arguments.length; i++) {
+            target = arguments[i];
+            for (key in target) {
+                if (Object.prototype.hasOwnProperty.call(target, key)) {
+                    obj[key] = target[key];
+                }
+            }
+        }
+
+        return obj;
+    }
+
+
+    /**
+ * Marked
+ */
+
+    function marked(src, opt, callback) {
+        if (callback || typeof opt === 'function') {
+            if (!callback) {
+                callback = opt;
+                opt = null;
+            }
+
+            opt = merge({}, marked.defaults, opt || {});
+
+            var highlight = opt.highlight,
+                tokens,
+                pending,
+                i = 0;
+
+            try {
+                tokens = Lexer.lex(src, opt);
+            } catch (e) {
+                return callback(e);
+            }
+
+            pending = tokens.length;
+
+            var done = function(err) {
+                if (err) {
+                    opt.highlight = highlight;
+                    return callback(err);
+                }
+
+                var out;
+
+                try {
+                    out = Parser.parse(tokens, opt);
+                } catch (e) {
+                    err = e;
+                }
+
+                opt.highlight = highlight;
+
+                return err
+                    ? callback(err)
+                    : callback(null, out);
+            };
+
+            if (!highlight || highlight.length < 3) {
+                return done();
+            }
+
+            delete opt.highlight;
+
+            if (!pending) { return done(); }
+
+            for (; i < tokens.length; i++) {
+                // eslint-disable-next-line no-loop-func
+                (function(token) {
+                    if (token.type !== 'code') {
+                        return --pending || done();
+                    }
+                    return highlight(token.text, token.lang, function(err, code) {
+                        if (err) { return done(err); }
+                        if (code == null || code === token.text) {
+                            return --pending || done();
+                        }
+                        token.text = code;
+                        token.escaped = true;
+                        --pending || done();
+                    });
+                }(tokens[i]));
+            }
+
+            return;
+        }
+        try {
+            if (opt) { opt = merge({}, marked.defaults, opt); }
+            return Parser.parse(Lexer.lex(src, opt), opt);
+        } catch (e) {
+            e.message += '\nPlease report this to https://github.com/chjj/marked.';
+            if ((opt || marked.defaults).silent) {
+                return '<p>An error occured:</p><pre>'
+        + escape(e.message + '', true)
+        + '</pre>';
+            }
+            throw e;
+        }
+    }
+
+    /**
+ * Options
+ */
+
+    marked.options =
+marked.setOptions = function(opt) {
+    merge(marked.defaults, opt);
+    return marked;
+};
+
+    marked.defaults = {
+        gfm: true,
+        tables: true,
+        breaks: false,
+        pedantic: false,
+        sanitize: false,
+        smartLists: false,
+        silent: false,
+        highlight: null,
+        langPrefix: 'lang-',
+        smartypants: false,
+        headerPrefix: '',
+        renderer: new Renderer(),
+        xhtml: false
+    };
+
+    /**
+ * Expose
+ */
+
+    marked.Parser = Parser;
+    marked.parser = Parser.parse;
+
+    marked.Renderer = Renderer;
+
+    marked.Lexer = Lexer;
+    marked.lexer = Lexer.lex;
+
+    marked.InlineLexer = InlineLexer;
+    marked.inlineLexer = InlineLexer.output;
+
+    marked.parse = marked;
+
+    if (typeof module !== 'undefined' && typeof exports === 'object') {
+        // eslint-disable-next-line no-undef
+        module.exports = marked;
+    } else if (typeof define === 'function' && define.amd) {
+        define(function() { return marked; });
+    } else {
+        this.marked = marked;
+    }
+
+}).call(function() {
+    // eslint-disable-next-line no-invalid-this
+    return this || (typeof window !== 'undefined' ? window : global);
+}());
