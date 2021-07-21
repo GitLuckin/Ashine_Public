@@ -159,4 +159,65 @@
 .octicon-plug:before { content: '\f0d4'} /*  */
 .octicon-repo-create:before,
 .octicon-gist-new:before,
-.octicon-file-directory-creat
+.octicon-file-directory-create:before,
+.octicon-file-add:before,
+.octicon-plus:before { content: '\f05d'} /*  */
+.octicon-primitive-dot:before { content: '\f052'} /*  */
+.octicon-primitive-square:before { content: '\f053'} /*  */
+.octicon-pulse:before { content: '\f085'} /*  */
+.octicon-question:before { content: '\f02c'} /*  */
+.octicon-quote:before { content: '\f063'} /*  */
+.octicon-radio-tower:before { content: '\f030'} /*  */
+.octicon-repo-delete:before,
+.octicon-repo:before { content: '\f001'} /*  */
+.octicon-repo-clone:before { content: '\f04c'} /*  */
+.octicon-repo-force-push:before { content: '\f04a'} /*  */
+.octicon-gist-fork:before,
+.octicon-repo-forked:before { content: '\f002'} /*  */
+.octicon-repo-pull:before { content: '\f006'} /*  */
+.octicon-repo-push:before { content: '\f005'} /*  */
+.octicon-rocket:before { content: '\f033'} /*  */
+.octicon-rss:before { content: '\f034'} /*  */
+.octicon-ruby:before { content: '\f047'} /*  */
+.octicon-search-save:before,
+.octicon-search:before { content: '\f02e'} /*  */
+.octicon-server:before { content: '\f097'} /*  */
+.octicon-settings:before { content: '\f07c'} /*  */
+.octicon-shield:before { content: '\f0e1'} /*  */
+.octicon-log-in:before,
+.octicon-sign-in:before { content: '\f036'} /*  */
+.octicon-log-out:before,
+.octicon-sign-out:before { content: '\f032'} /*  */
+.octicon-smiley:before { content: '\f0e7'} /*  */
+.octicon-squirrel:before { content: '\f0b2'} /*  */
+.octicon-star-add:before,
+.octicon-star-delete:before,
+.octicon-star:before { content: '\f02a'} /*  */
+.octicon-stop:before { content: '\f08f'} /*  */
+.octicon-repo-sync:before,
+.octicon-sync:before { content: '\f087'} /*  */
+.octicon-tag-remove:before,
+.octicon-tag-add:before,
+.octicon-tag:before { content: '\f015'} /*  */
+.octicon-tasklist:before { content: '\f0e5'} /*  */
+.octicon-telescope:before { content: '\f088'} /*  */
+.octicon-terminal:before { content: '\f0c8'} /*  */
+.octicon-text-size:before { content: '\f0e3'} /*  */
+.octicon-three-bars:before { content: '\f05e'} /*  */
+.octicon-thumbsdown:before { content: '\f0db'} /*  */
+.octicon-thumbsup:before { content: '\f0da'} /*  */
+.octicon-tools:before { content: '\f031'} /*  */
+.octicon-trashcan:before { content: '\f0d0'} /*  */
+.octicon-triangle-down:before { content: '\f05b'} /*  */
+.octicon-triangle-left:before { content: '\f044'} /*  */
+.octicon-triangle-right:before { content: '\f05a'} /*  */
+.octicon-triangle-up:before { content: '\f0aa'} /*  */
+.octicon-unfold:before { content: '\f039'} /*  */
+.octicon-unmute:before { content: '\f0ba'} /*  */
+.octicon-unverified:before { content: '\f0e8'} /*  */
+.octicon-verified:before { content: '\f0e6'} /*  */
+.octicon-versions:before { content: '\f064'} /*  */
+.octicon-watch:before { content: '\f0e0'} /*  */
+.octicon-remove-close:before,
+.octicon-x:before { content: '\f081'} /*  */
+.octicon-zap:before { content: '\26A1'} /* ⚡ */
