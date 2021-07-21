@@ -51,3 +51,73 @@ define(function (require, exports, module) {
     }
 
     function isPreviewableFile(filePath) {
+        let extension = getExtension(filePath);
+        return ['html', 'xhtml', 'htm', 'jpg', 'jpeg', 'png', 'svg',
+            'pdf', 'md', 'markdown'].includes(extension.toLowerCase());
+    }
+
+    function _isMarkdownFile(filePath) {
+        let extension = getExtension(filePath);
+        return ['md', 'markdown'].includes(extension.toLowerCase());
+    }
+
+    function _isHTMLFile(filePath) {
+        let extension = getExtension(filePath);
+        return ['html', 'htm', 'xhtml'].includes(extension.toLowerCase());
+    }
+
+    function getNoPreviewURL(){
+        return `${window.Phoenix.baseURL}assets/phoenix-splash/no-preview.html?jsonInput=`+
+            encodeURIComponent(`{"heading":"${Strings.DESCRIPTION_LIVEDEV_NO_PREVIEW}",`
+                +`"details":"${Strings.DESCRIPTION_LIVEDEV_NO_PREVIEW_DETAILS}"}`);
+    }
+
+    /**
+     * Finds out a {URL,filePath} to live preview from the project. Will return and empty object if the current
+     * file is not previewable.
+     * @return {Promise<*>}
+     */
+    async function getPreviewDetails() {
+        return new Promise(async (resolve, reject)=>{ // eslint-disable-line
+            // async is explicitly caught
+            try {
+                const projectRoot = ProjectManager.getProjectRoot().fullPath;
+                const projectRootUrl = `${window.fsServerUrl}PHOENIX_LIVE_PREVIEW_${Phoenix.PHOENIX_INSTANCE_ID}${projectRoot}`;
+                const currentDocument = DocumentManager.getCurrentDocument();
+                const currentFile = currentDocument? currentDocument.file : ProjectManager.getSelectedItem();
+                if(currentFile){
+                    let fullPath = currentFile.fullPath;
+                    let httpFilePath = null;
+                    if(fullPath.startsWith("http://") || fullPath.startsWith("https://")){
+                        httpFilePath = fullPath;
+                    }
+                    if(isPreviewableFile(fullPath)){
+                        const filePath = httpFilePath || path.relative(projectRoot, fullPath);
+                        let URL = httpFilePath || `${projectRootUrl}${filePath}`;
+                        resolve({
+                            URL,
+                            filePath: filePath,
+                            fullPath: fullPath,
+                            isMarkdownFile: _isMarkdownFile(fullPath),
+                            isHTMLFile: _isHTMLFile(fullPath)
+                        });
+                        return;
+                    }
+                }
+                resolve({
+                    URL: getNoPreviewURL(),
+                    isNoPreview: true
+                });
+            }catch (e) {
+                reject(e);
+            }
+        });
+    }
+
+    exports.getPreviewDetails = getPreviewDetails;
+    exports.getNoPreviewURL = getNoPreviewURL;
+    exports.getExtension = getExtension;
+    exports.isPreviewableFile = isPreviewableFile;
+});
+
+
