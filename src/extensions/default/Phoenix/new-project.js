@@ -296,4 +296,64 @@ define(function (require, exports, module) {
                             reject();
                         } else {
                             function _progressCB(done, total) {
-                                let message = StringUtils.format(Strings.EXTRACTING_
+                                let message = StringUtils.format(Strings.EXTRACTING_FILES_PROGRESS, done, total);
+                                _updateCreateProjectDialogueMessage(message);
+                                return !downloadCancelled; // continueExtraction id not download cancelled
+                            }
+                            _unzipProject(data, projectPath, flattenFirstLevelInZip, _progressCB)
+                                .then(()=>{
+                                    _closeCreateProjectDialogue();
+                                    ProjectManager.openProject(projectPath)
+                                        .then(resolve)
+                                        .fail(reject);
+                                    console.log("Project Setup complete: ", projectPath);
+                                })
+                                .catch(()=>{
+                                    _closeCreateProjectDialogue();
+                                    showErrorDialogue(Strings.ERROR_LOADING_PROJECT, Strings.UNZIP_FAILED);
+                                    reject();
+                                });
+                        }
+                    },
+                    progress: function (status){
+                        if(status.percent > 0){
+                            _updateCreateProjectDialogueMessage(
+                                `${Strings.DOWNLOADING} ${Math.round(status.percent)}%`);
+                        }
+                    },
+                    abortCheck: function (){
+                        return downloadCancelled;
+                    }
+                });
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
+    function showFolderSelect() {
+        return new Promise((resolve, reject)=>{
+            FileSystem.showOpenDialog(false, true, Strings.CHOOSE_FOLDER, '', null, function (err, files) {
+                if(err || files.length !== 1){
+                    reject();
+                    return;
+                }
+                resolve(files[0]);
+            });
+        });
+    }
+
+    exports.init = init;
+    exports.openFolder = openFolder;
+    exports.closeDialogue = closeDialogue;
+    exports.downloadAndOpenProject = downloadAndOpenProject;
+    exports.showFolderSelect = showFolderSelect;
+    exports.showErrorDialogue = showErrorDialogue;
+    exports.alreadyExists = alreadyExists;
+    exports.Metrics = Metrics;
+    exports.EVENT_NEW_PROJECT_DIALOGUE_CLOSED = "newProjectDlgClosed";
+    exports.getWelcomeProjectPath = ProjectManager.getWelcomeProjectPath;
+    exports.getExploreProjectPath = ProjectManager.getExploreProjectPath;
+    exports.getLocalProjectsPath = ProjectManager.getLocalProjectsPath;
+    exports.getMountDir = Phoenix.VFS.getMountDir;
+});
