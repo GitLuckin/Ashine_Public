@@ -281,4 +281,146 @@ define(function (require, exports, module) {
                     values = values.map(function (val) {
                         return val.toString();
                     });
-          
+                }
+
+                // filter through the values.
+                hints = $.map(values, function (value) {
+                    var match = StringMatch.stringMatch(value, query, stringMatcherOptions);
+                    if (match) {
+                        match.type = option.valueType || option.type;
+                        match.description = option.description || null;
+                        return match;
+                    }
+                });
+            }
+
+            return {
+                hints: formatHints(hints, query),
+                match: null,
+                selectInitial: true,
+                handleWideResults: false
+            };
+        }
+        return null;
+    };
+
+    /**
+     * Inserts a completion at current position
+     *
+     * @param {!String} completion
+     * @return {Boolean}
+     */
+    PrefsCodeHints.prototype.insertHint = function (completion) {
+        var ctxInfo = JSONUtils.getContextInfo(this.editor, this.editor.getCursorPos(), false, true),
+            pos     = this.editor.getCursorPos(),
+            start   = {line: -1, ch: -1},
+            end     = {line: -1, ch: -1},
+            startChar,
+            quoteChar,
+            type;
+
+        if (completion.jquery) {
+            type = completion.data("type");
+            completion = completion.find(".hint-obj").text();
+        }
+        start.line = end.line = pos.line;
+
+        if (ctxInfo.tokenType === JSONUtils.TOKEN_KEY) {
+            startChar = ctxInfo.token.string.charAt(0);
+
+            // Get the quote char.
+            if (/^['"]$/.test(startChar)) {
+                quoteChar = startChar;
+            }
+
+            // Put quotes around completion.
+            completion = quoteChar + completion + quoteChar;
+
+            // Append colon and braces, brackets and quotes.
+            if (!ctxInfo.shouldReplace) {
+                completion += ": ";
+
+                switch (type) {
+                case "object":
+                    completion += "{}";
+                    break;
+
+                case "array":
+                    completion += "[]";
+                    break;
+
+                case "string":
+                    completion += "\"\"";
+                    break;
+                }
+            }
+
+            start.ch = pos.ch - ctxInfo.offset;
+            end.ch = ctxInfo.token.end;
+            this.editor.document.replaceRange(completion, start, end);
+
+            // Place cursor inside the braces, brackets or quotes.
+            if (["object", "array", "string"].indexOf(type) !== -1) {
+                this.editor.setCursorPos(start.line, start.ch + completion.length - 1);
+
+                // Start a new session in case it is an array or string.
+                if (type !== "object" && !ctxInfo.shouldReplace) {
+                    return true;
+                }
+                return false;
+            }
+            return true;
+        } else if (ctxInfo.tokenType === JSONUtils.TOKEN_VALUE) {
+            // In case the current token is a white-space, start and end will be same.
+            if (JSONUtils.regexAllowedChars.test(ctxInfo.token.string)) {
+                start.ch = end.ch = pos.ch;
+            } else if (ctxInfo.shouldReplace) {
+                start.ch = ctxInfo.token.start;
+                end.ch = ctxInfo.token.end;
+            } else {
+                start.ch = pos.ch - ctxInfo.offset;
+                end.ch = ctxInfo.token.end;
+            }
+
+            if (!type || type === "string") {
+                startChar = ctxInfo.token.string.charAt(0);
+                if (/^['"]$/.test(startChar)) {
+                    quoteChar = startChar;
+                } else {
+                    quoteChar = "\"";
+                }
+                completion = quoteChar + completion + quoteChar;
+            }
+
+            this.editor.document.replaceRange(completion, start, end);
+            return false;
+        }
+    };
+
+    /**
+     * @private
+     *
+     * `isPrefHintsEnabled` must be set to true to allow code hints
+     *
+     * It also loads a set of preferences that we need for running unit tests, this
+     * will not break unit tests in case we add new preferences in the future.
+     *
+     * @param {!Document} testDocument
+     * @param {!Object} testPreferences
+     */
+    function _setupTestEnvironment(testDocument, testPreferences) {
+        isPrefHintsEnabled = _isPrefDocument(testDocument);
+        data = testPreferences;
+    }
+
+    AppInit.appReady(function () {
+        var hintProvider = new PrefsCodeHints();
+        CodeHintManager.registerHintProvider(hintProvider, ["json"], 0);
+        ExtensionUtils.loadStyleSheet(module, "styles/brackets-prefs-hints.css");
+
+        // For unit tests only.
+        exports.hintProvider            = hintProvider;
+        exports._setupTestEnvironment   = _setupTestEnvironment;
+    });
+
+});
