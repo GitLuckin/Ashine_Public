@@ -584,4 +584,109 @@ define(function (require, exports, module) {
                 testEditor.setCursorPos({line: 7, ch: 25});
                 selectHint(SVGCodeHints.hintProvider, "inherit");
                 expectTokenAt({line: 7, ch: 24}, "=", null);
-                expectTokenAt({line
+                expectTokenAt({line: 7, ch: 33}, "\"inherit\"", "string");
+                expectCursorAt({line: 7, ch: 33});
+            });
+
+            it("should insert if =' is typed after an attribute", function () {
+                // After =' inside <g>
+                testDocument.replaceRange("<defs clip-path='", {line: 7, ch: 8});
+                testEditor.setCursorPos({line: 7, ch: 25});
+                selectHint(SVGCodeHints.hintProvider, "inherit");
+                expectTokenAt({line: 7, ch: 24}, "=", null);
+                expectTokenAt({line: 7, ch: 33}, "'inherit'", "string");
+                expectCursorAt({line: 7, ch: 33});
+            });
+
+            it("should insert if first character is typed after =\"", function () {
+                // After clip-path="i inside <g>
+                testDocument.replaceRange("<defs clip-path=\"i", {line: 7, ch: 8});
+                testEditor.setCursorPos({line: 7, ch: 26});
+                selectHint(SVGCodeHints.hintProvider, "inherit");
+                expectTokenAt({line: 7, ch: 24}, "=", null);
+                expectTokenAt({line: 7, ch: 33}, "\"inherit\"", "string");
+                expectCursorAt({line: 7, ch: 33});
+            });
+
+            it("should insert if first character is typed after ='", function () {
+                // After clip-path='i inside <g>
+                testDocument.replaceRange("<defs clip-path='i", {line: 7, ch: 8});
+                testEditor.setCursorPos({line: 7, ch: 26});
+                selectHint(SVGCodeHints.hintProvider, "inherit");
+                expectTokenAt({line: 7, ch: 24}, "=", null);
+                expectTokenAt({line: 7, ch: 33}, "'inherit'", "string");
+                expectCursorAt({line: 7, ch: 33});
+            });
+
+            it("should insert if we are in middle of query after =\"", function () {
+                // After clip-path="inhe inside <g>
+                testDocument.replaceRange("<defs clip-path=\"inhe", {line: 7, ch: 8});
+                testEditor.setCursorPos({line: 7, ch: 29});
+                selectHint(SVGCodeHints.hintProvider, "inherit");
+                expectTokenAt({line: 7, ch: 24}, "=", null);
+                expectTokenAt({line: 7, ch: 33}, "\"inherit\"", "string");
+                expectCursorAt({line: 7, ch: 33});
+            });
+
+            it("should insert if we are in middle of query after ='", function () {
+                // After clip-path='inhe inside <g>
+                testDocument.replaceRange("<defs clip-path='inhe", {line: 7, ch: 8});
+                testEditor.setCursorPos({line: 7, ch: 29});
+                selectHint(SVGCodeHints.hintProvider, "inherit");
+                expectTokenAt({line: 7, ch: 24}, "=", null);
+                expectTokenAt({line: 7, ch: 33}, "'inherit'", "string");
+                expectCursorAt({line: 7, ch: 33});
+            });
+
+            it("should insert if we are in the end of value after ='", function () {
+                // Before last ' in clip-path='inherit' inside <g>
+                testDocument.replaceRange("<defs clip-path='inherit'", {line: 7, ch: 8});
+                testEditor.setCursorPos({line: 7, ch: 32});
+                selectHint(SVGCodeHints.hintProvider, "inherit");
+                expectTokenAt({line: 7, ch: 24}, "=", null);
+                expectTokenAt({line: 7, ch: 33}, "'inherit'", "string");
+                expectCursorAt({line: 7, ch: 33});
+            });
+
+            it("should insert if we are in the end of value after =\"", function () {
+                // Before last " in clip-path="inherit" inside <g>
+                testDocument.replaceRange("<defs clip-path=\"inherit\"", {line: 7, ch: 8});
+                testEditor.setCursorPos({line: 7, ch: 32});
+                selectHint(SVGCodeHints.hintProvider, "inherit");
+                expectTokenAt({line: 7, ch: 24}, "=", null);
+                expectTokenAt({line: 7, ch: 33}, "\"inherit\"", "string");
+                expectCursorAt({line: 7, ch: 33});
+            });
+
+            it("should insert value to left in a multiple options attribute", function () {
+                // Between "" in transform="" inside <g>
+                testDocument.replaceRange("<rect transform=\"\"", {line: 7, ch: 8});
+                testEditor.setCursorPos({line: 7, ch: 25});
+                selectHint(SVGCodeHints.hintProvider, "matrix()");
+                expectTokenAt({line: 7, ch: 24}, "=", null);
+                expectTokenAt({line: 7, ch: 34}, "\"matrix()\"", "string");
+                expectCursorAt({line: 7, ch: 34});
+            });
+
+            it("should insert value to the right in a multiple options attribute", function () {
+                // After "matrix() " inside <g>
+                testDocument.replaceRange("<rect transform=\"matrix() \"", {line: 7, ch: 8});
+                testEditor.setCursorPos({line: 7, ch: 34});
+                selectHint(SVGCodeHints.hintProvider, "rotate()");
+                expectTokenAt({line: 7, ch: 24}, "=", null);
+                expectTokenAt({line: 7, ch: 34}, "\"matrix() rotate()\"", "string");
+                expectCursorAt({line: 7, ch: 43});
+            });
+
+            it("should insert value in the middle in a multiple options attribute", function () {
+                // Between matrix() and rotate() in "matrix()  rotate()"
+                testDocument.replaceRange("<rect transform=\"matrix()  rotate()\"", {line: 7, ch: 8});
+                testEditor.setCursorPos({line: 7, ch: 34});
+                selectHint(SVGCodeHints.hintProvider, "scale()");
+                expectTokenAt({line: 7, ch: 24}, "=", null);
+                expectTokenAt({line: 7, ch: 34}, "\"matrix() scale() rotate()\"", "string");
+                expectCursorAt({line: 7, ch: 41});
+            });
+        });
+    });
+});
