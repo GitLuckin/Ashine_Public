@@ -99,3 +99,19 @@ define(function (require, exports, module) {
 
     /*
      *  Create a view factory that can create views for the file
+     *  `.brackets.json` in a project's root folder.
+     */
+    var configViewFactory = {
+        canOpenFile: function (fullPath) {
+            var filename = fullPath.substr(fullPath.lastIndexOf("/") + 1);
+            return (filename.toLowerCase() === ".brackets.json");
+        },
+        openFile: function (file, pane) {
+            return _createConfigViewOf(file, pane);
+        }
+    };
+
+    /* load styles used by our template */
+    ExtensionUtils.loadStyleSheet(module, "styles/styles.css");
+    MainViewFactory.registerViewFactory(configViewFactory);
+});
