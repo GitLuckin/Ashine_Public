@@ -282,4 +282,272 @@ define(function (require, exports, module) {
 
     // Preview hide/show logic ------------------------------------------------
 
-    function _createPo
+    function _createPopoverState(editor, popoverResults) {
+        if (popoverResults && popoverResults.length) {
+            let popover = {
+                content: $("<div id='selection-view-popover-root'></div>")
+            };
+            // Each provider return popover { start, end, content}
+            for(let result of popoverResults){
+                popover.content.append(result.content);
+            }
+
+            let pos = editor.getCursorPos();
+            let startCoord = editor.charCoords(pos),
+                endCoord = editor.charCoords(pos);
+            popover.xpos = (endCoord.left - startCoord.left) / 2 + startCoord.left;
+            if(endCoord.left<startCoord.left){
+                // this probably spans multiple lines, just show at start cursor position
+                popover.xpos = startCoord.left;
+            }
+            popover.ytop = startCoord.top;
+            popover.ybot = startCoord.bottom;
+            popover.visible = false;
+            popover.editor  = editor;
+            popover.pos = pos;
+            return popover;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns a 'ready for use' popover state object or null if there is no popover:
+     * { visible: false, editor, start, end, content, xpos, ytop, ybot }
+     * @private
+     */
+    async function queryPreviewProviders(editor, selectionObj) {
+        if(!editor){
+            return null;
+        }
+
+        selectionObj = selectionObj || editor.getSelections();
+        if(selectionObj.length !== 1){
+            // we only show selection view over a single selection
+            return null;
+        }
+        let selection = editor.getSelection();
+        if(selection.start.line === selection.end.line &&  selection.start.ch === selection.end.ch){
+            //this is just a cursor
+            return null;
+        }
+        let providers = _getSelectionViewProviders(editor);
+        let popovers = [], providerPromises = [];
+        for(let provider of providers){
+            if(!provider.getSelectionView){
+                console.error("Error: SelectionView provider should implement getSelectionView function", provider);
+                continue;
+            }
+            providerPromises.push(provider.getSelectionView(editor, selectionObj));
+        }
+        let results = await Promise.allSettled(providerPromises);
+        for(let result of results){
+            if(result.status === "fulfilled" && result.value){
+                popovers.push(result.value);
+            }
+        }
+
+        return _createPopoverState(editor, popovers);
+    }
+
+    /**
+     * Changes the current hidden popoverState to visible, showing it in the UI and highlighting
+     * its matching text in the editor.
+     * @private
+     */
+    function _renderPreview(editor) {
+        if (popoverState) {
+            let $popoverContent = $(popoverState.content);
+            $previewContent.empty();
+            $previewContent.append($popoverContent);
+            $previewContainer.show();
+            popoverState.visible = true;
+            positionPreview(editor);
+
+            $popoverContent[0].addEventListener('DOMSubtreeModified', ()=>{
+                positionPreview(editor);
+            }, false);
+        }
+    }
+
+    let currentQueryID = 0;
+    async function showPreview(editor, selectionObj) {
+        if (!editor) {
+            hidePreview();
+            return;
+        }
+
+        // Query providers and append to popoverState
+        currentQueryID++;
+        let savedQueryId = currentQueryID;
+        popoverState = await queryPreviewProviders(editor, selectionObj);
+        if(savedQueryId === currentQueryID){
+            // this is to prevent race conditions. For Eg., if the preview provider takes time to generate a preview,
+            // another query might have happened while the last query is still in progress. So we only render the most
+            // recent QueryID
+            _renderPreview(editor);
+        }
+    }
+
+    function handleMouseUp(event) {
+        if (!enabled) {
+            return;
+        }
+
+        hidePreview();
+        if (event.buttons !== 0) {
+            // Button is down - don't show popovers while dragging
+            return;
+        }
+        setTimeout(()=>{
+            // we do this delayed popup so that we get a consistent view of the editor selections
+            let editor = EditorManager.getActiveEditor();
+            if(editor){
+                showPreview(editor, editor.getSelections());
+            }
+        }, POPUP_DELAY);
+    }
+
+    function _processMouseMove(event) {
+        lastMouseX= event.clientX;
+        lastMouseY= event.clientY;
+        if (event.buttons !== 0) {
+            // Button is down - don't show popovers while dragging
+            return;
+        }
+        if (isSelectionViewShown()) {
+            return;
+        }
+        let editor = EditorManager.getHoveredEditor(event);
+        if (editor) {
+            // Find char mouse is over
+            let mousePos = editor.coordsChar({left: event.clientX, top: event.clientY});
+            let selectionObj = editor.getSelections();
+            if(selectionObj.length !== 1){
+                // we only show selection view over a single selection
+                return;
+            }
+            let selection = editor.getSelection();
+            if(selection.start.line === selection.end.line &&  selection.start.ch === selection.end.ch){
+                //this is just a cursor
+                return;
+            }
+            if (editor.posWithinRange(mousePos, selection.start, selection.end, true)) {
+                popoverState = {};
+                showPreview(editor, selectionObj);
+            }
+        }
+    }
+
+    function onActiveEditorChange(_event, current, previous) {
+        // Hide preview when editor changes
+        hidePreview();
+
+        if (previous && previous.document) {
+            previous.document.off("change", hidePreview);
+        }
+
+        if (current && current.document) {
+            current.document.on("change", hidePreview);
+        }
+    }
+
+    // Menu command handlers
+    function updateMenuItemCheckmark() {
+        CommandManager.get(CMD_ENABLE_SELECTION_VIEW).setChecked(enabled);
+    }
+
+    function setEnabled(_enabled, doNotSave) {
+        if (enabled !== _enabled) {
+            enabled = _enabled;
+            let editorHolder = $("#editor-holder")[0];
+            if (enabled) {
+                // Note: listening to "scroll" also catches text edits, which bubble a scroll
+                // event up from the hidden text area. This means
+                // we auto-hide on text edit, which is probably actually a good thing.
+                editorHolder.addEventListener("mouseup", handleMouseUp, true);
+                editorHolder.addEventListener("mousemove", _processMouseMove, true);
+                editorHolder.addEventListener("scroll", hidePreview, true);
+
+                // Setup doc "change" listener
+                onActiveEditorChange(null, EditorManager.getActiveEditor(), null);
+                EditorManager.on("activeEditorChange", onActiveEditorChange);
+
+            } else {
+                editorHolder.removeEventListener("mouseup", handleMouseUp, true);
+                editorHolder.addEventListener("mousemove", _processMouseMove, true);
+                editorHolder.removeEventListener("scroll", hidePreview, true);
+
+                // Cleanup doc "change" listener
+                onActiveEditorChange(null, null, EditorManager.getActiveEditor());
+                EditorManager.off("activeEditorChange", onActiveEditorChange);
+
+                hidePreview();
+            }
+            if (!doNotSave) {
+                prefs.set("enabled", enabled);
+                prefs.save();
+            }
+        }
+        // Always update the checkmark, even if the enabled flag hasn't changed.
+        updateMenuItemCheckmark();
+    }
+
+    function toggleEnableSelectionView() {
+        setEnabled(!enabled);
+    }
+
+    function _forceShow(popover) {
+        hidePreview();
+        popoverState = popover;
+        _renderPreview(popover.editor);
+    }
+
+    function _handleEscapeKeyEvent(event) {
+        if(isSelectionViewShown()){
+            hidePreview();
+            event.preventDefault();
+            event.stopPropagation();
+            return true;
+        }
+        return false;
+    }
+
+    AppInit.appReady(function () {
+        // Create the preview container
+        $previewContainer = $(previewContainerHTML).appendTo($("body"));
+        $previewContent = $previewContainer.find(".preview-content");
+
+        // Register command
+        // Insert menu at specific pos since this may load before OR after code folding extension
+        CommandManager.register(Strings.CMD_ENABLE_SELECTION_VIEW, CMD_ENABLE_SELECTION_VIEW, toggleEnableSelectionView);
+        Menus.getMenu(Menus.AppMenuBar.VIEW_MENU).addMenuItem(
+            CMD_ENABLE_SELECTION_VIEW, null, Menus.AFTER, Commands.VIEW_TOGGLE_INSPECTION);
+
+        // Setup initial UI state
+        setEnabled(prefs.get("enabled"), true);
+
+        prefs.on("change", "enabled", function () {
+            setEnabled(prefs.get("enabled"), true);
+        });
+
+        WorkspaceManager.addEscapeKeyEventHandler("selectionView", _handleEscapeKeyEvent);
+    });
+
+    /**
+     * If quickview is displayed and visible on screen
+     * @return {boolean}
+     * @type {function}
+     */
+    function isSelectionViewShown() {
+        return (popoverState && popoverState.visible) || false;
+    }
+
+    // For unit testing
+    exports._queryPreviewProviders  = queryPreviewProviders;
+    exports._forceShow              = _forceShow;
+
+    exports.registerSelectionViewProvider = registerSelectionViewProvider;
+    exports.removeSelectionViewProvider   = removeSelectionViewProvider;
+    exports.isSelectionViewShown = isSelectionViewShown;
+});
