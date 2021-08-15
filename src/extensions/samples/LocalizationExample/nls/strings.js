@@ -1,3 +1,4 @@
+
 /*
  * GNU AGPL-3.0 License
  *
@@ -19,12 +20,19 @@
  *
  */
 
-// English - root strings
+define(function (require, exports, module) {
 
-define({
-    "COMMAND_NAME": "My New Command",
-    "ALERT_MESSAGE": "This is a sample alert message",
-    "DIALOG_TITLE": "Localized Dialog Example",
-    "DIALOG_TEXT": "This is an example of localized text in Brackets",
-    "DIALOG_OK": "OK"
+
+
+    // Code that needs to display user strings should call require("strings") to load
+    // strings.js. This file will dynamically load strings.js for the specified by bracketes.locale.
+    //
+    // Translations for other locales should be placed in nls/<locale<optional country code>>/strings.js
+    // Localization is provided via the i18n plugin.
+    // All other bundles for languages need to add a prefix to the exports below so i18n can find them.
+    // TODO: dynamically populate the local prefix list below?
+    module.exports = {
+        root: true,
+        "fr": true
+    };
 });

@@ -1,3 +1,4 @@
+
 /*
  * GNU AGPL-3.0 License
  *
@@ -19,12 +20,14 @@
  *
  */
 
-// English - root strings
+define(function (require, exports, module) {
 
-define({
-    "COMMAND_NAME": "My New Command",
-    "ALERT_MESSAGE": "This is a sample alert message",
-    "DIALOG_TITLE": "Localized Dialog Example",
-    "DIALOG_TEXT": "This is an example of localized text in Brackets",
-    "DIALOG_OK": "OK"
+
+    console.log("and a file that foo depends on!");
+
+    exports.bar = function bar() {
+        console.log("in bar in secondary!");
+        window.setTimeout(function () { require("main").bar(); }, 300);
+    };
+
 });
