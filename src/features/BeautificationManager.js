@@ -344,4 +344,8 @@ define(function (require, exports, module) {
         DocumentManager.on('documentSaved.beautificationManager', _beautifyOnSave);
     });
 
-    export
+    exports.registerBeautificationProvider = registerBeautificationProvider;
+    exports.removeBeautificationProvider = removeBeautificationProvider;
+    exports.beautifyEditor = beautifyEditor;
+    exports.beautifyText = beautifyText;
+});
