@@ -277,4 +277,332 @@ define(function (require, exports, module) {
     }
 
     /**
-     * Removes
+     * Removes the trailing slash from a path or URL, if it has one.
+     * Warning: this differs from the format of most paths used in Brackets! Use paths ending in "/"
+     * normally, as this is the format used by Directory.fullPath.
+     *
+     * @param {string} path or URL
+     * @return {string}
+     */
+    function stripTrailingSlash(path) {
+        if (path && path[path.length - 1] === "/") {
+            return path.slice(0, -1);
+        }
+        return path;
+
+    }
+
+    /**
+     * Get the name of a file or a directory, removing any preceding path.
+     * @param {string} fullPath full path to a file or directory
+     * @return {string} Returns the base name of a file or the name of a
+     * directory
+     */
+    function getBaseName(fullPath) {
+        var lastSlash = fullPath.lastIndexOf("/");
+        if (lastSlash === fullPath.length - 1) {  // directory: exclude trailing "/" too
+            return fullPath.slice(fullPath.lastIndexOf("/", fullPath.length - 2) + 1, -1);
+        }
+        return fullPath.slice(lastSlash + 1);
+
+    }
+
+    /**
+     * Returns a native absolute path to the 'brackets' source directory.
+     * Note that this only works when run in brackets/src/index.html, so it does
+     * not work for unit tests (which is run from brackets/test/SpecRunner.html)
+     *
+     * WARNING: unlike most paths in Brackets, this path EXCLUDES the trailing "/".
+     * @return {string}
+     */
+    function getNativeBracketsDirectoryPath() {
+        var pathname = decodeURI(window.location.pathname);
+        return pathname.substr(0, pathname.lastIndexOf("/")); // In the web, native path is the base url
+    }
+
+    /**
+     * Given the module object passed to JS module define function,
+     * convert the path to a native absolute path.
+     * Returns a native absolute path to the module folder.
+     *
+     * WARNING: unlike most paths in Brackets, this path EXCLUDES the trailing "/".
+     * @return {string}
+     */
+    function getNativeModuleDirectoryPath(module) {
+        var path;
+
+        if (module && module.uri) {
+            path = decodeURI(module.uri);
+
+            // Remove module name and trailing slash from path.
+            path = path.substr(0, path.lastIndexOf("/"));
+        }
+        return path;
+    }
+
+    /**
+     * Get the file extension (excluding ".") given a path OR a bare filename.
+     * Returns "" for names with no extension. If the name starts with ".", the
+     * full remaining text is considered the extension.
+     *
+     * @param {string} fullPath full path to a file or directory
+     * @return {string} Returns the extension of a filename or empty string if
+     * the argument is a directory or a filename with no extension
+     */
+    function getFileExtension(fullPath) {
+        var baseName = getBaseName(fullPath),
+            idx      = baseName.lastIndexOf(".");
+
+        if (idx === -1) {
+            return "";
+        }
+
+        return baseName.substr(idx + 1);
+    }
+
+    /**
+     * Get the file extension (excluding ".") given a path OR a bare filename.
+     * Returns "" for names with no extension.
+     * If the only `.` in the file is the first character,
+     * returns "" as this is not considered an extension.
+     * This method considers known extensions which include `.` in them.
+     * @deprecated Use LanguageManager.getCompoundFileExtension() instead
+     *
+     * @param {string} fullPath full path to a file or directory
+     * @return {string} Returns the extension of a filename or empty string if
+     * the argument is a directory or a filename with no extension
+     */
+    function getSmartFileExtension(fullPath) {
+        DeprecationWarning.deprecationWarning("FileUtils.getSmartFileExtension() has been deprecated. " +
+                                              "Please use LanguageManager.getCompoundFileExtension() instead.");
+        return LanguageManager.getCompoundFileExtension(fullPath);
+    }
+
+    /**
+     * Computes filename as relative to the basePath. For example:
+     * basePath: /foo/bar/, filename: /foo/bar/baz.txt
+     * returns: baz.txt
+     *
+     * The net effect is that the common prefix is stripped away. If basePath is not
+     * a prefix of filename, then undefined is returned.
+     *
+     * @param {string} basePath Path against which we're computing the relative path
+     * @param {string} filename Full path to the file for which we are computing a relative path
+     * @return {string} relative path
+     */
+    function getRelativeFilename(basePath, filename) {
+        if (!filename || filename.substr(0, basePath.length) !== basePath) {
+            return;
+        }
+
+        return filename.substr(basePath.length);
+    }
+
+    /**
+     * Determine if file extension is a static html file extension.
+     * @param {string} filePath could be a path, a file name or just a file extension
+     * @return {boolean} Returns true if fileExt is in the list
+     */
+    function isStaticHtmlFileExt(filePath) {
+        DeprecationWarning.deprecationWarning("FileUtils.isStaticHtmlFileExt() has been deprecated. " +
+                                              "Please use LiveDevelopmentUtils.isStaticHtmlFileExt() instead.");
+        return LiveDevelopmentUtils.isStaticHtmlFileExt(filePath);
+    }
+
+    /**
+     * Get the parent directory of a file. If a directory is passed, the SAME directory is returned.
+     * @param {string} fullPath full path to a file or directory
+     * @return {string} Returns the path to the parent directory of a file or the path of a directory,
+     *                  including trailing "/"
+     */
+    function getDirectoryPath(fullPath) {
+        return fullPath.substr(0, fullPath.lastIndexOf("/") + 1);
+    }
+
+    /**
+     * Get the parent folder of the given file/folder path. Differs from getDirectoryPath() when 'fullPath'
+     * is a directory itself: returns its parent instead of the original path. (Note: if you already have a
+     * FileSystemEntry, it's faster to use entry.parentPath instead).
+     * @param {string} fullPath full path to a file or directory
+     * @return {string} Path of containing folder (including trailing "/"); or "" if path was the root
+     */
+    function getParentPath(fullPath) {
+        if (fullPath === "/") {
+            return "";
+        }
+        return fullPath.substring(0, fullPath.lastIndexOf("/", fullPath.length - 2) + 1);
+    }
+
+    /**
+     * Get the file name without the extension. Returns "" if name starts with "."
+     * @param {string} filename File name of a file or directory, without preceding path
+     * @return {string} Returns the file name without the extension
+     */
+    function getFilenameWithoutExtension(filename) {
+        var index = filename.lastIndexOf(".");
+        return index === -1 ? filename : filename.slice(0, index);
+    }
+
+    /**
+     * @private
+     * OS-specific helper for `compareFilenames()`
+     * @return {Function} The OS-specific compare function
+     */
+    var _cmpNames = (function () {
+        if (brackets.platform === "win") {
+            // Use this function on Windows
+            return function (filename1, filename2, lang) {
+                var f1 = getFilenameWithoutExtension(filename1),
+                    f2 = getFilenameWithoutExtension(filename2);
+                return f1.localeCompare(f2, lang, {numeric: true});
+            };
+        }
+
+        // Use this function other OSes
+        return function (filename1, filename2, lang) {
+            return filename1.localeCompare(filename2, lang, {numeric: true});
+        };
+    }());
+
+    /**
+     * Compares 2 filenames in lowercases. In Windows it compares the names without the
+     * extension first and then the extensions to fix issue #4409
+     * @param {string} filename1
+     * @param {string} filename2
+     * @param {boolean} extFirst If true it compares the extensions first and then the file names.
+     * @return {number} The result of the compare function
+     */
+    function compareFilenames(filename1, filename2, extFirst) {
+        var lang = brackets.getLocale();
+
+        filename1 = filename1.toLocaleLowerCase();
+        filename2 = filename2.toLocaleLowerCase();
+
+        function cmpExt() {
+            var ext1 = getFileExtension(filename1),
+                ext2 = getFileExtension(filename2);
+            return ext1.localeCompare(ext2, lang, {numeric: true});
+        }
+
+        function cmpNames() {
+            return _cmpNames(filename1, filename2, lang);
+        }
+
+        return extFirst ? (cmpExt() || cmpNames()) : (cmpNames() || cmpExt());
+    }
+
+    /**
+     * Compares two paths segment-by-segment, used for sorting. When two files share a path prefix,
+     * the less deeply nested one is sorted earlier in the list. Sorts files within the same parent
+     * folder based on `compareFilenames()`.
+     * @param {string} path1
+     * @param {string} path2
+     * @return {number} -1, 0, or 1 depending on whether path1 is less than, equal to, or greater than
+     *     path2 according to this ordering.
+     */
+    function comparePaths(path1, path2) {
+        var entryName1, entryName2,
+            pathParts1 = path1.split("/"),
+            pathParts2 = path2.split("/"),
+            length     = Math.min(pathParts1.length, pathParts2.length),
+            folders1   = pathParts1.length - 1,
+            folders2   = pathParts2.length - 1,
+            index      = 0;
+
+        while (index < length) {
+            entryName1 = pathParts1[index];
+            entryName2 = pathParts2[index];
+
+            if (entryName1 !== entryName2) {
+                if (index < folders1 && index < folders2) {
+                    return entryName1.toLocaleLowerCase().localeCompare(entryName2.toLocaleLowerCase());
+                } else if (index >= folders1 && index >= folders2) {
+                    return compareFilenames(entryName1, entryName2);
+                }
+                return (index >= folders1 && index < folders2) ? -1 : 1;
+            }
+            index++;
+        }
+        return 0;
+    }
+
+    /**
+     * @param {string} path Native path in the format used by FileSystemEntry.fullPath
+     * @return {string} URI-encoded version suitable for appending to 'file:///`. It's not safe to use encodeURI()
+     *     directly since it doesn't escape chars like "#".
+     */
+    function encodeFilePath(path) {
+        var pathArray = path.split("/");
+        pathArray = pathArray.map(function (subPath) {
+            return encodeURIComponent(subPath);
+        });
+        return pathArray.join("/");
+    }
+
+    /**
+     * @param {string} ext extension string a file
+     * @return {string} returns true If file to be opened in External Application.
+     *
+     */
+    function shouldOpenInExternalApplication(ext) {
+        return extListToBeOpenedInExtApp.includes(ext);
+    }
+
+    /**
+     * @param {string} ext File Extensions to be added in External App List
+     *
+     */
+    function addExtensionToExternalAppList(ext) {
+
+        if(Array.isArray(ext)) {
+            extListToBeOpenedInExtApp = ext;
+        } else if (typeof ext === 'string'){
+            extListToBeOpenedInExtApp.push(ext);
+        }
+    }
+
+    // Asynchronously load DocumentCommandHandlers
+    // This avoids a temporary circular dependency created
+    // by relocating showFileOpenError() until deprecation is over
+    require(["document/DocumentCommandHandlers"], function (dchModule) {
+        DocumentCommandHandlers = dchModule;
+    });
+
+    // Asynchronously load LiveDevelopmentUtils
+    // This avoids a temporary circular dependency created
+    // by relocating isStaticHtmlFileExt() until deprecation is over
+    require(["LiveDevelopment/LiveDevelopmentUtils"], function (lduModule) {
+        LiveDevelopmentUtils = lduModule;
+    });
+
+    // Define public API
+    exports.LINE_ENDINGS_CRLF              = LINE_ENDINGS_CRLF;
+    exports.LINE_ENDINGS_LF                = LINE_ENDINGS_LF;
+    exports.getPlatformLineEndings         = getPlatformLineEndings;
+    exports.sniffLineEndings               = sniffLineEndings;
+    exports.translateLineEndings           = translateLineEndings;
+    exports.showFileOpenError              = showFileOpenError;
+    exports.getFileErrorString             = getFileErrorString;
+    exports.makeDialogFileList             = makeDialogFileList;
+    exports.readAsText                     = readAsText;
+    exports.writeText                      = writeText;
+    exports.convertToNativePath            = convertToNativePath;
+    exports.convertWindowsPathToUnixPath   = convertWindowsPathToUnixPath;
+    exports.getNativeBracketsDirectoryPath = getNativeBracketsDirectoryPath;
+    exports.getNativeModuleDirectoryPath   = getNativeModuleDirectoryPath;
+    exports.stripTrailingSlash             = stripTrailingSlash;
+    exports.isStaticHtmlFileExt            = isStaticHtmlFileExt;
+    exports.getDirectoryPath               = getDirectoryPath;
+    exports.getParentPath                  = getParentPath;
+    exports.getBaseName                    = getBaseName;
+    exports.getRelativeFilename            = getRelativeFilename;
+    exports.getFilenameWithoutExtension    = getFilenameWithoutExtension;
+    exports.getFileExtension               = getFileExtension;
+    exports.getSmartFileExtension          = getSmartFileExtension;
+    exports.compareFilenames               = compareFilenames;
+    exports.comparePaths                   = comparePaths;
+    exports.MAX_FILE_SIZE                  = MAX_FILE_SIZE;
+    exports.encodeFilePath                 = encodeFilePath;
+    exports.shouldOpenInExternalApplication = shouldOpenInExternalApplication;
+    exports.addExtensionToExternalAppList = addExtensionToExternalAppList;
+});
