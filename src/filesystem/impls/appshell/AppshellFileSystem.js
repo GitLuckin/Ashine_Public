@@ -550,4 +550,109 @@ define(function (require, exports, module) {
     /**
      * Initialize file watching for this filesystem, using the supplied
      * changeCallback to provide change notifications. The first parameter of
-     * changeCallback specifies the chan
+     * changeCallback specifies the changed path (either a file or a directory);
+     * if this parameter is null, it indicates that the implementation cannot
+     * specify a particular changed path, and so the callers should consider all
+     * paths to have changed and to update their state accordingly. The second
+     * parameter to changeCallback is an optional FileSystemStats object that
+     * may be provided in case the changed path already exists and stats are
+     * readily available. The offlineCallback will be called in case watchers
+     * are no longer expected to function properly. All watched paths are
+     * cleared when the offlineCallback is called.
+     *
+     * @param {function(?string, FileSystemStats=)} changeCallback
+     * @param {function()=} offlineCallback
+     */
+    function initWatchers(changeCallback, offlineCallback) {
+        _changeCallback = changeCallback;
+        _offlineCallback = offlineCallback;
+
+        if (_offlineCallback) {
+            _offlineCallback();
+        }
+    }
+
+    /**
+     * Start providing change notifications for the file or directory at the
+     * given path, calling back asynchronously with a possibly null FileSystemError
+     * string when the initialization is complete. Notifications are provided
+     * using the changeCallback function provided by the initWatchers method.
+     * Note that change notifications are only provided recursively for directories
+     * when the recursiveWatch property of this module is true.
+     *
+     * @param {string} path
+     * @param {Array<string>} ignored
+     * @param {function(?string)=} callback
+     */
+    function watchPath(path, ignored, callback) {
+        console.log('Watch path: ', path, ignored);
+        path = _normalise_path(path);
+        appshell.fs.watch(path, ignored, _fileWatcherChangeHandler, callback);
+    }
+    /**
+     * Stop providing change notifications for the file or directory at the
+     * given path, calling back asynchronously with a possibly null FileSystemError
+     * string when the operation is complete.
+     * This function needs to mirror the signature of watchPath
+     * because of FileSystem.prototype._watchOrUnwatchEntry implementation.
+     *
+     * @param {string} path
+     * @param {Array<string>} ignored
+     * @param {function(?string)=} callback
+     */
+    function unwatchPath(path, ignored, callback) {
+        console.log('unwatch path: ', path);
+        path = _normalise_path(path);
+        appshell.fs.unwatch(path, callback);
+    }
+
+    /**
+     * Stop providing change notifications for all previously watched files and
+     * directories, optionally calling back asynchronously with a possibly null
+     * FileSystemError string when the operation is complete.
+     *
+     * @param {function(?string)=} callback
+     */
+    function unwatchAll(callback) {
+        appshell.fs.unwatchAll(callback);
+    }
+
+
+    // Export public API
+    exports.showOpenDialog  = showOpenDialog;
+    exports.showSaveDialog  = showSaveDialog;
+    exports.exists          = exists;
+    exports.existsAsync     = existsAsync;
+    exports.readdir         = readdir;
+    exports.mkdir           = mkdir;
+    exports.rename          = rename;
+    exports.copy            = copy;
+    exports.stat            = stat;
+    exports.readFile        = readFile;
+    exports.writeFile       = writeFile;
+    exports.unlink          = unlink;
+    exports.moveToTrash     = moveToTrash;
+    exports.initWatchers    = initWatchers;
+    exports.watchPath       = watchPath;
+    exports.unwatchPath     = unwatchPath;
+    exports.unwatchAll      = unwatchAll;
+    exports.pathLib         = window.Phoenix.VFS.path;
+
+    /**
+     * Indicates whether or not recursive watching notifications are supported
+     * by the watchPath call.
+     *
+     * @type {boolean}
+     */
+    exports.recursiveWatch = true;
+
+    /**
+     * Indicates whether or not the filesystem should expect and normalize UNC
+     * paths. If set, then //server/directory/ is a normalized path; otherwise the
+     * filesystem will normalize it to /server/directory. Currently, UNC path
+     * normalization only occurs on Windows.
+     *
+     * @type {boolean}
+     */
+    exports.normalizeUNCPaths = brackets.platform === "win";
+});
