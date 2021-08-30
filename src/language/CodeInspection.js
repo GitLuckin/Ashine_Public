@@ -370,4 +370,494 @@ define(function (require, exports, module) {
 
         $problemsPanel.find(".title").text(message);
         tooltip = StringUtils.format(Strings.STATUSBAR_CODE_INSPECTION_TOOLTIP, message);
-        StatusBar.updateIndicator(INDICATOR_ID, true, "inspection-e
+        StatusBar.updateIndicator(INDICATOR_ID, true, "inspection-errors", tooltip);
+    }
+
+    function _getMarkOptions(error){
+        switch (error.type) {
+        case Type.ERROR: return Editor.MARK_OPTION_UNDERLINE_ERROR;
+        case Type.WARNING: return Editor.MARK_OPTION_UNDERLINE_WARN;
+        case Type.META: return Editor.MARK_OPTION_UNDERLINE_INFO;
+        }
+    }
+
+    function _getMarkTypePriority(type){
+        switch (type) {
+        case Type.ERROR: return 3;
+        case Type.WARNING: return 2;
+        case Type.META: return 1;
+        }
+    }
+
+    function _shouldMarkTokenAtPosition(editor, error) {
+        if(isNaN(error.pos.line) || isNaN(error.pos.ch) || error.pos.line < 0 || error.pos.ch < 0){
+            console.warn("CodeInspector: Invalid error position: ", error);
+            return false;
+        }
+        // now we only apply a style if there is not already a higher priority style applied to it.
+        // Ie. If an error style is applied, we don't apply an info style over it as error takes precedence.
+        let markings = editor.findMarksAt(error.pos, CODE_MARK_TYPE_INSPECTOR);
+        let MarkToApplyPriority = _getMarkTypePriority(error.type);
+        let shouldMark = true;
+        for(let mark of markings){
+            let markTypePriority = _getMarkTypePriority(mark.type);
+            if(markTypePriority<=MarkToApplyPriority){
+                mark.clear();
+            } else {
+                // there's something with a higher priority marking the token
+                shouldMark = false;
+            }
+        }
+        return shouldMark;
+    }
+
+    /**
+     * It creates a div element with a span element inside it, and then adds a click handler to move cursor to the
+     * error position.
+     * @param editor - the editor instance
+     * @param line - the line number of the error
+     * @param ch - the character position of the error
+     * @param type - The type of the marker. This is a string that can be one of the error types
+     * @param message - The message that will be displayed when you hover over the marker.
+     * @returns A DOM element.
+     */
+    function _createMarkerElement(editor, line, ch, type, message) {
+        let $marker = $('<div><span>')
+            .attr('title', message)
+            .addClass(CODE_INSPECTION_GUTTER);
+        $marker.click(function (){
+            editor.setCursorPos(line, ch);
+        });
+        $marker.find('span')
+            .addClass(_getIconClassForType(type))
+            .addClass("brackets-inspection-gutter-marker")
+            .html('&nbsp;');
+        return $marker[0];
+    }
+
+    /**
+     * We have to draw empty gutter markers if it doesnt exist, else there is a visual gap in the gutter when
+     * codemirror renders gutter with lines having no gutter icons
+     * @param editor
+     * @param line
+     * @private
+     */
+    function _addDummyGutterMarkerIfNotExist(editor, line) {
+        let marker = editor.getGutterMarker(line, CODE_INSPECTION_GUTTER);
+        if(!marker){
+            let $marker = $('<div>')
+                .addClass(CODE_INSPECTION_GUTTER);
+            editor.setGutterMarker(line, CODE_INSPECTION_GUTTER, $marker[0]);
+        }
+    }
+
+    function _populateDummyGutterElements(editor, from, to) {
+        for(let line=from; line <= to; line++) {
+            _addDummyGutterMarkerIfNotExist(editor, line);
+        }
+    }
+
+    function _updateGutterMarks(editor, gutterErrorMessages) {
+        // add gutter icons
+        for(let lineno of Object.keys(gutterErrorMessages)){
+            // We mark the line with the Highest priority icon. (Eg. error icon if same line has warnings and info)
+            let highestPriorityMarkTypeSeen = Type.META;
+            let gutterMessage = gutterErrorMessages[lineno].reduce((prev, current)=>{
+                if(_getMarkTypePriority(current.type) > _getMarkTypePriority(highestPriorityMarkTypeSeen)){
+                    highestPriorityMarkTypeSeen = current.type;
+                }
+                return {message: `${prev.message}\n${current.message} at column: ${current.ch+1}`};
+            }, {message: ''});
+            let line = gutterErrorMessages[lineno][0].line,
+                ch = gutterErrorMessages[lineno][0].ch,
+                message = gutterMessage.message;
+            let marker = _createMarkerElement(editor, line, ch, highestPriorityMarkTypeSeen, message);
+            editor.setGutterMarker(line, CODE_INSPECTION_GUTTER, marker);
+        }
+        _populateDummyGutterElements(editor, 0, editor.getLastVisibleLine());
+    }
+
+    function _editorVieportChangeHandler(_evt, editor, from, to) {
+        _populateDummyGutterElements(editor, from, to);
+    }
+
+    function getQuickView(editor, pos, token, line) {
+        return new Promise((resolve, reject)=>{
+            let codeInspectionMarks = editor.findMarksAt(pos, CODE_MARK_TYPE_INSPECTOR) || [];
+            let hoverMessage = '';
+            for(let mark of codeInspectionMarks){
+                hoverMessage = `${hoverMessage}${mark.message}\n`;
+            }
+            if(hoverMessage){
+                resolve({
+                    start: {line: pos.line, ch: token.start},
+                    end: {line: pos.line, ch: token.end},
+                    content: hoverMessage
+                });
+                return;
+            }
+            reject();
+        });
+    }
+
+
+    /**
+     * Adds gutter icons and squiggly lines under err/warn/info to editor after lint.
+     * @param resultProviderEntries
+     * @private
+     */
+    function _updateEditorMarks(resultProviderEntries) {
+        let editor = EditorManager.getCurrentFullEditor();
+        if(!(editor && resultProviderEntries && resultProviderEntries.length)) {
+            return;
+        }
+        editor.operation(function () {
+            editor.clearAllMarks(CODE_MARK_TYPE_INSPECTOR);
+            editor.clearGutter(CODE_INSPECTION_GUTTER);
+            editor.off("viewportChange.codeInspection");
+            editor.on("viewportChange.codeInspection", _editorVieportChangeHandler);
+            let gutterErrorMessages = {};
+            for (let resultProvider of resultProviderEntries) {
+                let errors = (resultProvider.result && resultProvider.result.errors) || [];
+                for (let error of errors) {
+                    // todo: add error.message on hover
+                    // add gutter markers
+                    let line = error.pos.line || 0;
+                    let ch = error.pos.ch || 0;
+                    let gutterMessage = gutterErrorMessages[line] || [];
+                    gutterMessage.push({message: error.message, type: error.type, line, ch});
+                    gutterErrorMessages[line] = gutterMessage;
+                    // add squiggly lines
+                    if (_shouldMarkTokenAtPosition(editor, error)) {
+                        let mark = editor.markToken(CODE_MARK_TYPE_INSPECTOR, error.pos, _getMarkOptions(error));
+                        mark.type = error.type;
+                        mark.message = error.message;
+                    }
+                }
+            }
+            _updateGutterMarks(editor, gutterErrorMessages);
+        });
+    }
+
+    /**
+     * Run inspector applicable to current document. Updates status bar indicator and refreshes error list in
+     * bottom panel. Does not run if inspection is disabled or if a providerName is given and does not
+     * match the current doc's provider name.
+     *
+     * @param {?string} providerName name of the provider that is requesting a run
+     */
+    function run() {
+        if (!_enabled) {
+            _hasErrors = false;
+            _currentPromise = null;
+            problemsPanel.hide();
+            StatusBar.updateIndicator(INDICATOR_ID, true, "inspection-disabled", Strings.LINT_DISABLED);
+            setGotoEnabled(false);
+            return;
+        }
+
+        var currentDoc = DocumentManager.getCurrentDocument(),
+            providerList = currentDoc && getProvidersForPath(currentDoc.file.fullPath);
+
+        if (providerList && providerList.length) {
+            var numProblems = 0;
+            var aborted = false;
+            var allErrors = [];
+            var html;
+            var providersReportingProblems = [];
+            $problemsPanelTable.empty();
+
+            // run all the providers registered for this file type
+            (_currentPromise = inspectFile(currentDoc.file, providerList)).then(function (results) {
+                _updateEditorMarks(results);
+                // check if promise has not changed while inspectFile was running
+                if (this !== _currentPromise) {
+                    return;
+                }
+
+                // how many errors in total?
+                var errors = results.reduce(function (a, item) { return a + (item.result ? item.result.errors.length : 0); }, 0);
+
+                _hasErrors = Boolean(errors);
+
+                if (!errors) {
+                    problemsPanel.hide();
+
+                    var message = Strings.NO_ERRORS_MULTIPLE_PROVIDER;
+                    if (providerList.length === 1) {
+                        message = StringUtils.format(Strings.NO_ERRORS, providerList[0].name);
+                    }
+
+                    StatusBar.updateIndicator(INDICATOR_ID, true, "inspection-valid", message);
+
+                    setGotoEnabled(false);
+                    return;
+                }
+
+                var perfTimerDOM = PerfUtils.markStart("ProblemsPanel render:\t" + currentDoc.file.fullPath);
+
+                // Augment error objects with additional fields needed by Mustache template
+                results.forEach(function (inspectionResult) {
+                    var provider = inspectionResult.provider;
+                    var isExpanded = prefs.get(provider.name + ".collapsed") !== false;
+
+                    if (inspectionResult.result) {
+                        inspectionResult.result.errors.forEach(function (error) {
+                            // some inspectors don't always provide a line number or report a negative line number
+                            if (!isNaN(error.pos.line) &&
+                                    (error.pos.line + 1) > 0 &&
+                                    (error.codeSnippet = currentDoc.getLine(error.pos.line)) !== undefined) {
+                                error.friendlyLine = error.pos.line + 1;
+                                error.codeSnippet = error.codeSnippet.substr(0, 175);  // limit snippet width
+                            }
+
+                            if (error.type !== Type.META) {
+                                numProblems++;
+                            }
+
+                            error.iconClass = _getIconClassForType(error.type);
+
+                            // Hide the errors when the provider is collapsed.
+                            error.display = isExpanded ? "" : "forced-hidden";
+                        });
+
+                        // if the code inspector was unable to process the whole file, we keep track to show a different status
+                        if (inspectionResult.result.aborted) {
+                            aborted = true;
+                        }
+
+                        if (inspectionResult.result.errors.length) {
+                            allErrors.push({
+                                isExpanded: isExpanded,
+                                providerName: provider.name,
+                                results: inspectionResult.result.errors
+                            });
+
+                            providersReportingProblems.push(provider);
+                        }
+                    }
+                });
+
+                // Update results table
+                html = Mustache.render(ResultsTemplate, {reportList: allErrors});
+
+                $problemsPanelTable
+                    .empty()
+                    .append(html)
+                    .scrollTop(0);  // otherwise scroll pos from previous contents is remembered
+
+                if (!_collapsed) {
+                    problemsPanel.show();
+                }
+
+                updatePanelTitleAndStatusBar(numProblems, providersReportingProblems, aborted);
+                setGotoEnabled(true);
+
+                PerfUtils.addMeasurement(perfTimerDOM);
+            });
+
+        } else {
+            // No provider for current file
+            _hasErrors = false;
+            _currentPromise = null;
+            if(problemsPanel){
+                problemsPanel.hide();
+            }
+            var language = currentDoc && LanguageManager.getLanguageForPath(currentDoc.file.fullPath);
+            if (language) {
+                StatusBar.updateIndicator(INDICATOR_ID, true, "inspection-disabled", StringUtils.format(Strings.NO_LINT_AVAILABLE, language.getName()));
+            } else {
+                StatusBar.updateIndicator(INDICATOR_ID, true, "inspection-disabled", Strings.NOTHING_TO_LINT);
+            }
+            setGotoEnabled(false);
+        }
+    }
+
+    /**
+     * The provider is passed the text of the file and its fullPath. Providers should not assume
+     * that the file is open (i.e. DocumentManager.getOpenDocumentForPath() may return null) or
+     * that the file on disk matches the text given (file may have unsaved changes).
+     *
+     * Registering any provider for the "javascript" language automatically unregisters the built-in
+     * Brackets JSLint provider. This is a temporary convenience until UI exists for disabling
+     * registered providers.
+     *
+     * Providers implement scanFile() if results are available synchronously, or scanFileAsync() if results
+     * may require an async wait (if both are implemented, scanFile() is ignored). scanFileAsync() returns
+     * a {$.Promise} object resolved with the same type of value as scanFile() is expected to return.
+     * Rejecting the promise is treated as an internal error in the provider.
+     *
+     * @param {string} languageId
+     * @param {{name:string, scanFileAsync:?function(string, string):!{$.Promise},
+     *         scanFile:?function(string, string):?{errors:!Array, aborted:boolean}}} provider
+     *
+     * Each error is: { pos:{line,ch}, endPos:?{line,ch}, message:string, type:?Type }
+     * If type is unspecified, Type.WARNING is assumed.
+     * If no errors found, return either null or an object with a zero-length `errors` array.
+     */
+    function register(languageId, provider) {
+        if (!_providers[languageId]) {
+            _providers[languageId] = [];
+        } else {
+            // Check if provider with same name exists for the given language
+            // If yes, remove the provider before inserting the most recently loaded one
+            var indexOfProvider = _.findIndex(_providers[languageId], function(entry) { return entry.name === provider.name; });
+            if (indexOfProvider !== -1) {
+                _providers[languageId].splice(indexOfProvider, 1);
+            }
+        }
+
+        _providers[languageId].push(provider);
+
+        if(!_registeredLanguageIDs.includes(languageId)){
+            _registeredLanguageIDs.push(languageId);
+            Editor.unregisterGutter(CODE_INSPECTION_GUTTER);
+            Editor.registerGutter(CODE_INSPECTION_GUTTER, CODE_INSPECTION_GUTTER_PRIORITY, _registeredLanguageIDs);
+        }
+
+        run();  // in case a file of this type is open currently
+    }
+
+    /**
+     * Returns a list of providers registered for given languageId through register function
+     */
+    function getProvidersForLanguageId(languageId) {
+        var result = [];
+        if (_providers[languageId]) {
+            result = result.concat(_providers[languageId]);
+        }
+        if (_providers['*']) {
+            result = result.concat(_providers['*']);
+        }
+        return result;
+    }
+
+    /**
+     * Update DocumentManager listeners.
+     */
+    function updateListeners() {
+        if (_enabled) {
+            // register our event listeners
+            MainViewManager
+                .on("currentFileChange.codeInspection", function () {
+                    run();
+                });
+            DocumentManager
+                .on("currentDocumentLanguageChanged.codeInspection", function () {
+                    run();
+                })
+                .on("documentSaved.codeInspection documentRefreshed.codeInspection", function (event, document) {
+                    if (document === DocumentManager.getCurrentDocument()) {
+                        run();
+                    }
+                });
+        } else {
+            DocumentManager.off(".codeInspection");
+            MainViewManager.off(".codeInspection");
+        }
+    }
+
+    /**
+     * Enable or disable all inspection.
+     * @param {?boolean} enabled Enabled state. If omitted, the state is toggled.
+     * @param {?boolean} doNotSave true if the preference should not be saved to user settings. This is generally for events triggered by project-level settings.
+     */
+    function toggleEnabled(enabled, doNotSave) {
+        if (enabled === undefined) {
+            enabled = !_enabled;
+        }
+
+        // Take no action when there is no change.
+        if (enabled === _enabled) {
+            return;
+        }
+
+        _enabled = enabled;
+
+        CommandManager.get(Commands.VIEW_TOGGLE_INSPECTION).setChecked(_enabled);
+        updateListeners();
+        if (!doNotSave) {
+            prefs.set(PREF_ENABLED, _enabled);
+            prefs.save();
+        }
+
+        // run immediately
+        run();
+    }
+
+    /**
+     * Toggle the collapsed state for the panel. This explicitly collapses the panel (as opposed to
+     * the auto collapse due to files with no errors & filetypes with no provider). When explicitly
+     * collapsed, the panel will not reopen automatically on switch files or save.
+     *
+     * @param {?boolean} collapsed Collapsed state. If omitted, the state is toggled.
+     * @param {?boolean} doNotSave true if the preference should not be saved to user settings. This is generally for events triggered by project-level settings.
+     */
+    function toggleCollapsed(collapsed, doNotSave) {
+        if (collapsed === undefined) {
+            collapsed = !_collapsed;
+        }
+
+        if (collapsed === _collapsed) {
+            return;
+        }
+
+        _collapsed = collapsed;
+        if (!doNotSave) {
+            prefs.set(PREF_COLLAPSED, _collapsed);
+            prefs.save();
+        }
+
+        if (_collapsed) {
+            problemsPanel.hide();
+        } else {
+            if (_hasErrors) {
+                problemsPanel.show();
+            }
+        }
+    }
+
+    /** Command to go to the first Problem */
+    function handleGotoFirstProblem() {
+        run();
+        if (_gotoEnabled) {
+            $problemsPanel.find("tr:not(.inspector-section)").first().trigger("click");
+        }
+    }
+
+    // Register command handlers
+    CommandManager.register(Strings.CMD_VIEW_TOGGLE_INSPECTION, Commands.VIEW_TOGGLE_INSPECTION,        toggleEnabled);
+    CommandManager.register(Strings.CMD_GOTO_FIRST_PROBLEM,     Commands.NAVIGATE_GOTO_FIRST_PROBLEM,   handleGotoFirstProblem);
+
+    // Register preferences
+    prefs.definePreference(PREF_ENABLED, "boolean", brackets.config["linting.enabled_by_default"], {
+        description: Strings.DESCRIPTION_LINTING_ENABLED
+    })
+        .on("change", function (e, data) {
+            toggleEnabled(prefs.get(PREF_ENABLED), true);
+        });
+
+    prefs.definePreference(PREF_COLLAPSED, "boolean", false, {
+        description: Strings.DESCRIPTION_LINTING_COLLAPSED
+    })
+        .on("change", function (e, data) {
+            toggleCollapsed(prefs.get(PREF_COLLAPSED), true);
+        });
+
+    prefs.definePreference(PREF_ASYNC_TIMEOUT, "number", 10000, {
+        description: Strings.DESCRIPTION_ASYNC_TIMEOUT
+    });
+
+    prefs.definePreference(PREF_PREFER_PROVIDERS, "array", [], {
+        description: Strings.DESCRIPTION_LINTING_PREFER,
+        valueType: "string"
+    });
+
+    prefs.definePreference(PREF_PREFERRED_ONLY, "boolean", false, {
+        description: Strings.DESCRIPTION_USE_PREFERED_ONLY
+    });
+
+    // Initialize items dependent on HTML DOM
+    AppInit.htmlReady(function () {
+        Editor.registerGutter(CODE_INSPECTION_GUTTER, CODE_INSPECTION_GUTTER_PRIORITY);
+        // Cre
