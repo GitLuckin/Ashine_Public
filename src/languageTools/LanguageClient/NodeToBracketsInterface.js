@@ -146,4 +146,68 @@
         domainManager.registerCommand(
             domainName,
             "data",
-            this.processRequest.bind(t
+            this.processRequest.bind(this),
+            false,
+            "Receives sync request from brackets",
+            [
+                {
+                    name: "params",
+                    type: "object",
+                    description: "json object containing message info"
+                }
+            ],
+            []
+        );
+
+        domainManager.registerCommand(
+            domainName,
+            "response",
+            this.processResponse.bind(this),
+            false,
+            "Receives response from brackets for an earlier request",
+            [
+                {
+                    name: "params",
+                    type: "object",
+                    description: "json object containing message info"
+                }
+            ],
+            []
+        );
+
+        domainManager.registerCommand(
+            domainName,
+            "asyncData",
+            this.processAsyncRequest.bind(this),
+            true,
+            "Receives async call request from brackets",
+            [
+                {
+                    name: "params",
+                    type: "object",
+                    description: "json object containing message info"
+                },
+                {
+                    name: "resolver",
+                    type: "function",
+                    description: "callback required to resolve the async request"
+                }
+            ],
+            []
+        );
+
+        domainManager.registerEvent(
+            domainName,
+            "data",
+            [
+                {
+                    name: "params",
+                    type: "object",
+                    description: "json object containing message info to pass to brackets"
+                }
+            ]
+        );
+    };
+
+    exports.NodeToBracketsInterface = NodeToBracketsInterface;
+}());
