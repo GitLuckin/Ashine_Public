@@ -860,4 +860,92 @@ define(function (require, exports, module) {
     // Initialize items dependent on HTML DOM
     AppInit.htmlReady(function () {
         Editor.registerGutter(CODE_INSPECTION_GUTTER, CODE_INSPECTION_GUTTER_PRIORITY);
-        // Cre
+        // Create bottom panel to list error details
+        var panelHtml = Mustache.render(PanelTemplate, Strings);
+        problemsPanel = WorkspaceManager.createBottomPanel("errors", $(panelHtml), 100);
+        $problemsPanel = $("#problems-panel");
+
+        var $selectedRow;
+        $problemsPanelTable = $problemsPanel.find(".table-container")
+            .on("click", "tr", function (e) {
+                if ($selectedRow) {
+                    $selectedRow.removeClass("selected");
+                }
+
+                $selectedRow  = $(e.currentTarget);
+                $selectedRow.addClass("selected");
+
+                // This is a inspector title row, expand/collapse on click
+                if ($selectedRow.hasClass("inspector-section")) {
+                    var $triangle = $(".disclosure-triangle", $selectedRow);
+                    var isExpanded = $triangle.hasClass("expanded");
+
+                    // Clicking the inspector title section header collapses/expands result rows
+                    if (isExpanded) {
+                        $selectedRow.nextUntil(".inspector-section").addClass("forced-hidden");
+                    } else {
+                        $selectedRow.nextUntil(".inspector-section").removeClass("forced-hidden");
+                    }
+                    $triangle.toggleClass("expanded");
+
+                    var providerName = $selectedRow.find("input[type='hidden']").val();
+                    prefs.set(providerName + ".collapsed", !isExpanded);
+                    prefs.save();
+                } else {
+                    // This is a problem marker row, show the result on click
+                    // Grab the required position data
+                    var lineTd    = $selectedRow.find(".line-number");
+                    var line      = parseInt(lineTd.text(), 10) - 1;  // convert friendlyLine back to pos.line
+                    // if there is no line number available, don't do anything
+                    if (!isNaN(line)) {
+                        var character = lineTd.data("character");
+
+                        var editor = EditorManager.getCurrentFullEditor();
+                        editor.setCursorPos(line, character, true);
+                        MainViewManager.focusActivePane();
+                    }
+                }
+            });
+
+        $("#problems-panel .close").click(function () {
+            toggleCollapsed(true);
+            MainViewManager.focusActivePane();
+        });
+
+        // Status bar indicator - icon & tooltip updated by run()
+        var statusIconHtml = Mustache.render("<div id=\"status-inspection\">&nbsp;</div>", Strings);
+        StatusBar.addIndicator(INDICATOR_ID, $(statusIconHtml), true, "", "", "status-indent");
+
+        $("#status-inspection").click(function () {
+            // Clicking indicator toggles error panel, if any errors in current file
+            if (_hasErrors) {
+                toggleCollapsed();
+            }
+        });
+
+        // Set initial UI state
+        toggleEnabled(prefs.get(PREF_ENABLED), true);
+        toggleCollapsed(prefs.get(PREF_COLLAPSED), true);
+
+        QuickViewManager.registerQuickViewProvider({
+            getQuickView,
+            QUICK_VIEW_NAME: "CodeInspection"
+        }, ["all"]);
+    });
+
+    // Testing
+    exports._unregisterAll          = _unregisterAll;
+    exports._PREF_ASYNC_TIMEOUT     = PREF_ASYNC_TIMEOUT;
+    exports._PREF_PREFER_PROVIDERS  = PREF_PREFER_PROVIDERS;
+    exports._PREF_PREFERRED_ONLY    = PREF_PREFERRED_ONLY;
+
+    // Public API
+    exports.CODE_INSPECTION_GUTTER      = CODE_INSPECTION_GUTTER;
+    exports.register                    = register;
+    exports.Type                        = Type;
+    exports.toggleEnabled               = toggleEnabled;
+    exports.inspectFile                 = inspectFile;
+    exports.requestRun                  = run;
+    exports.getProvidersForPath         = getProvidersForPath;
+    exports.getProviderIDsForLanguage   = getProviderIDsForLanguage;
+});
