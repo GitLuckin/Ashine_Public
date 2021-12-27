@@ -843,4 +843,21 @@ define({
   "GUIDED_LIVE_PREVIEW_POPOUT": "Fare clic su questo pulsante per visualizzare l&#39;anteprima dal vivo in una nuova scheda.</br> <a href='#' style='float:right;'>ok</a>",
   "ENJOYING_APP": "Ti piace {APP_NAME}?",
   "GITHUB_STARS_POPUP": "<div>Le tue recensioni motivano il nostro piccolo team a rendere <b>phcode.dev</b> ancora migliore.<br/> Inserisci una stella su GitHub:",
-  "GITHUB_STARS_POPUP_TWITTER": "Dai un feedback o spa
+  "GITHUB_STARS_POPUP_TWITTER": "Dai un feedback o spargi la voce su Twitter:",
+  "TEST_TRANSLATE": "usalo per testare le traduzioni",
+  "POWER_USER_POPUP_TITLE": "Come possiamo migliorare {APP_NAME} per te?",
+  "POWER_USER_POPUP_TEXT": "<div>Ci piacerebbe ricevere il tuo feedback. Il tuo feedback ci aiuta a decidere quali funzionalità sviluppare e quali miglioramenti dovrebbero essere apportati alla nostra piattaforma.<br/> <a>Si prega di compilare questo breve sondaggio.</a></div>",
+  "BEAUTIFY_ERROR": "Impossibile abbellire il codice. Controlla la sintassi.",
+  "BEAUTIFY_ERROR_ORIGINAL_CHANGED": "Impossibile abbellire. Il testo dell'editor è cambiato dopo l'abbellimento.",
+  "BEAUTIFY_PROJECT_BUSY_MESSAGE": "File di abbellimento {0}",
+  "BEAUTIFY_ERROR_SELECTION": "Impossibile abbellire.</br>Blocco di codice incompleto selezionato o sintassi non valida.",
+  "BEAUTIFY_OPTIONS": "Opzioni che controllano il funzionamento del codice Beautify",
+  "BEAUTIFY_OPTION_PRINT_WIDTH": "Specifica la lunghezza della linea su cui beautifier andrà a capo",
+  "BEAUTIFY_OPTION_SEMICOLON": "Aggiungi un punto e virgola alla fine di ogni istruzione",
+  "BEAUTIFY_OPTION_SINGLE_QUOTE": "Usa virgolette singole invece di virgolette doppie",
+  "BEAUTIFY_OPTION_QUOTE_PROPS": "Cambia quando le proprietà negli oggetti sono quotate",
+  "BEAUTIFY_OPTION_BRACKET_SAME_LINE": "Metti il > di un elemento HTML a più righe (HTML, JSX, Vue, Angular) alla fine dell'ultima riga invece di essere solo nella riga successiva (non si applica agli elementi a chiusura automatica)",
+  "BEAUTIFY_OPTION_SINGLE_ATTRIBUTE_PER_LINE": "Applica un singolo attributo per riga in HTML, Vue e JSX",
+  "BEAUTIFY_OPTION_PROSE_WRAP": "Avvolgi la prosa se supera la larghezza di stampa nei file markdown",
+  "BEAUTIFY_OPTION_PRINT_TRAILING_COMMAS": "Stampa le virgole finali, ove possibile, in strutture sintattiche separate da virgole su più righe"
+});
