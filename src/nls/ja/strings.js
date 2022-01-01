@@ -1,4 +1,25 @@
-{
+
+/*
+ * GNU AGPL-3.0 License
+ *
+ * Copyright (c) 2021 - present core.ai . All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://opensource.org/licenses/AGPL-3.0.
+ *
+ */
+
+define({
   "SYSTEM_DEFAULT": "システムのデフォルト",
   "PROJECT_BUSY": "進行中のプロジェクト オペレーション",
   "DUPLICATING": "{0} を複製しています",
@@ -840,4 +861,4 @@
   "BEAUTIFY_OPTION_SINGLE_ATTRIBUTE_PER_LINE": "HTML、Vue、JSX で 1 行に 1 つの属性を適用する",
   "BEAUTIFY_OPTION_PROSE_WRAP": "マークダウンファイルの印刷幅を超える場合は文章を折り返す",
   "BEAUTIFY_OPTION_PRINT_TRAILING_COMMAS": "複数行のコンマ区切りの構文構造では、可能な限り末尾のコンマを出力します"
-}
+});
