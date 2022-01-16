@@ -1,4 +1,25 @@
-{
+
+/*
+ * GNU AGPL-3.0 License
+ *
+ * Copyright (c) 2021 - present core.ai . All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://opensource.org/licenses/AGPL-3.0.
+ *
+ */
+
+define({
   "SYSTEM_DEFAULT": "Padrão do sistema",
   "PROJECT_BUSY": "Operações do projeto em andamento",
   "DUPLICATING": "Duplicando {0}",
@@ -840,4 +861,4 @@
   "BEAUTIFY_OPTION_SINGLE_ATTRIBUTE_PER_LINE": "Aplicar atributo único por linha em HTML, Vue e JSX",
   "BEAUTIFY_OPTION_PROSE_WRAP": "Enrole prosa se exceder a largura de impressão em arquivos de remarcação",
   "BEAUTIFY_OPTION_PRINT_TRAILING_COMMAS": "Imprima vírgulas à direita sempre que possível em estruturas sintáticas de várias linhas separadas por vírgulas"
-}
+});
