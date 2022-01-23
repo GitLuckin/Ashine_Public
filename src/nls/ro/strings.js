@@ -1,4 +1,25 @@
-{
+
+/*
+ * GNU AGPL-3.0 License
+ *
+ * Copyright (c) 2021 - present core.ai . All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://opensource.org/licenses/AGPL-3.0.
+ *
+ */
+
+define({
   "SYSTEM_DEFAULT": "Limba implicită a sistemului",
   "PROJECT_BUSY": "Operațiuni de proiect în derulare",
   "DUPLICATING": "Se dublează {0}",
@@ -840,4 +861,4 @@
   "BEAUTIFY_OPTION_SINGLE_ATTRIBUTE_PER_LINE": "Aplicați un singur atribut pe linie în HTML, Vue și JSX",
   "BEAUTIFY_OPTION_PROSE_WRAP": "Înfășurați proza dacă depășește lățimea de tipărire în fișierele de reducere",
   "BEAUTIFY_OPTION_PRINT_TRAILING_COMMAS": "Tipăriți virgulele finale ori de câte ori este posibil în structuri sintactice separate prin virgulă cu mai multe linii"
-}
+});
