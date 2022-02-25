@@ -1,4 +1,25 @@
-{
+
+/*
+ * GNU AGPL-3.0 License
+ *
+ * Copyright (c) 2021 - present core.ai . All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://opensource.org/licenses/AGPL-3.0.
+ *
+ */
+
+define({
   "SYSTEM_DEFAULT": "系統預設",
   "PROJECT_BUSY": "正在進行的項目運營",
   "DUPLICATING": "複製 {0}",
@@ -840,4 +861,4 @@
   "BEAUTIFY_OPTION_SINGLE_ATTRIBUTE_PER_LINE": "在 HTML、Vue 和 JSX 中每行強制執行單個屬性",
   "BEAUTIFY_OPTION_PROSE_WRAP": "如果散文超過 Markdown 文件中的打印寬度，則包裝散文",
   "BEAUTIFY_OPTION_PRINT_TRAILING_COMMAS": "在多行逗號分隔的句法結構中盡可能打印尾隨逗號"
-}
+});
