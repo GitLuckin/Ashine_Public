@@ -54,4 +54,9 @@ if(!self.ContentType){
         return mimeType.toLowerCase().startsWith('image/');
     }
 
-    se
+    self.ContentType = {
+        isMedia,
+        isImage,
+        getMimeType
+    };
+}
