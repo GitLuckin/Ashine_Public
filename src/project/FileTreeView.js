@@ -1177,4 +1177,183 @@ define(function (require, exports, module) {
      * * sortDirectoriesFirst: whether the directories should be displayed first when listing the contents of a directory
      * * parentPath: the full path of the directory containing this file
      * * actions: the action creator responsible for communicating actions the user has taken
-     * * extensions: registered extensions for the 
+     * * extensions: registered extensions for the file tree
+     * * forceRender: causes the component to run render
+     * * platform: platform that Brackets is running on
+     */
+    var fileTreeView = Preact.createFactory(Preact.createClass({
+
+        /**
+         * Update for any change in the tree data or directory sorting preference.
+         */
+        shouldComponentUpdate: function (nextProps, nextState) {
+            return nextProps.forceRender ||
+                this.props.treeData !== nextProps.treeData ||
+                this.props.sortDirectoriesFirst !== nextProps.sortDirectoriesFirst ||
+                this.props.extensions !== nextProps.extensions ||
+                this.props.selectionViewInfo !== nextProps.selectionViewInfo;
+        },
+
+        handleDrop: function(e) {
+            var data = JSON.parse(e.dataTransfer.getData("text"));
+            this.props.actions.moveItem(data.path, this.props.parentPath);
+            e.stopPropagation();
+        },
+
+        /**
+         * Allow the Drop
+         */
+        handleDragOver: function(e) {
+            e.preventDefault();
+        },
+
+        render: function () {
+            var selectionBackground = fileSelectionBox({
+                    ref: "selectionBackground",
+                    selectionViewInfo: this.props.selectionViewInfo,
+                    className: "filetree-selection",
+                    visible: this.props.selectionViewInfo.get("hasSelection"),
+                    selectedClassName: ".selected-node",
+                    forceUpdate: true
+                }),
+                contextBackground = fileSelectionBox({
+                    ref: "contextBackground",
+                    selectionViewInfo: this.props.selectionViewInfo,
+                    className: "filetree-context",
+                    visible: this.props.selectionViewInfo.get("hasContext"),
+                    selectedClassName: ".context-node",
+                    forceUpdate: true
+                }),
+                extensionForSelection = selectionExtension({
+                    selectionViewInfo: this.props.selectionViewInfo,
+                    selectedClassName: ".selected-node",
+                    visible: this.props.selectionViewInfo.get("hasSelection"),
+                    forceUpdate: true,
+                    className: "filetree-selection-extension"
+                }),
+                extensionForContext = selectionExtension({
+                    selectionViewInfo: this.props.selectionViewInfo,
+                    selectedClassName: ".context-node",
+                    visible: this.props.selectionViewInfo.get("hasContext"),
+                    forceUpdate: true,
+                    className: "filetree-context-extension"
+                }),
+                contents = directoryContents({
+                    isRoot: true,
+                    depth: 1,
+                    parentPath: this.props.parentPath,
+                    sortDirectoriesFirst: this.props.sortDirectoriesFirst,
+                    contents: this.props.treeData,
+                    extensions: this.props.extensions,
+                    actions: this.props.actions,
+                    forceRender: this.props.forceRender,
+                    platform: this.props.platform
+                }),
+                args = {
+                    onDrop: this.handleDrop,
+                    onDragOver: this.handleDragOver
+                };
+
+
+            return DOM.div(
+                args,
+                contents,
+                selectionBackground,
+                contextBackground,
+                extensionForSelection,
+                extensionForContext
+            );
+        }
+    }));
+
+    /**
+     * Renders the file tree to the given element.
+     *
+     * @param {DOMNode|jQuery} element Element in which to render this file tree
+     * @param {FileTreeViewModel} viewModel the data container
+     * @param {Directory} projectRoot Directory object from which the fullPath of the project root is extracted
+     * @param {ActionCreator} actions object with methods used to communicate events that originate from the user
+     * @param {boolean} forceRender Run render on the entire tree (useful if an extension has new data that it needs rendered)
+     * @param {string} platform mac, win, linux
+     */
+    function render(element, viewModel, projectRoot, actions, forceRender, platform) {
+        if (!projectRoot) {
+            return;
+        }
+
+        Preact.render(fileTreeView({
+            treeData: viewModel.treeData,
+            selectionViewInfo: viewModel.selectionViewInfo,
+            sortDirectoriesFirst: viewModel.sortDirectoriesFirst,
+            parentPath: projectRoot.fullPath,
+            actions: actions,
+            extensions: _extensions,
+            platform: platform,
+            forceRender: forceRender
+        }),
+              element);
+    }
+
+    /**
+     * @private
+     *
+     * Add an extension for the given category (icons, addClass).
+     *
+     * @param {string} category Category to which the extension is being added
+     * @param {function} callback The extension function itself
+     */
+    function _addExtension(category, callback) {
+        if (!callback || typeof callback !== "function") {
+            console.error("Attempt to add FileTreeView", category, "extension without a callback function");
+            return;
+        }
+        var callbackList = _extensions.get(category);
+        if (!callbackList) {
+            callbackList = Immutable.List();
+        }
+        callbackList = callbackList.push(callback);
+        callbackList = callbackList.sortBy((f) => -f.priority);
+        _extensions = _extensions.set(category, callbackList);
+    }
+
+    /**
+     * Adds an icon provider. The callback is invoked before each working set item is created, and can
+     * return content to prepend to the item if it supports the icon.
+     *
+     * @param {!function(!{name:string, fullPath:string, isFile:boolean}):?string|jQuery|DOMNode} callback
+     * Return a string representing the HTML, a jQuery object or DOM node, or undefined. If undefined,
+     * nothing is prepended to the list item and the default or an available icon will be used.
+     * @param {number} [priority] optional priority. 0 being lowest. The icons with the highest priority wins if there
+     * are multiple callback providers attached. icon providers of the same priority first valid response wins.
+     */
+    function addIconProvider(callback, priority= 0) {
+        callback.priority = priority;
+        _addExtension("icons", callback);
+    }
+
+    /**
+     * Adds a CSS class provider, invoked before each working set item is created or updated. When called
+     * to update an existing item, all previously applied classes have been cleared.
+     *
+     * @param {!function(!{name:string, fullPath:string, isFile:boolean}):?string} callback
+     * Return a string containing space-separated CSS class(es) to add, or undefined to leave CSS unchanged.
+     * @param {number} [priority] optional priority. 0 being lowest. The class with the highest priority wins if there
+     * are multiple callback classes attached. class providers of the same priority will be appended.
+     */
+    function addClassesProvider(callback, priority = 0) {
+        callback.priority = priority;
+        _addExtension("addClass", callback);
+    }
+
+    // Private API for testing
+    exports._sortFormattedDirectory = _sortDirectoryContents;
+    exports._fileNode = fileNode;
+    exports._directoryNode = directoryNode;
+    exports._directoryContents = directoryContents;
+    exports._fileTreeView = fileTreeView;
+
+    // Public API
+    exports.addIconProvider = addIconProvider;
+    exports.addClassesProvider = addClassesProvider;
+    exports.render = render;
+});
