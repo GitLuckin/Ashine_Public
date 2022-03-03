@@ -976,4 +976,184 @@ define(function (require, exports, module) {
     /**
      * @private
      *
-     * Sets/updat
+     * Sets/updates the timestamp on the file paths listed in the `changed` array.
+     *
+     * @param {Immutable.Map} treeData
+     * @param {Array.<string>} changed list of changed project-relative file paths
+     * @return {Immutable.Map} revised treeData
+     */
+    function _markAsChanged(treeData, changed) {
+        changed.forEach(function (filePath) {
+            var objectPath = _filePathToObjectPath(treeData, filePath);
+            if (objectPath) {
+                treeData = treeData.updateIn(objectPath, _addTimestamp);
+            }
+        });
+        return treeData;
+    }
+
+    /**
+     * @private
+     *
+     * Adds entries at the paths listed in the `added` array. Directories should have a trailing slash.
+     *
+     * @param {Immutable.Map} treeData
+     * @param {Array.<string>} added list of new project-relative file paths
+     * @return {Immutable.Map} revised treeData
+     */
+    function _addNewEntries(treeData, added) {
+        added.forEach(function (filePath) {
+            var isFolder = _.last(filePath) === "/";
+
+            filePath = isFolder ? filePath.substr(0, filePath.length - 1) : filePath;
+
+            var parentPath = FileUtils.getDirectoryPath(filePath),
+                parentObjectPath = _filePathToObjectPath(treeData, parentPath),
+                basename = FileUtils.getBaseName(filePath);
+
+            if (parentObjectPath) {
+                // Verify that the children are loaded
+                var childrenPath = _.clone(parentObjectPath);
+                childrenPath.push("children");
+                if (treeData.getIn(childrenPath) === null) {
+                    return;
+                }
+
+                treeData = _createPlaceholder(treeData, parentPath, basename, isFolder, {
+                    notInCreateMode: true,
+                    doNotOpen: true
+                });
+            }
+        });
+
+        return treeData;
+    }
+
+    /**
+     * Applies changes to the tree. The `changes` object can have one or more of the following keys which all
+     * have arrays of project-relative paths as their values:
+     *
+     * * `changed`: entries that have changed in some way that should be re-rendered
+     * * `added`: new entries that need to appear in the tree
+     * * `removed`: entries that have been deleted from the tree
+     *
+     * @param {{changed: Array.<string>=, added: Array.<string>=, removed: Array.<string>=}}
+     */
+    FileTreeViewModel.prototype.processChanges = function (changes) {
+        var treeData = this._treeData;
+
+        if (changes.changed) {
+            treeData = _markAsChanged(treeData, changes.changed);
+        }
+
+        if (changes.added) {
+            treeData = _addNewEntries(treeData, changes.added);
+        }
+
+        if (changes.removed) {
+            changes.removed.forEach(function (path) {
+                treeData = _deleteAtPath(treeData, path);
+            });
+        }
+
+        this._commit(treeData);
+    };
+
+    /**
+     * Makes sure that the directory exists. This will create a directory object (unloaded)
+     * if the directory does not already exist. A change message is also fired in that case.
+     *
+     * This is useful for file system events which can refer to a directory that we don't
+     * know about already.
+     *
+     * @param {string} path Project-relative path to the directory
+     */
+    FileTreeViewModel.prototype.ensureDirectoryExists = function (path) {
+        var treeData          = this._treeData,
+            pathWithoutSlash  = FileUtils.stripTrailingSlash(path),
+            parentPath        = FileUtils.getDirectoryPath(pathWithoutSlash),
+            name              = pathWithoutSlash.substr(parentPath.length),
+            targetPath        = [];
+
+        if (parentPath) {
+            targetPath = _filePathToObjectPath(treeData, parentPath);
+            if (!targetPath) {
+                return;
+            }
+            targetPath.push("children");
+            if (!treeData.getIn(targetPath)) {
+                return;
+            }
+        }
+
+        targetPath.push(name);
+
+        if (treeData.getIn(targetPath)) {
+            return;
+        }
+
+        treeData = _setIn(treeData, targetPath, Immutable.Map({
+            children: null
+        }));
+
+        this._commit(treeData);
+    };
+
+    /**
+     * Sets the value of the `sortDirectoriesFirst` flag which tells to view that directories
+     * should be listed before the alphabetical listing of files.
+     *
+     * @param {boolean} sortDirectoriesFirst True if directories should be displayed first
+     */
+    FileTreeViewModel.prototype.setSortDirectoriesFirst = function (sortDirectoriesFirst) {
+        if (sortDirectoriesFirst !== this.sortDirectoriesFirst) {
+            this.sortDirectoriesFirst = sortDirectoriesFirst;
+            this.trigger(EVENT_CHANGE);
+        }
+    };
+
+    /**
+     * Sets the width of the selection bar.
+     *
+     * @param {int} width New width
+     */
+    FileTreeViewModel.prototype.setSelectionWidth = function (width) {
+        var selectionViewInfo = this._selectionViewInfo;
+        selectionViewInfo = selectionViewInfo.set("width", width);
+        this._commit(null, selectionViewInfo);
+    };
+
+    /**
+     * Sets the scroll position of the file tree to help position the selection bar.
+     * SPECIAL CASE NOTE: this does not trigger a change event because this data is
+     * explicitly set in the rendering process (see ProjectManager._renderTree).
+     *
+     * @param {int} scrollWidth width of the tree content
+     * @param {int} scrollTop Scroll position
+     * @param {int=} scrollLeft Horizontal scroll position
+     * @param {int=} offsetTop top of the scroller
+     */
+    FileTreeViewModel.prototype.setSelectionScrollerInfo = function (scrollWidth, scrollTop, scrollLeft, offsetTop) {
+        this._selectionViewInfo = this._selectionViewInfo.set("scrollWidth", scrollWidth);
+        this._selectionViewInfo = this._selectionViewInfo.set("scrollTop", scrollTop);
+
+        if (scrollLeft !== undefined) {
+            this._selectionViewInfo = this._selectionViewInfo.set("scrollLeft", scrollLeft);
+        }
+
+        if (offsetTop !== undefined) {
+            this._selectionViewInfo = this._selectionViewInfo.set("offsetTop", offsetTop);
+        }
+        // Does not emit change event. See SPECIAL CASE NOTE in docstring above.
+    };
+
+    // Private API
+    exports.EVENT_CHANGE          = EVENT_CHANGE;
+    exports._filePathToObjectPath = _filePathToObjectPath;
+    exports._isFilePathVisible    = _isFilePathVisible;
+    exports._createPlaceholder    = _createPlaceholder;
+
+    // Public API
+    exports.isFile            = isFile;
+    exports.FileTreeViewModel = FileTreeViewModel;
+});
