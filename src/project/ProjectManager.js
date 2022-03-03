@@ -1805,3 +1805,167 @@ define(function (require, exports, module) {
                         switch (errorInfo.type) {
                         case FileSystemError.ALREADY_EXISTS:
                             _showErrorDialog(ERR_TYPE_MOVE, errorInfo.isFolder, Strings.FILE_EXISTS_ERR, errorInfo.fullPath);
+                            break;
+                        case ProjectModel.ERROR_NOT_IN_PROJECT:
+                            _showErrorDialog(ERR_TYPE_MOVE, errorInfo.isFolder, Strings.ERROR_MOVING_NOT_IN_PROJECT, errorInfo.fullPath);
+                            break;
+                        default:
+                            _showErrorDialog(ERR_TYPE_MOVE, errorInfo.isFolder, FileUtils.getFileErrorString(errorInfo.type), errorInfo.fullPath);
+                        }
+                    } else {
+                        switch (errorInfo.type) {
+                        case ProjectModel.ERROR_INVALID_FILENAME:
+                            _showErrorDialog(ERR_TYPE_INVALID_FILENAME, errorInfo.isFolder, ProjectModel._invalidChars);
+                            break;
+                        case FileSystemError.ALREADY_EXISTS:
+                            _showErrorDialog(ERR_TYPE_RENAME, errorInfo.isFolder, Strings.FILE_EXISTS_ERR, errorInfo.fullPath);
+                            break;
+                        case ProjectModel.ERROR_NOT_IN_PROJECT:
+                            _showErrorDialog(ERR_TYPE_RENAME, errorInfo.isFolder, Strings.ERROR_RENAMING_NOT_IN_PROJECT, errorInfo.fullPath);
+                            break;
+                        default:
+                            _showErrorDialog(ERR_TYPE_RENAME, errorInfo.isFolder, FileUtils.getFileErrorString(errorInfo.type), errorInfo.fullPath);
+                        }
+                    }
+                }, 10);
+                d.reject(errorInfo);
+            });
+        return d.promise();
+    }
+
+    /**
+     * Returns an Array of all files for this project, optionally including
+     * files in the working set that are *not* under the project root. Files are
+     * filtered first by ProjectModel.shouldShow(), then by the custom filter
+     * argument (if one was provided).
+     *
+     * @param {function (File, number):boolean=} filter Optional function to filter
+     *          the file list (does not filter directory traversal). API matches Array.filter().
+     * @param {boolean=} includeWorkingSet If true, include files in the working set
+     *          that are not under the project root (*except* for untitled documents).
+     * @param {boolean=} sort If true, The files will be sorted by their paths
+     *
+     * @return {$.Promise} Promise that is resolved with an Array of File objects.
+     */
+    function getAllFiles(filter, includeWorkingSet, sort) {
+        var viewFiles, deferred;
+
+        // The filter and includeWorkingSet params are both optional.
+        // Handle the case where filter is omitted but includeWorkingSet is
+        // specified.
+        if (includeWorkingSet === undefined && typeof (filter) !== "function") {
+            includeWorkingSet = filter;
+            filter = null;
+        }
+
+        if (includeWorkingSet) {
+            viewFiles = MainViewManager.getWorkingSet(MainViewManager.ALL_PANES);
+        }
+
+        deferred = new $.Deferred();
+        model.getAllFiles(filter, viewFiles, sort)
+            .done(function (fileList) {
+                deferred.resolve(fileList);
+            })
+            .fail(function (err) {
+                if (err === FileSystemError.TOO_MANY_ENTRIES && !_projectWarnedForTooManyFiles) {
+                    _showErrorDialog(ERR_TYPE_MAX_FILES);
+                    _projectWarnedForTooManyFiles = true;
+                }
+                // resolve with empty list
+                deferred.resolve([]);
+            });
+        return deferred.promise();
+    }
+
+    /**
+     * Adds an icon provider. The callback is invoked before each working set item is created, and can
+     * return content to prepend to the item if it supports the icon.
+     *
+     * @param {!function(!{name:string, fullPath:string, isFile:boolean}):?string|jQuery|DOMNode} callback
+     * Return a string representing the HTML, a jQuery object or DOM node, or undefined. If undefined,
+     * nothing is prepended to the list item and the default or an available icon will be used.
+     * @param {number} [priority] optional priority. 0 being lowest. The icons with the highest priority wins if there
+     * are multiple callback providers attached. icon providers of the same priority first valid response wins.
+     */
+    function addIconProvider(callback, priority= 0) {
+        WorkingSetView.addIconProvider(callback, priority);
+        return FileTreeView.addIconProvider(callback, priority);
+    }
+
+    /**
+     * Adds a CSS class provider, invoked before each working set item is created or updated. When called
+     * to update an existing item, all previously applied classes have been cleared.
+     *
+     * @param {!function(!{name:string, fullPath:string, isFile:boolean}):?string} callback
+     * Return a string containing space-separated CSS class(es) to add, or undefined to leave CSS unchanged.
+     * @param {number} [priority] optional priority. 0 being lowest. The class with the highest priority wins if there
+     * are multiple callback classes attached. class providers of the same priority will be appended.
+     */
+    function addClassesProvider(callback, priority) {
+        WorkingSetView.addClassProvider(callback, priority);
+        return FileTreeView.addClassesProvider(callback, priority);
+    }
+
+    /**
+     * Forces the file tree to rerender. Typically, the tree only rerenders the portions of the
+     * tree that have changed data. If an extension that augments the tree has changes that it
+     * needs to display, calling rerenderTree will cause the components for the whole tree to
+     * be rerendered.
+     */
+    function rerenderTree() {
+        _renderTree(true);
+    }
+
+
+    // Private API helpful in testing
+    exports._actionCreator                = actionCreator;
+    exports._RENDER_DEBOUNCE_TIME         = _RENDER_DEBOUNCE_TIME;
+
+    // Private API for use with SidebarView
+    exports._setFileTreeSelectionWidth    = _setFileTreeSelectionWidth;
+
+    // Define public API
+    exports.getProjectRoot                = getProjectRoot;
+    exports.getBaseUrl                    = getBaseUrl;
+    exports.setBaseUrl                    = setBaseUrl;
+    exports.isWithinProject               = isWithinProject;
+    exports.filterProjectFiles            = filterProjectFiles;
+    exports.makeProjectRelativeIfPossible = makeProjectRelativeIfPossible;
+    exports.shouldShow                    = ProjectModel.shouldShow;
+    exports.shouldIndex                   = ProjectModel.shouldIndex;
+    exports.openProject                   = openProject;
+    exports.getFileTreeContext            = getFileTreeContext;
+    exports.getSelectedItem               = getSelectedItem;
+    exports.getContext                    = getContext;
+    exports.getInitialProjectPath         = getInitialProjectPath;
+    exports.getStartupProjectPath         = getStartupProjectPath;
+    exports.getProjectRelativePath        = getProjectRelativePath;
+    exports.getWelcomeProjectPath         = getWelcomeProjectPath;
+    exports.getExploreProjectPath         = getExploreProjectPath;
+    exports.getLocalProjectsPath          = getLocalProjectsPath;
+    exports.isWelcomeProjectPath          = isWelcomeProjectPath;
+    exports.updateWelcomeProjectPath      = updateWelcomeProjectPath;
+    exports.createNewItem                 = createNewItem;
+    exports.renameItemInline              = renameItemInline;
+    exports.deleteItem                    = deleteItem;
+    exports.forceFinishRename             = forceFinishRename;
+    exports.showInTree                    = showInTree;
+    exports.refreshFileTree               = refreshFileTree;
+    exports.getAllFiles                   = getAllFiles;
+    exports.getLanguageFilter             = getLanguageFilter;
+    exports.addIconProvider               = addIconProvider;
+    exports.addClassesProvider            = addClassesProvider;
+    exports.rerenderTree                  = rerenderTree;
+    exports.setProjectBusy                = setProjectBusy;
+
+    // public events
+    exports.EVENT_PROJECT_BEFORE_CLOSE = EVENT_PROJECT_BEFORE_CLOSE;
+    exports.EVENT_PROJECT_CLOSE = EVENT_PROJECT_CLOSE;
+    exports.EVENT_PROJECT_OPEN = EVENT_PROJECT_OPEN;
+    exports.EVENT_PROJECT_REFRESH = EVENT_PROJECT_REFRESH;
+    exports.EVENT_CONTENT_CHANGED = EVENT_CONTENT_CHANGED;
+    exports.EVENT_PROJECT_FILE_CHANGED = EVENT_PROJECT_FILE_CHANGED;
+    exports.EVENT_PROJECT_FILE_RENAMED = EVENT_PROJECT_FILE_RENAMED;
+    exports.EVENT_PROJECT_OPEN_FAILED = EVENT_PROJECT_OPEN_FAILED;
+});
