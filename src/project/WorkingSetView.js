@@ -1484,4 +1484,65 @@ define(function (require, exports, module) {
     });
 
     /*
-     * T
+     * To be used by other modules/default-extensions which needs to borrow working set entry icons
+     * @param {!object} data - contains file info {fullPath, name, isFile}
+     * @param {!jQuery} $element - jquery fn wrap for the list item
+     */
+    function useIconProviders(data, $element) {
+        for(let provider of _iconProviders){
+            try{
+                let icon = provider(data);
+                if (icon) {
+                    $element.prepend($(icon));
+                    break;
+                }
+            } catch (e) {
+                console.error("Failed to create workingset file icon: ", e);
+            }
+        }
+    }
+
+    /*
+     * To be used by other modules/default-extensions which needs to borrow working set entry custom classes
+     * @param {!object} data - contains file info {fullPath, name, isFile}
+     * @param {!jQuery} $element - jquery fn wrap for the list item
+     */
+    function useClassProviders(data, $element) {
+        let succeededPriority = null;
+        // the classProviders list is sorted by priority at insertion
+        for(let provider of _classProviders){
+            try{
+                if(succeededPriority !== null && (succeededPriority !== provider.priority)){
+                    // we need to append all class of the same priority and break once we shift to lower priority.
+                    break;
+                }
+                let classToApply = provider(data);
+                if(classToApply){
+                    $element.addClass(classToApply);
+                    succeededPriority = provider.priority;
+                }
+            } catch (e) {
+                console.error("Failed to apply workingset file class: ", e);
+            }
+        }
+    }
+
+    /**
+     * Gets the filesystem object for the current context in the working set.
+     */
+    function getContext() {
+        return _contextEntry;
+    }
+
+    // Public API
+    exports.createWorkingSetViewForPane   = createWorkingSetViewForPane;
+    exports.refresh                       = refresh;
+    exports.addIconProvider               = addIconProvider;
+    exports.addClassProvider              = addClassProvider;
+    exports.syncSelectionIndicator        = syncSelectionIndicator;
+    exports.getContext                    = getContext;
+
+    // API to be used only by default extensions
+    exports.useIconProviders              = useIconProviders;
+    exports.useClassProviders               = useClassProviders;
+});
