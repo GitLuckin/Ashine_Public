@@ -439,4 +439,156 @@ define(function (require, exports, module) {
         e.stopPropagation();
 
         filterSets.splice(filterIndex, 1);
-        Preferences
+        PreferencesManager.set("fileFilters", filterSets);
+
+        if (activeFilterIndex === filterIndex) {
+            // Removing the active filter, so clear the active filter
+            // both in the view state.
+            setActiveFilter(null);
+        } else if (activeFilterIndex > filterIndex) {
+            // Adjust the active filter index after the removal of a filter set before it.
+            --activeFilterIndex;
+            setActiveFilter(filterSets[activeFilterIndex], activeFilterIndex);
+        }
+
+        _updatePicker();
+        _doPopulate();
+        _picker.refresh();
+    }
+
+    /**
+     * Close filter dropdwon list and launch edit filter dialog.
+     * @param {!Event} e Mouse events
+     */
+    function _handleEditFilter(e) {
+        var filterSets  = PreferencesManager.get("fileFilters") || [],
+            filterIndex = $(e.target).parent().data("index") - FIRST_FILTER_INDEX;
+
+        // Don't let the click bubble upward.
+        e.stopPropagation();
+
+        // Close the dropdown first before opening the edit filter dialog
+        // so that it will restore focus to the DOM element that has focus
+        // prior to opening it.
+        _picker.closeDropdown();
+
+        editFilter(filterSets[filterIndex], filterIndex);
+    }
+
+    /**
+     * Set up mouse click event listeners for 'Delete' and 'Edit' buttons
+     * when the dropdown is open. Also set check mark on the active filter.
+     * @param {!Event>} event listRendered event triggered when the dropdown is open
+     * @param {!jQueryObject} $dropdown the jQuery DOM node of the dropdown list
+     */
+    function _handleListRendered(event, $dropdown) {
+        var activeFilterIndex = PreferencesManager.getViewState("activeFileFilter"),
+            checkedItemIndex = (activeFilterIndex > -1) ? (activeFilterIndex + FIRST_FILTER_INDEX) : -1;
+        _picker.setChecked(checkedItemIndex, true);
+
+        $dropdown.find(".filter-trash-icon")
+            .on("click", _handleDeleteFilter);
+
+        $dropdown.find(".filter-edit-icon")
+            .on("click", _handleEditFilter);
+    }
+
+    /**
+     * Creates a UI element for selecting a filter, populated with a list of recently used filters, an option to
+     * edit the selected filter and another option to create a new filter. The client should call commitDropdown()
+     * when the UI containing the filter picker is confirmed (which updates the MRU order) and then use the
+     * returned filter object as needed.
+     *
+     * @param {?{label:string, promise:$.Promise}} context Info on files that filter will apply to.
+     *      This will be saved as _context for later use in creating a new filter or editing an
+     *      existing filter in Edit Filter dialog.
+     * @return {!jQueryObject} Picker UI. To retrieve the selected value, use commitPicker().
+     */
+    function createFilterPicker(context) {
+
+        function itemRenderer(item, index) {
+            if (index < FIRST_FILTER_INDEX) {
+                // Prefix the two filter commands with 'recent-filter-name' so that
+                // they also get the same margin-left as the actual filters.
+                return "<span class='recent-filter-name'></span>" + _.escape(item);
+            }
+
+            var condensedPatterns = _getCondensedForm(item.patterns),
+                templateVars = {
+                    "filter-name": _.escape(item.name || condensedPatterns),
+                    "filter-patterns": item.name ? " - " + _.escape(condensedPatterns) : ""
+                };
+
+            return Mustache.render(FilterNameTemplate, templateVars);
+        }
+
+        _context = context;
+        _picker = new DropdownButton("", [], itemRenderer);
+
+        _updatePicker();
+        _doPopulate();
+
+        // Add 'file-filter-picker' to keep some margin space on the left of the button
+        _picker.$button.addClass("file-filter-picker no-focus");
+
+        // Set up mouse click event listeners for 'Delete' and 'Edit' buttons
+        _picker.on("listRendered", _handleListRendered);
+
+        _picker.on("select", function (event, item, itemIndex) {
+            if (itemIndex === 0) {
+                // Close the dropdown first before opening the edit filter dialog
+                // so that it will restore focus to the DOM element that has focus
+                // prior to opening it.
+                _picker.closeDropdown();
+
+                // Create a new filter set
+                editFilter({ name: "", patterns: [] }, -1);
+            } else if (itemIndex === 1) {
+                // Uncheck the prior active filter in the dropdown list.
+                _picker.setChecked(itemIndex, false);
+
+                // Clear the active filter
+                setActiveFilter(null);
+                _updatePicker();
+            } else if (itemIndex >= FIRST_FILTER_INDEX && item) {
+                setActiveFilter(item, itemIndex - FIRST_FILTER_INDEX);
+                _picker.setChecked(itemIndex, true);
+                _updatePicker();
+            }
+        });
+
+        return _picker.$button;
+    }
+
+    /**
+     * Allows unit tests to open the file filter dropdown list.
+     */
+    function showDropdown() {
+        if (_picker) {
+            _picker.showDropdown();
+        }
+    }
+
+    /**
+     * Allows unit tests to close the file filter dropdown list.
+     */
+    function closeDropdown() {
+        if (_picker) {
+            _picker.closeDropdown();
+        }
+    }
+
+    // For unit tests only
+    exports.showDropdown       = showDropdown;
+    exports.closeDropdown      = closeDropdown;
+
+    exports.createFilterPicker     = createFilterPicker;
+    exports.commitPicker           = commitPicker;
+    exports.getActiveFilter        = getActiveFilter;
+    exports.setActiveFilter        = setActiveFilter;
+    exports.editFilter             = editFilter;
+    exports.compile                = compile;
+    exports.filterPath             = filterPath;
+    exports.filterFileList         = filterFileList;
+    exports.getPathsMatchingFilter = getPathsMatchingFilter;
+});
