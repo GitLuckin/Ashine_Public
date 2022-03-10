@@ -275,4 +275,281 @@ define(function (require, exports, module) {
             })
             .on("selectNextPage", function () {
                 if (_findBar && _findBar._options.multifile){
-                    _resultsView.selectN
+                    _resultsView.selectNextPage();
+                }
+            })
+            .on("selectPrevPage", function () {
+                if (_findBar && _findBar._options.multifile){
+                    _resultsView.selectPrevPage();
+                }
+            })
+            .on("openSelectedFile", function () {
+                if (_findBar && _findBar._options.multifile){
+                    _resultsView.OpenSelectedFile();
+                }
+            });
+
+        if (showReplace) {
+            // We shouldn't get a "doReplace" in this case, since the Replace button
+            // is hidden when we set options.multifile.
+            _findBar.on("doReplaceBatch.FindInFiles", startReplace);
+        }
+
+        var oldModalBarHeight = _findBar._modalBar.height();
+
+        // Show file-exclusion UI *unless* search scope is just a single file
+        if (!scope || scope.isDirectory) {
+            var exclusionsContext = {
+                label: FindUtils.labelForScope(scope),
+                promise: candidateFilesPromise
+            };
+
+            filterPicker = FileFilters.createFilterPicker(exclusionsContext);
+            // TODO: include in FindBar? (and disable it when FindBar is disabled)
+            _findBar._modalBar.getRoot().find(".scope-group").append(filterPicker);
+        }
+
+        handleQueryChange();
+        startSearch();
+
+        // Appending FilterPicker and query text can change height of modal bar, so resize editor.
+        // Preserve scroll position of the current full editor across the editor refresh, adjusting
+        // for the height of the modal bar so the code doesn't appear to shift if possible.
+        var fullEditor = EditorManager.getCurrentFullEditor(),
+            scrollPos;
+        if (fullEditor) {
+            scrollPos = fullEditor.getScrollPos();
+            scrollPos.y -= oldModalBarHeight;   // modalbar already showing, adjust for old height
+        }
+        WorkspaceManager.recomputeLayout();
+        if (fullEditor) {
+            fullEditor._codeMirror.scrollTo(scrollPos.x, scrollPos.y + _findBar._modalBar.height());
+        }
+    }
+
+    /**
+     * @private
+     * Finish a replace across files operation when the user clicks "Replace" on the results panel.
+     * @param {SearchModel} model The model for the search associated with ths replace.
+     */
+    function _finishReplaceBatch(model) {
+        var replaceText = model.replaceText;
+        if (replaceText === null) {
+            return;
+        }
+
+        // Clone the search results so that they don't get updated in the middle of the replacement.
+        var resultsClone = _.cloneDeep(model.results),
+            replacedFiles = Object.keys(resultsClone).filter(function (path) {
+                return FindUtils.hasCheckedMatches(resultsClone[path]);
+            }),
+            isRegexp = model.queryInfo.isRegexp;
+
+        function processReplace(forceFilesOpen) {
+            StatusBar.showBusyIndicator(true);
+            FindInFiles.doReplace(resultsClone, replaceText, { forceFilesOpen: forceFilesOpen, isRegexp: isRegexp })
+                .fail(function (errors) {
+                    var message = Strings.REPLACE_IN_FILES_ERRORS + FileUtils.makeDialogFileList(
+                            errors.map(function (errorInfo) {
+                                return ProjectManager.makeProjectRelativeIfPossible(errorInfo.item);
+                            })
+                        );
+
+                    Dialogs.showModalDialog(
+                        DefaultDialogs.DIALOG_ID_ERROR,
+                        Strings.REPLACE_IN_FILES_ERRORS_TITLE,
+                        message,
+                        [
+                            {
+                                className: Dialogs.DIALOG_BTN_CLASS_PRIMARY,
+                                id: Dialogs.DIALOG_BTN_OK,
+                                text: Strings.BUTTON_REPLACE_WITHOUT_UNDO
+                            }
+                        ]
+                    );
+                })
+                .always(function () {
+                    StatusBar.hideBusyIndicator();
+                });
+        }
+
+        if (replacedFiles.length <= MAX_IN_MEMORY) {
+            // Just do the replacements in memory.
+            _resultsView.close();
+            processReplace(true);
+        } else {
+            Dialogs.showModalDialog(
+                DefaultDialogs.DIALOG_ID_INFO,
+                Strings.REPLACE_WITHOUT_UNDO_WARNING_TITLE,
+                StringUtils.format(Strings.REPLACE_WITHOUT_UNDO_WARNING, MAX_IN_MEMORY),
+                [
+                    {
+                        className: Dialogs.DIALOG_BTN_CLASS_NORMAL,
+                        id: Dialogs.DIALOG_BTN_CANCEL,
+                        text: Strings.CANCEL
+                    },
+                    {
+                        className: Dialogs.DIALOG_BTN_CLASS_PRIMARY,
+                        id: Dialogs.DIALOG_BTN_OK,
+                        text: Strings.BUTTON_REPLACE_WITHOUT_UNDO
+                    }
+                ]
+            )
+                .done(function (id) {
+                    if (id === Dialogs.DIALOG_BTN_OK) {
+                        _resultsView.close();
+                        processReplace(false);
+                    }
+                });
+        }
+    }
+
+    // Command handlers
+
+    /**
+     * @private
+     * Bring up the Find in Files UI with the replace options.
+     */
+    function _showReplaceBar() {
+        FindUtils.notifySearchScopeChanged();
+        _showFindBar(null, true);
+    }
+
+    /**
+     * @private
+     * Search within the file/subtree defined by the sidebar selection
+     */
+    function _showFindBarForSubtree() {
+        FindUtils.notifySearchScopeChanged();
+        var selectedEntry = ProjectManager.getSelectedItem();
+        _showFindBar(selectedEntry);
+    }
+
+    /**
+     * @private
+     * Search within the file/subtree defined by the sidebar selection
+     */
+    function _showReplaceBarForSubtree() {
+        FindUtils.notifySearchScopeChanged();
+        var selectedEntry = ProjectManager.getSelectedItem();
+        _showFindBar(selectedEntry, true);
+    }
+
+    /**
+     * @private
+     * Close the open search bar, if any. For unit tests.
+     */
+    function _closeFindBar() {
+        if (_findBar) {
+            _findBar.close();
+        }
+    }
+
+    /**
+     * When the search indexing is started, we need to show the indexing status on the find bar if present.
+     */
+    function _searchIndexingStarted() {
+        if (_findBar && _findBar._options.multifile && FindUtils.isIndexingInProgress()) {
+            _findBar.showIndexingSpinner();
+        }
+    }
+
+    /**
+     * When the search indexing is started, we need to show the indexing status on the find bar if present.
+     */
+    function _searchIndexingProgressing(_evt, processed, total) {
+        if (_findBar && _findBar._options.multifile && FindUtils.isIndexingInProgress()) {
+            let progressMessage = StringUtils.format(Strings.FIND_IN_FILES_INDEXING_PROGRESS, processed, total);
+            _findBar.setIndexingMessage(progressMessage);
+        }
+    }
+
+    /**
+     * Once the indexing has finished, clear the indexing spinner
+     */
+    function _searchIndexingFinished() {
+        if (_findBar) {
+            _findBar.hideIndexingSpinner();
+        }
+    }
+
+    /**
+     * Issues a search if find bar is visible and is multi file search and not instant search
+     */
+    function _defferedSearch() {
+        if (_findBar && _findBar._options.multifile && !_findBar._options.replace) {
+            _findBar.redoInstantSearch();
+        }
+    }
+
+    /**
+     * Schedules a search on search scope/filter changes. Have to schedule as when we listen to this event, the file filters
+     * might not have been updated yet.
+     */
+    function _searchIfRequired() {
+        if (!FindUtils.isInstantSearchDisabled() && _findBar && _findBar._options.multifile && !_findBar._options.replace) {
+            setTimeout(_defferedSearch, 100);
+        }
+    }
+
+    /**
+    * @public
+    * Closes the search results panel
+    */
+    function closeResultsPanel() {
+        _resultsView.close();
+        _closeFindBar();
+    }
+
+    // Initialize items dependent on HTML DOM
+    AppInit.htmlReady(function () {
+        var model = FindInFiles.searchModel;
+        _resultsView = new SearchResultsView(model, "find-in-files-results", "find-in-files.results");
+        _resultsView
+            .on("replaceBatch", function () {
+                _finishReplaceBatch(model);
+            })
+            .on("close", function () {
+                FindInFiles.clearSearch();
+            })
+            .on("getNextPage", function () {
+                FindInFiles.getNextPageofSearchResults().done(function () {
+                    if (FindInFiles.searchModel.hasResults()) {
+                        _resultsView.showNextPage();
+                    }
+                });
+            })
+            .on("getLastPage", function () {
+                FindInFiles.getAllSearchResults().done(function () {
+                    if (FindInFiles.searchModel.hasResults()) {
+                        _resultsView.showLastPage();
+                    }
+                });
+            });
+    });
+
+    // Initialize: register listeners
+    ProjectManager.on("beforeProjectClose", function () { _resultsView.close(); });
+
+    // Initialize: command handlers
+    CommandManager.register(Strings.CMD_FIND_IN_FILES,       Commands.CMD_FIND_IN_FILES,       _showFindBar);
+    CommandManager.register(Strings.CMD_FIND_IN_SUBTREE,     Commands.CMD_FIND_IN_SUBTREE,     _showFindBarForSubtree);
+
+    CommandManager.register(Strings.CMD_REPLACE_IN_FILES,    Commands.CMD_REPLACE_IN_FILES,    _showReplaceBar);
+    CommandManager.register(Strings.CMD_REPLACE_IN_SUBTREE,  Commands.CMD_REPLACE_IN_SUBTREE,  _showReplaceBarForSubtree);
+
+    FindUtils.on(FindUtils.SEARCH_INDEXING_STARTED, _searchIndexingStarted);
+    FindUtils.on(FindUtils.SEARCH_INDEXING_PROGRESS, _searchIndexingProgressing);
+    FindUtils.on(FindUtils.SEARCH_INDEXING_FINISHED, _searchIndexingFinished);
+    FindUtils.on(FindUtils.SEARCH_FILE_FILTERS_CHANGED, _searchIfRequired);
+    FindUtils.on(FindUtils.SEARCH_SCOPE_CHANGED, _searchIfRequired);
+
+    // Public exports
+    exports.searchAndShowResults = searchAndShowResults;
+    exports.searchAndReplaceResults = searchAndReplaceResults;
+    exports.closeResultsPanel = closeResultsPanel;
+
+    // For unit testing
+    exports._showFindBar  = _showFindBar;
+    exports._closeFindBar = _closeFindBar;
+});
