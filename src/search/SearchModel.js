@@ -126,4 +126,143 @@ define(function (require, exports, module) {
 
     /**
      * Sets the given query info and stores a compiled RegExp query in this.queryExpr.
-     * @param {{query: string, case
+     * @param {{query: string, caseSensitive: boolean, isRegexp: boolean}} queryInfo
+     * @return {boolean} true if the query was valid and properly set, false if it was
+     *      invalid or empty.
+     */
+    SearchModel.prototype.setQueryInfo = function (queryInfo) {
+        var parsedQuery = FindUtils.parseQueryInfo(queryInfo);
+        if (parsedQuery.valid) {
+            this.queryInfo = queryInfo;
+            this.queryExpr = parsedQuery.queryExpr;
+            return true;
+        }
+        return false;
+
+    };
+
+    /**
+     * Sets the list of matches for the given path, removing the previous match info, if any, and updating
+     * the total match count. Note that for the count to remain accurate, the previous match info must not have
+     * been mutated since it was set.
+     * @param {string} fullpath Full path to the file containing the matches.
+     * @param {!{matches: Object, timestamp: Date, collapsed: boolean=}} resultInfo Info for the matches to set:
+     *      matches - Array of matches, in the format returned by FindInFiles._getSearchMatches()
+     *      timestamp - The timestamp of the document at the time we searched it.
+     *      collapsed - Optional: whether the results should be collapsed in the UI (default false).
+     */
+    SearchModel.prototype.setResults = function (fullpath, resultInfo) {
+        this.removeResults(fullpath);
+
+        if (this.foundMaximum || !resultInfo.matches.length) {
+            return;
+        }
+
+        // Make sure that the optional `collapsed` property is explicitly set to either true or false,
+        // to avoid logic issues later with comparing values.
+        resultInfo.collapsed = !!resultInfo.collapsed;
+
+        if(!this.results[fullpath] && this.numFiles >= 0){
+            this.numFiles++;
+        }
+        this.results[fullpath] = resultInfo;
+        this.numMatches += resultInfo.matches.length;
+        if (this.numMatches >= SearchModel.MAX_TOTAL_RESULTS) {
+            this.foundMaximum = true;
+
+            // Remove final result if there have been over MAX_TOTAL_RESULTS found
+            if (this.numMatches > SearchModel.MAX_TOTAL_RESULTS) {
+                this.results[fullpath].matches.pop();
+                this.numMatches--;
+                this.exceedsMaximum = true;
+            }
+        }
+    };
+
+    /**
+     * Removes the given result's matches from the search results and updates the total match count.
+     * @param {string} fullpath Full path to the file containing the matches.
+     */
+    SearchModel.prototype.removeResults = function (fullpath) {
+        if (this.results[fullpath]) {
+            this.numMatches -= this.results[fullpath].matches.length;
+            if(this.numFiles){
+                this.numFiles--;
+            }
+            delete this.results[fullpath];
+        }
+    };
+
+    /**
+     * @return {boolean} true if there are any results in this model.
+     */
+    SearchModel.prototype.hasResults = function () {
+        return Object.keys(this.results).length > 0;
+    };
+
+    /**
+     * Counts the total number of matches and files
+     * @return {{files: number, matches: number}}
+     */
+    SearchModel.prototype.countFilesMatches = function () {
+        return {files: (this.numFiles || Object.keys(this.results).length), matches: this.numMatches};
+    };
+
+    /**
+     * Prioritizes the open file and then the working set files to the starting of the list of files
+     * If node search is disabled, we sort the files too- Sorting is computation intensive, and our
+     * ProjectManager.getAllFiles with the sort flag is not working properly : TODO TOFIX
+     * @param {?string} firstFile If specified, the path to the file that should be sorted to the top.
+     * @return {Array.<string>}
+     */
+    SearchModel.prototype.prioritizeOpenFile = function (firstFile) {
+        var workingSetFiles = MainViewManager.getWorkingSet(MainViewManager.ALL_PANES),
+            workingSetFileFound = {},
+            fileSetWithoutWorkingSet = [],
+            startingWorkingFileSet = [],
+            propertyName = "",
+            i = 0;
+
+        firstFile = firstFile || "";
+
+        // Create a working set path map which indicates if a file in working set is found in file list
+        for (i = 0; i < workingSetFiles.length; i++) {
+            workingSetFileFound[workingSetFiles[i].fullPath] = false;
+        }
+
+        // Remove all the working set files from the filtration list
+        fileSetWithoutWorkingSet = Object.keys(this.results).filter(function (key) {
+            if (workingSetFileFound[key] !== undefined) {
+                workingSetFileFound[key] = true;
+                return false;
+            }
+            return true;
+        });
+
+        //push in the first file
+        if (workingSetFileFound[firstFile] === true) {
+            startingWorkingFileSet.push(firstFile);
+            workingSetFileFound[firstFile] = false;
+        }
+        //push in the rest of working set files already present in file list
+        for (propertyName in workingSetFileFound) {
+            if (workingSetFileFound.hasOwnProperty(propertyName) && workingSetFileFound[propertyName]) {
+                startingWorkingFileSet.push(propertyName);
+            }
+        }
+        return startingWorkingFileSet.concat(fileSetWithoutWorkingSet);
+    };
+
+    /**
+     * Notifies listeners that the set of results has changed. Must be called after the
+     * model is changed.
+     * @param {boolean} quickChange Whether this type of change is one that might occur
+     *      often, meaning that the view should buffer updates.
+     */
+    SearchModel.prototype.fireChanged = function (quickChange) {
+        this.trigger("change", quickChange);
+    };
+
+    // Public API
+    exports.SearchModel = SearchModel;
+});
