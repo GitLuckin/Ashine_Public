@@ -34,4 +34,872 @@
  */
 
 /* IMPORTANT: importing brackets_shared should be the first step in this file
- * This is so that imported CSS files (NOT LESS files
+ * This is so that imported CSS files (NOT LESS files) end up in the
+ * right place
+ */
+@import "brackets_shared.less";
+
+/* Overall layout */
+
+html, body {
+    color: @bc-text;
+    height: 100%;
+    overflow: hidden;
+    font-size: 14px;
+
+    /* Turn off selection for UI elements */
+    .user-select(none);
+
+    /* And make sure we get a pointer cursor even over text */
+    cursor: default;
+
+    &.platform-mac {
+        // Use gray scale antialiasing for UI. Code view editor-holder
+        // overrides this to use subpixel antialiasing on Mac, which then
+        // can be overridden by setting "fontSmoothing" preference to
+        // "antialiased". Gray scale AA is used for UI parts which use
+        // SourceSansPro font, which does't look good with subpixel AA,
+        // especially on low resolution monitors.
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .dark,
+    &.dark {
+         color: @dark-bc-text;
+    }
+}
+
+.editor-text-fragment-hover{
+    text-decoration-style: solid;
+    text-decoration-line: underline;
+    color: @bc-text-link !important;
+    text-decoration-color: @bc-text-link;
+    text-decoration-thickness: 2px;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.editor-text-fragment-matching-refs{
+    background-color: @matching-bracket;
+}
+
+.editor-text-rename-outline{
+    border-top: 2px @bc-primary-btn-border solid;
+    border-bottom: 2px @bc-primary-btn-border solid;
+}
+.editor-text-rename-outline-left{
+    border-left: 2px @bc-primary-btn-border solid;
+}
+.editor-text-rename-outline-right{
+    border-right: 2px @bc-primary-btn-border solid;
+}
+
+.editor-text-fragment-error{
+    text-decoration-style: wavy;
+    text-decoration-line: underline;
+    text-decoration-color: @error-underline-text;
+    text-decoration-thickness: 1px;
+}
+
+.editor-text-fragment-warn{
+    text-decoration-style: wavy;
+    text-decoration-line: underline;
+    text-decoration-color: @warn-underline-text;
+    text-decoration-thickness: 1px;
+}
+
+.editor-text-fragment-info{
+    text-decoration-style: dashed;
+    text-decoration-line: underline;
+    text-decoration-color: @info-underline-text;
+    text-decoration-thickness: 1px;
+}
+
+.editor-text-fragment-spell-error{
+    text-decoration-style: wavy;
+    text-decoration-line: underline;
+    text-decoration-color: @spell-underline-text;
+    text-decoration-thickness: 1px;
+}
+
+.hidden-element{
+    display: none !important;
+}
+
+.subpixel-aa{
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+
+.resizing-container {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: @z-index-brackets-panel-resizer;
+
+    &.horz-resizing {
+        cursor: col-resize;
+    }
+
+    &.vert-resizing {
+        cursor: row-resize;
+    }
+}
+
+a, img {
+    -webkit-user-drag: none;
+}
+
+.main-view {
+    background: @bc-menu-bg; // to keep the theme background consistent
+    height: 100%;
+
+    .dark & {
+        background: @dark-bc-menu-bg;
+    }
+
+    #notificationUIDefaultAnchor{
+        position: absolute;
+        right: @main-toolbar-width;
+    }
+
+    .sidebar, .content {
+        height: 100%;
+        position: absolute;
+        top: 0;
+    }
+
+    .sidebar {
+        .vbox;
+        left: 0;
+        width: @sidebar-width;  // changed dynamically via Resizer
+        white-space: nowrap;
+    }
+
+    .content {
+        padding: 0;
+        left: @sidebar-width;  // changed dynamically via Resizer
+        right: @main-toolbar-width;
+        z-index: @z-index-brackets-main-content;
+    }
+
+    .force-right-zero {
+        right: 0;
+    }
+}
+
+#titlebar, .modal-bar {
+    border-bottom: 1px solid @bc-panel-border;
+    box-shadow: 0 1px 3px @bc-shadow-small;
+    font-size: @menu-item-font-size;
+
+    // Make sure the bottom box-shadow goes above the editor (position: relative needed to start a new stacking group)
+    position: relative;
+    z-index: @z-index-brackets-toolbar;
+
+    .dark & {
+        border-bottom: 1px solid @dark-bc-shadow;
+        box-shadow: 0 1px 3px @dark-bc-shadow-small;
+    }
+}
+
+.forced-hidden {
+    display: none !important;
+}
+
+.forced-inVisible {
+    visibility: hidden !important;
+}
+
+.busyCursor {
+    cursor: wait !important;
+}
+
+#status-bar {
+    position: relative;
+    background: @bc-bg-status-bar;
+    border-top: 1px solid @bc-panel-border;
+    box-sizing: border-box;
+    color: @bc-text;
+    font-family: @sansFontFamily;
+    font-size: 11px;
+    line-height: 25px;
+    height: @bc-bg-status-bar-height;
+    overflow: hidden;
+    .dark & {
+        background: @dark-bc-bg-status-bar;
+        border-top: 1px solid @dark-bc-panel-separator;
+        color: @dark-bc-text;
+    }
+}
+
+#status-info {
+    color: @bc-text;
+    left: 10px;
+    position: absolute;
+    white-space: nowrap;
+
+    .dark & {
+        color: @dark-bc-text;
+    }
+
+    div {
+        display: inline;
+    }
+}
+
+#status-file {
+    color: @bc-text-quiet;
+
+    .dark & {
+        color: @dark-bc-text-quiet;
+    }
+}
+
+#status-indicators {
+    background: @bc-bg-status-bar;
+    color: @bc-text;
+    position: absolute;
+    right: 0;
+    text-align: right;
+    white-space: nowrap;
+
+    .dark & {
+        background: @dark-bc-bg-status-bar;
+        color: @dark-bc-text;
+    }
+
+    > div {
+        &:not(.spinner) {
+            border-left: 1px solid @bc-panel-border;
+
+            .dark & {
+                border-left: 1px solid @dark-bc-panel-separator;
+            }
+        }
+        float: right;
+        padding: 0 10px;
+    }
+    .spinner {  // spinner is tiny & usually invisible; reduce margin so gap is less glaring
+        margin: 6px 10px;
+        padding: 0;
+    }
+
+    #status-language {
+        border-right: 1px solid @bc-panel-border;
+        padding: 0;
+        margin: 0;
+
+        .dark & {
+            border-right: 1px solid @dark-bc-panel-separator;
+        }
+    }
+
+    /* dropdown button styling */
+    .btn-status-bar {
+        border: 0;
+        background-color: inherit;
+        color: inherit;
+        font: inherit;
+        height: inherit;
+        line-height: inherit;
+        margin: 0;
+        padding: 0 21px 0 10px;
+        vertical-align: top;
+        width: auto;
+        cursor: pointer;
+        border-radius: 0;
+        box-shadow: none;
+        text-shadow: none;
+
+        &:focus {
+            outline: 0;
+        }
+        &[disabled] {
+            cursor: inherit;
+            background: none;
+            text-decoration: none;
+        }
+        &::after {
+            top: 10px;
+            right: 8px;
+        }
+    }
+
+}
+
+#status-indent > * {
+    display: inline-block;
+}
+
+#status-indent > *.hidden {
+    display: none;
+}
+
+#indent-type, #indent-width-label {
+    cursor: pointer;
+    margin-right: 3px;
+}
+
+#status-overwrite:hover, #indent-type:hover, #indent-width-label:hover {
+    text-decoration: underline;
+}
+
+#indent-width-input {
+    font-size: 11px;
+    font-weight: @font-weight-semibold;
+    height: 13px;
+    line-height: 1;
+    vertical-align: middle;
+    color: @bc-text;
+    margin: 0;
+    padding: 0 3px 2px;
+    position: relative;
+    left: 0;
+    top: -1px;
+    width: 6px;
+    transition: 0.1s linear all;
+
+    .dark & {
+        color: @dark-bc-text;
+    }
+}
+
+#indent-width-input:focus {
+
+}
+
+#indent-width-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#status-overwrite {
+    transition: background-color 3s;
+    background-color: rgba(255, 255, 255, 0);
+    color: @bc-text;
+    cursor: pointer;
+
+    .dark & {
+        color: @dark-bc-text;
+    }
+}
+
+#status-overwrite.flash {
+    transition: background-color 1s;
+    background-color: rgb(120, 178, 242);
+}
+
+
+#editor-holder {
+    position: relative;
+
+    /* Placeholder shown when there is no editor open */
+
+    .view-pane {
+        display: block !important;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .pane-content {
+        display: block;
+        margin: 0;
+        overflow: hidden;
+        height: 100%;
+        width: 100%;
+        box-sizing: border-box;
+
+        /* Image Preview */
+        .image-view {
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            text-align: center;
+            .image-centering {
+                display: inline-block;
+                vertical-align: middle;
+                width: 90%; //As long as the width isn't set on the image itself theres no need for max-width/height
+                height: 90%;
+            }
+            .image-data {
+                font-weight: @font-weight-semibold;
+            }
+        }
+
+        .image-view:before {
+            content: '';
+            display: inline-block;
+            height: 100%;
+            margin-right: -0.25em; /* Adjusts for spacing */
+            vertical-align: middle;
+        }
+
+        .image-preview {
+            background: url(images/preview-bg.svg);
+            box-shadow: 0 1px 3px @bc-shadow;
+            max-height: 100%;
+
+            .dark & {
+                background: url(images/preview-bg-dark.svg);
+                box-shadow: 0 1px 3px @dark-bc-shadow;
+            }
+        }
+
+        .image-header {
+            display: block;
+            width: 100%;
+            height: 38px;
+            margin-bottom: 15px;
+        }
+
+        .image-data,
+        .image-path {
+            text-align: left;
+            .user-select(text);
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        .image-data::selection,
+        .image-path::selection {
+            background: @selection-color-focused;
+        }
+
+        .image {
+            position: relative;
+            height: calc(~'100% - 53px');//.image-header height+margin
+        }
+
+        .image-guide,
+        .image-tip,
+        .image-scale {
+            pointer-events: none;
+        }
+
+        .image-scale {
+            display: block;
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 40px;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: @bc-text-alt;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px @bc-shadow;
+
+            .dark & {
+                color: @dark-bc-text-alt;
+                box-shadow: 0 1px 3px @dark-bc-shadow;
+            }
+        }
+
+        .image-tip {
+            display: block;
+            position: absolute;
+            text-align: left;
+            white-space: nowrap;
+            padding: 6px 9px;
+            color: @bc-text-alt;
+            background-color: rgba(0, 0, 0, 0.8);
+            font-size: 11px;
+            font-family: @sourceFontFamily;
+            line-height: 13px;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px @bc-shadow;
+
+            .dark & {
+                color: @dark-bc-text-alt;
+                box-shadow: 0 1px 3px @dark-bc-shadow;
+            }
+        }
+
+        .x-value,
+        .y-value {
+            text-align: right;
+        }
+
+        .tip-container {
+            border: 0;
+        }
+
+        .horz-guide {
+            background-image: url("images/horizontal-dash.svg");
+            background-repeat: repeat-x;
+            width: 8px;
+            height: 1px;
+        }
+
+        .vert-guide {
+            background-image: url("images/vertical-dash.svg");
+            background-repeat: repeat-y;
+            width: 1px;
+            height: 8px;
+        }
+
+        .horz-guide,
+        .vert-guide {
+            position: absolute;
+            display: block;
+        }
+    }
+    .pane-header {
+        opacity: 0.7; // quieten inactive pane header
+        box-sizing: border-box;
+        border-bottom:  1px solid rgba(0, 0, 0, 0.05);
+        padding: 5px 10px;
+        background-color: @background;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        &-text {
+            display: inline;
+        }
+
+        .dark & {
+            background-color: #1d1f21; // not using a variable on purpose.
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+        }
+
+        &-flipview-btn {
+            position: relative;
+            display: none;
+            top: 0;
+            padding-top: 2px;
+            padding-right: 4px;
+            padding-left: 4px;
+            margin-left: 0;
+            margin-bottom: 0;
+            .sprite-icon(0, 0, 13px, 13px, "images/flip-view-icons.svg");
+            background-origin: content-box;
+            -webkit-transform: translateZ(0); // forces GPU mode for better filter rendering on retina
+            transform: translateZ(0); // future proofing
+            z-index: 1;
+            vertical-align: middle;
+
+            &:hover {
+                background-image: url("images/flip-view-icons-hover.svg")
+            }
+
+            &.flipview-icon-none {
+                display: none;
+            }
+
+            &.flipview-icon-top {
+                background-position: center 1px;
+            }
+
+            &.flipview-icon-right {
+                background-position: center -18px;
+            }
+
+            &.flipview-icon-bottom {
+                background-position: center -35px;
+            }
+
+            &.flipview-icon-left {
+                background-position: center -54px;
+            }
+        }
+
+        &-close-btn {
+            position: relative;
+            display: none;
+            height: 16px;
+            width: 16px;
+            float: right;
+            margin-top: -2px;
+
+            &:before {
+                color: rgba(0, 0, 0, 0.5);
+            }
+
+            &:hover:before {
+                color: rgba(0, 0, 0, 0.8);
+            }
+
+            .dark & {
+                &:before {
+                    color: rgba(255, 255, 255, 0.5);
+                }
+
+                &:hover:before {
+                    color: rgba(255, 255, 255, 0.8);
+                }
+            }
+        }
+
+        &:hover, &.always-show-header-buttons {
+            > .pane-header-flipview-btn:not(.flipview-icon-none) {
+                display: inline-block;
+            }
+
+            > .pane-header-close-btn {
+                display: inline;
+            }
+        }
+    }
+
+    .active-pane {
+
+        .pane-header {
+            opacity: 1;
+            color: @bc-menu-text;
+
+            .dark & {
+                color: @dark-bc-menu-text;
+            }
+        }
+    }
+}
+
+// moved this out of #editor-holder because we need to lower the specificity so theme authors can override the background color
+.not-editor {
+    height: 100%;
+    .vbox;
+    .box-pack(center);
+    .box-align(center);
+    background: #f8f8f8 url('images/no_content_bg.svg') no-repeat center 45%;
+
+    .dark & {
+        background: #1d1f21 url('images/no_content_bg_dark.svg') no-repeat center 45%;
+    }
+}
+
+// Split View Separator Styles
+.split-vertical #second-pane {
+    border-left: 1px solid rgba(0, 0, 0, 0.17);
+    .dark & {
+        border-left: 1px solid rgba(255, 255, 255, 0.3);
+    }
+}
+
+.split-horizontal #second-pane {
+    border-top: 1px solid rgba(0, 0, 0, 0.17);
+    .dark & {
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+    }
+}
+
+.vert-resizer {
+    position: absolute;
+    height: 6px;
+    width: 100%;
+    z-index: @z-index-brackets-panel-resizer;
+    opacity: 0;
+    cursor: row-resize;
+}
+
+.horz-resizer {
+    position: absolute;
+    height: 100%;
+    width: 6px;
+    z-index: @z-index-brackets-panel-resizer;
+    opacity: 0;
+    cursor: col-resize;
+}
+
+@keyframes fadeInFromNone {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.horz-resizer:hover {
+    background-color: @bc-primary-btn-bg;
+    opacity: 1;
+    animation: fadeInFromNone 0.5s ease-out;
+}
+
+.vert-resizer:hover {
+    background-color: @bc-primary-btn-bg;
+    opacity: 1;
+    animation: fadeInFromNone 0.5s ease-out;
+}
+
+.bottom-panel {
+    background-color: @bc-panel-bg;
+    display: none;
+    height: 200px;
+    border-top: 1px solid @bc-panel-border;
+
+    .dark & {
+        background-color: @dark-bc-panel-bg;
+        border-top: 1px solid @dark-bc-panel-border;
+    }
+
+    .check-all {
+        margin: 7px 15px 7px 7px;
+    }
+
+    .toolbar {
+        background-color: @bc-panel-bg-promoted;
+        border-bottom: @bc-panel-separator;
+        height: auto;
+        padding-top: (@base-padding / 2);
+        padding-bottom: (@base-padding / 2);
+        z-index: @z-index-brackets-results-panel;
+        box-shadow: inset 0 1px 0 @bc-highlight-hard, 0 -1px 3px @bc-shadow-small;
+
+        .dark & {
+            background-color: @dark-bc-panel-bg-promoted;
+            border-bottom: @dark-bc-panel-separator;
+            box-shadow: inset 0 1px 0 @dark-bc-highlight, 0 -1px 3px @dark-bc-shadow-small;
+        }
+
+        .title {
+            color: @bc-text;
+            font-size: @label-font-size;
+            font-weight: @font-weight-semibold;
+
+            .dark & {
+                color: @dark-bc-text;
+            }
+        }
+        .close {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            margin-top: -10px;
+        }
+    }
+
+    .table-container {
+        height: 170px;
+        overflow: auto;
+
+        .highlight {
+            background: @bc-panel-bg-text-highlight;
+            border-radius: 2px;
+
+            .dark & {
+                background: @dark-bc-panel-bg-text-highlight;
+            }
+        }
+
+        tr.selected td {
+            background-color: @bc-panel-bg-selected;
+            color: @bc-text-thin;
+
+            .dark & {
+                background-color: @dark-bc-panel-bg-selected;
+                color: @dark-bc-text-thin;
+            }
+        }
+    }
+}
+
+.bottom-panel-table {
+    td {
+        font-size: 14px;
+        padding-left: 15px;
+        padding-right: 0;
+        vertical-align: baseline;
+    }
+
+    .file-section > .checkbox-column {
+        width: 15px;
+    }
+
+    .line-number {
+        color: @bc-text-thin-quiet;
+        font-family: @sourceFontFamily;
+        font-size: 11px;
+        padding: 4px 0 0 15px;
+        text-align: right;
+        white-space: nowrap;
+        width: 5px;
+
+        .dark & {
+            color: @dark-bc-text-thin-quiet;
+        }
+    }
+
+    .dialog-filename {
+        font-size: 13px;
+        font-weight: @font-weight-semibold;
+    }
+
+    .dialog-path {
+        font-size: 11px;
+        font-weight: normal;
+    }
+
+    .line-text {
+        width: 100%;
+    }
+}
+
+
+#update-notification {
+    .sprite-icon(0, 0, 24px, 24px, "images/updateSprites.svg");
+    &.update-in-progress {
+        .sprite-icon(0, 0, 24px, 24px, "images/updateSpritesGrayed.svg");
+    }
+}
+
+#toolbar-go-live {
+    // background-position is 0 0 for 24x24 icons
+    // Default icon is for the 'disconnected' state
+    // The 'connecting failed' (.warning) state also maps here
+    .sprite-icon(0, 0, 24px, 24px, "images/live_development_sprites.svg");
+    // 'Connected' state
+    &.success {
+        .sprite-swap(0, 24px);
+    }
+    // 'Connection in progress' state
+    &.info {
+        .sprite-swap(0, 48px);
+    }
+    // 'Out-of-sync' state
+    &.out-of-sync {
+        .sprite-swap(0, 72px);
+    }
+    // 'sync-error'
+    &.sync-error {
+        .sprite-swap(0, 96px);
+    }
+}
+
+#toolbar-extension-manager {
+    .sprite-icon(0, 0, 24px, 24px, "images/extension-manager-sprite.svg");
+    &.updatesAvailable {
+        .sprite-icon(0, 24px, 24px, 24px, "images/extension-manager-sprite.svg");
+    }
+}
+
+/* Project panel */
+
+#working-set-list-container {
+    background: @bc-sidebar-bg;
+
+    > div:last-child ul {
+        padding-bottom: 21px; // Adds working set bottom padding to the last UL.
+    }
+}
+
+.working-set-header {
+    position: relative;
+    height: 19px;
+    padding: 10px 0 9px 12px;
+    background: @bc-sidebar-bg;
+    color: @project-panel-text-2;
+    text-shadow: none;
+    overflow: hidden;
+
+    > span {
+        background: @bc-sidebar-bg;
+        position: relative;
+        z-index: 9;
+    }
+
