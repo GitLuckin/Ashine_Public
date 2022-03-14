@@ -903,3 +903,828 @@ a, img {
         z-index: 9;
     }
 
+    > div {
+        background-color: @dark-bc-sidebar-bg;
+        opacity: 1;
+    }
+}
+
+#mainNavBar {
+    height: var(--toolbar-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#mainNavBarLeft {
+    float: left;
+    display: flex;
+}
+
+#mainNavBarRight {
+    float: right;
+    display: flex;
+}
+
+.working-set-splitview-btn {
+    top: 7px;
+    padding: 4px 6px;
+    .sprite-icon(0, 0, 13px, 13px, "images/select-triangles.svg");
+    background-origin: content-box;  // center image within the 13x13 area - ignore button's padding
+    -webkit-transform: translateZ(0); // forces GPU mode for better filter rendering on retina
+    transform: translateZ(0); // future proofing
+    -webkit-filter: drop-shadow(0 1px 0 rgba(0,0,0,0.36));
+    filter: drop-shadow(0 1px 0 rgba(0,0,0,0.36));
+    z-index: 1;
+    background-position: center 1px;
+}
+
+.search-nav-btn {
+    top: 7px;
+    padding: 4px 6px;
+    .sprite-icon(0, 0, 13px, 13px, "images/sprites.svg#search");
+    background-position: center;
+    background-size: cover;
+    opacity: 0.8;
+    z-index: 1;
+}
+
+.new-project-btn {
+    top: 7px;
+    padding: 4px 6px;
+    .sprite-icon(0, 0, 13px, 13px, "images/sprites.svg#newFolder");
+    background-position: center;
+    background-size: cover;
+    opacity: 0.8;
+    z-index: 1;
+}
+
+.show-in-file-tree-btn {
+    top: 7px;
+    padding: 4px 6px;
+    .sprite-icon(0, 0, 13px, 13px, "images/sprites.svg#binoculars");
+    background-position: center;
+    background-size: cover;
+    opacity: 0.8;
+    z-index: 1;
+}
+
+.nav-back-btn {
+    top: 7px;
+    padding: 4px 6px;
+    .sprite-icon(0, 0, 13px, 13px, "images/sprites.svg#leftArrow");
+    background-position: center;
+    background-size: cover;
+    opacity: 0.8;
+    z-index: 1;
+}
+
+.nav-forward-btn {
+    top: 7px;
+    padding: 4px 6px;
+    .sprite-icon(0, 0, 13px, 13px, "images/sprites.svg#rightArrow");
+    background-position: center;
+    background-size: cover;
+    opacity: 0.8;
+    z-index: 1;
+}
+
+.nav-back-btn-disabled {
+    top: 7px;
+    padding: 4px 6px;
+    .sprite-icon(0, 0, 13px, 13px, "images/sprites.svg#leftArrowDisabled");
+    background-position: center;
+    background-size: cover;
+    opacity: 0.8;
+    z-index: 1;
+}
+
+.nav-forward-btn-disabled {
+    top: 7px;
+    padding: 4px 6px;
+    .sprite-icon(0, 0, 13px, 13px, "images/sprites.svg#rightArrowDisabled");
+    background-position: center;
+    background-size: cover;
+    opacity: 0.8;
+    z-index: 1;
+}
+
+.splitview-icon-none {
+    display: inline-block;
+    background-position: center 1px;
+}
+.splitview-icon-vertical {
+    display: inline-block;
+    background-position: center -20px;
+}
+.splitview-icon-horizontal {
+    display: inline-block;
+    background-position: center -41px;
+}
+
+
+
+// Show splitview icons on the button's dropdown menu too
+#splitview-menu ul.dropdown-menu > li {
+    .menu-name::before {
+        display: none;
+        .sprite-icon(0, 0, 13px, 13px, "images/split-view-icons.svg");
+        margin: 0 5px 0 -1px;
+        vertical-align: -2px;
+
+        .dark & {
+            .sprite-icon(0, 0, 13px, 13px, "images/split-view-icons-dark.svg");
+        }
+    }
+    &:nth-child(1) .menu-name::before {
+        .splitview-icon-none();
+    }
+    &:nth-child(2) .menu-name::before {
+        .splitview-icon-vertical();
+    }
+    &:nth-child(3) .menu-name::before {
+        .splitview-icon-horizontal();
+    }
+}
+
+#sidebar-resizer {
+    position: absolute;
+    width: 6px;
+    height: 100%;
+    z-index: @z-index-brackets-sidebar-resizer;
+    opacity: 0;
+    cursor: col-resize;
+}
+
+.working-set-header-title{
+    font-size: 15px;
+}
+
+#project-files-header {
+    display: flex;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 8px 0 9px 12px;
+    font-size: 15px;
+    color: @project-panel-text-2;
+    overflow: hidden;
+
+    .btn-alt-quiet {
+        background-color: #47484b;
+
+        // relative positioning plus z-index make sure that the splitview button flows under the left aligned buttons in the project pane when there are no working set files
+        position: relative;
+        z-index: 9;
+    }
+}
+
+#project-operations-spinner{
+    margin-right: 7px;
+}
+
+.open-files-container {
+    .box-flex(0);
+    padding: 0;
+    max-height: 30vh;
+
+
+    ul {
+        list-style-type: none;
+        margin: 0 0 2px; // 2px bottom margin required to stop scrollbar from appearing when the cursor is hovering over the last opened file.
+    }
+
+    li {
+        position: relative; // so that children can be positioned absolute
+        line-height: 18px;
+        padding: 0 0 0 8px;
+        min-height: 18px;
+        vertical-align: baseline;
+        white-space: nowrap;
+
+        &.selected a {
+            color: @open-working-file-name-highlight;
+        }
+
+        &.selected .extension {
+            color: @open-working-file-ext-highlight;
+        }
+    }
+
+    a {
+        color: @bc-text-alt;
+
+        font-size: 14px;
+        text-decoration: none;
+
+        display: block;
+        height: 16px;
+        line-height: 15px;
+        margin-left: 18px;
+        padding: 3px 0 3px 0;
+
+        cursor: default;
+
+        .dark & {
+            color: @dark-bc-text-alt;
+        }
+
+        .directory {
+            font-size: 11px;
+        }
+    }
+
+    .extension, .directory {
+        color: @project-panel-text-2;
+    }
+}
+
+
+
+.sidebar-selection, .filetree-selection {
+    background: @bc-sidebar-selection;
+    border-top: 1px solid @bc-shadow-small;
+    border-bottom: 1px solid @bc-highlight;
+    box-sizing: border-box;
+    height: 23px;
+    width: 100%;
+    position: absolute;
+}
+
+.sidebar-selection-extension, .filetree-selection-extension {
+    background: @bc-sidebar-selection;
+    border-top: 1px solid @bc-shadow-small;
+    border-bottom: 1px solid @bc-highlight;
+    box-sizing: border-box;
+    height: 23px;
+    width: 9px; /* quiet scrollbar width */
+    position: fixed;
+
+    z-index: @z-index-brackets-selection-extension; /* scroller-shadow appears above the extension */
+}
+
+.filetree-context-extension {
+    background: rgba(255, 255, 255, 0.06);
+    box-sizing: border-box;
+    height: 23px;
+    width: 9px; /* quiet scrollbar width */
+    position: fixed;
+
+    z-index: @z-index-brackets-selection-extension; /* scroller-shadow appears above the extension */
+}
+
+.filetree-context {
+    background: rgba(255, 255, 255, 0.06);
+    box-sizing: border-box;
+    position: absolute;
+    height: 23px;
+    width: 100%;
+}
+
+//Initially start with the open files hidden, they will get show as files are added
+.open-files-container {
+    display:none;
+}
+
+#project-files-container {
+    .box-flex(1);
+
+    div > ul {
+        padding-bottom: 24px;
+        padding-left: 8px;
+    }
+}
+
+.scroller-shadow {
+    background-size: 100%;
+    background-repeat: no-repeat;
+    height: 5px;
+    position: fixed;
+    z-index: @z-index-brackets-scroller-shadow;
+    pointer-events: none; // serves as a "click through", so clicks go to the file tree behind (see #12684)
+
+    &.top {
+        #gradient > .vertical(rgba(0,0,0,0.1), rgba(0,0,0,0));
+        background-position: 0 -5px;
+        background-color: transparent; /* override background-color: @endColor from #gradient.vertical */
+    }
+
+    &.bottom {
+        #gradient > .vertical(rgba(0,0,0,0), rgba(0,0,0,0.1));
+        background-position: 0 5px;
+        background-color: transparent; /* override background-color: @endColor from #gradient.vertical */
+    }
+}
+
+
+@jstree-sprite-size: 18px;  // this is hardcoded in jsTree's JS code
+
+/** Classes for icons from jsTreeSprites.svg
+*/
+.jstree-sprite {
+    background-image: @jstree-sprite;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    vertical-align: middle;
+    width: @jstree-sprite-size;
+    height: @jstree-sprite-size;
+
+    .dark & {
+        background-image: @dark-jstree-sprite;
+    }
+}
+
+/** Overriding jsTreeTheme.less
+*/
+.jstree-brackets .jstree-no-dots .jstree-open > ins {
+    background-position: 7px -8px;
+    -webkit-transform: translateZ(0) rotate(90deg);
+    transform: translateZ(0) rotate(90deg);
+    transition: -webkit-transform 190ms cubic-bezier(.01, .91, 0, .99);
+    transition: transform 190ms cubic-bezier(.01, .91, 0, .99);
+    -webkit-filter: drop-shadow(1px 0 1px @bc-shadow);
+    filter: drop-shadow(1px 0 1px @bc-shadow);
+
+    .dark & {
+        -webkit-filter: drop-shadow(1px 0 1px @dark-bc-shadow);
+        filter: drop-shadow(1px 0 1px @dark-bc-shadow);
+    }
+}
+
+.jstree-brackets .jstree-no-dots .jstree-closed > ins {
+    background-position: 7px -8px;
+    -webkit-transform: translateZ(0); /* Need this to make sure that the svg isn't blurry on retina. */
+    transform: translateZ(0);
+    transition: -webkit-transform 90ms cubic-bezier(.01, .91, 0, .99);
+    transition: transform 90ms cubic-bezier(.01, .91, 0, .99);
+    -webkit-filter: drop-shadow(1px 0 1px @bc-shadow);
+    filter: drop-shadow(1px 0 1px @bc-shadow);
+
+    .dark & {
+        -webkit-filter: drop-shadow(1px 0 1px @dark-bc-shadow);
+        filter: drop-shadow(1px 0 1px @dark-bc-shadow);
+    }
+}
+
+/** Unicode Icon container
+*/
+.unicode-icon-container {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    font-size: 20px;
+    line-height: 15px;
+    text-align: center;
+}
+
+.file-status-icon {
+    margin: 0 0 0 8px;
+    position: absolute;
+    left: 0;
+    top: 0;
+
+    &.dirty:before,
+    &.can-close:before {
+        .unicode-icon-container;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    &.dirty:before {
+        content: "\2022";
+        line-height: 1em;
+    }
+
+    &.can-close:before {
+        content: "\00D7";
+        line-height: 1.1em;
+    }
+
+    &.can-close:hover:before {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    &.can-close:active:before {
+        color: rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* Styles for inline editors */
+
+.inline-text-editor {
+    line-height: 0;
+}
+
+.inline-widget {
+    position: relative;
+    overflow: hidden;
+    outline: none;
+
+    background-color: @bc-bg-inline-widget;
+    min-width: 250px;
+    cursor: default;
+
+    .dark & {
+        background-color: @dark-bc-bg-inline-widget;
+    }
+
+    &.animating {
+        // Make the animation use the GPU--especially important for retina.
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+
+        transition: height 250ms cubic-bezier(0, 1.02, 0.6, 1);
+    }
+
+    .CodeMirror {
+        /* remove CodeMirror default height: 300px */
+        height: auto;
+    }
+
+    .inline-text-editor {
+        white-space: nowrap;
+    }
+
+    .inline-editor-header {
+        display: inline-block;
+        padding: 8px 10px 2px 40px;
+
+        .filename {
+            vertical-align: middle;
+            font-family: @sansFontFamily;
+            font-size: 13px;
+            color: @bc-text-thin;
+
+            // Filename header is clickable (it's an <a> tag, so we get underscore on hover by
+            // default; but the hand cursor is shut off by Bootstrap's reset stylesheet)
+            cursor: pointer;
+
+            .dark & {
+                color: @dark-bc-text-thin;
+            }
+
+            .dirty-indicator {
+                .unicode-icon-container;
+                color: @bc-text-quiet;
+                overflow: hidden;
+                position: relative;
+                top: 1px;
+
+                .dark & {
+                    color: @dark-bc-text-quiet;
+                }
+            }
+
+            .line-number {
+                color: @accent-comment;
+            }
+        }
+    }
+
+    .shadow {
+        display: block;
+        height: 4px;
+        width: 100%;
+        position: absolute;
+        content: " ";
+        left: 0;
+        z-index: @z-index-brackets-inline-editor-shadow;
+    }
+
+    .shadow.top {
+        top: 0;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+    }
+
+    .shadow.bottom {
+        bottom: 0;
+        background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1));
+    }
+
+    .CodeMirror-scroll {
+        background-color: transparent !important;
+
+        .CodeMirror-linenumbers {
+            background-color: @bc-bg-inline-widget;
+
+            .dark & {
+                background-color: @dark-bc-bg-inline-widget;
+            }
+        }
+    }
+
+    .close {
+        position: absolute;
+        left: 15px;
+        top: 10px;
+        margin-right: 30px;
+    }
+
+}
+
+/* CSSInlineEditor rule list */
+.related-container {
+    @top-margin: 12px;
+
+    float: right;
+    position: relative;
+    min-height: 100%;
+    font-family: @sansFontFamily;
+    width: 250px;
+    max-width: 50%;
+    overflow: hidden;
+    background: @bc-panel-bg;
+
+    // Without this, the "New Rule" button shows on top of the rule list if you resize
+    // the window narrow enough. No idea why, since there's no z-index on the button, and
+    // the other items in the header go behind the rule list.
+    z-index: 1;
+
+    .dark & {
+        background: @dark-bc-panel-bg;
+    }
+
+    .selection {
+        width: 100%;
+        background: @bc-panel-bg-selected;
+        position: absolute;
+        border-top: none;
+        border-bottom: none;
+        top: @top-margin;
+
+        .dark & {
+            background: @dark-bc-panel-bg-selected;
+        }
+
+        &.animate {
+            transition: top 0.1s ease-out;
+        }
+    }
+
+    /*
+     * CSS triangle hack with anti-alias workarounds:
+     * (a) Use selection-background-color instead of transparent.
+     * (b) Use transform scaleX and origin to adjust width.
+     */
+    .selection:before {
+        content: " ";
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-top: @inline-triangle-size solid transparent;
+        border-bottom: @inline-triangle-size solid transparent;
+        border-left: @inline-triangle-size solid @bc-bg-inline-widget;
+        margin-top: -@inline-triangle-size;
+        top: 50%;
+        .scale-x(0.9, left, top);
+
+        .dark & {
+            border-left: @inline-triangle-size solid @dark-bc-bg-inline-widget;
+        }
+    }
+
+    .related {
+        font-size: 12px;
+        position: absolute;
+        top: 0;
+        left: 1px;
+        width: 100%;
+
+        ul {
+            margin: 0;
+            padding: 10px 0 10px 5px;
+            list-style: none;
+        }
+
+        li {
+            color: @bc-text-emphasized;
+            margin: 0;
+            overflow: hidden;
+            padding: 2px 0 2px 15px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+            .dark & {
+                color: @dark-bc-text-emphasized;
+            }
+
+            &.section-header {
+                padding-left: 0;
+                padding-bottom: 0;
+                .disclosure-triangle {
+                    .expand-collapse-triangle();
+                }
+                .filename {
+                    font-weight: @font-weight-semibold;
+                }
+            }
+
+            .related-file {
+                color: @bc-text-thin-quiet;
+                padding-left: 3px;
+
+                .dark & {
+                    color: @dark-bc-text-thin-quiet;
+                }
+            }
+        }
+
+        .selected {
+            color: @bc-text-thin;
+            transition: color 0.1s ease-out .15s;
+
+            .dark & {
+                color: @dark-bc-text-thin;
+            }
+        }
+    }
+}
+
+.inline-editor-message {
+    color: @bc-text-thin-quiet;
+    font-family: @sansFontFamily;
+    font-size: 12px;
+    line-height: 17px;
+    height: 20px;
+    padding: 10px 0 40px 50px;
+
+    .dark & {
+        color: @dark-bc-text-thin-quiet;
+    }
+}
+
+/* This text is used to force the code editor's font to be loaded early on if it's a
+   web font. This is necessary in order for the editor's horizontal measurement of text
+   to work properly.
+
+   In the future, when we allow the user to switch fonts, we'll need to make sure to
+   update the font for this text item whenever the user switches. We'll also need to
+   wait to initiate a re-measure in CodeMirror until the new font is loaded (if they
+   choose a web font). This library allows for checking if a web font is loaded:
+
+     http://code.google.com/apis/webfonts/docs/webfont_loader.html
+*/
+.dummy-text {
+    position: fixed;
+    top: -10000px;
+    .code-font();
+}
+
+.platform-mac .dummy-text {
+    .code-font-mac();
+}
+
+/* Find in Files results panel - temporary UI, to be replaced with a richer search feature later */
+
+.search-results .title {
+    .sane-box-model;
+    padding-right: 20px;
+    width: 100%;
+    line-height: 25px;
+
+    .flex-box;
+    .contracting-col {
+        .flex-item(0);
+        min-width: 1px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .fixed-col {
+        .flex-item(0, 0);
+    }
+    .pagination-col {
+        .flex-item(0, 0);
+        min-width: 100px;
+        word-spacing: 0;
+    }
+    .pagination-col > span:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+    .pagination-col > span:active {
+        background-color: @bc-shadow;
+
+        .dark & {
+            background-color: @dark-bc-shadow;
+        }
+    }
+    .replace-col {
+        .flex-item(1, 0);
+        min-width: 120px;
+        padding: 0 15px;
+    }
+    .first-page,
+    .prev-page,
+    .next-page,
+    .last-page {
+        .jstree-sprite;
+        width: 18px;
+        display: inline-block;
+        margin: 0;
+        background-position: 7px 6px;
+        vertical-align: text-top;
+        border-radius: 3px;
+    }
+    .first-page {
+        background-position: 6px -78px;
+        margin-left: 10px;
+    }
+    .prev-page {
+        background-position: 6px -22px;
+        margin-right: 5px;
+    }
+    .next-page {
+        margin-left: 5px;
+    }
+    .last-page {
+        background-position: 6px -50px;
+    }
+    .disabled,
+    .disabled:hover,
+    .disabled:active {
+        background-color: transparent;
+        opacity: 0.3;
+    }
+}
+
+.search-results .disclosure-triangle,
+#problems-panel .disclosure-triangle {
+    .expand-collapse-triangle();
+}
+.expand-collapse-triangle() {
+    .jstree-sprite;
+    display: inline-block;
+    background-position: 7px 5px;
+    &.expanded {
+        // Unfortunately, the way jsTree sprites are aligned within their 18px boxes doesn't look good in
+        // other contexts, so we need some tweaks here instead of straight multiples of @jstree-sprite-size
+        -webkit-transform: translateZ(0) rotate(90deg);
+        transform: translateZ(0) rotate(90deg);
+    }
+}
+
+// quick view
+@bc-highlight:                  rgba(255, 255, 255, 0.12);
+@bc-panel-bg:                   #dfe2e2;
+@bc-panel-bg-promoted:          #d4d7d7;
+@bc-shadow-large:               rgba(0, 0, 0, 0.5);
+@bc-shadow-small:               rgba(0, 0, 0, 0.06);
+@bc-text:                       #333;
+
+@dark-bc-highlight:             rgba(255, 255, 255, 0.06);
+@dark-bc-panel-bg:              #2c2c2c;
+@dark-bc-panel-bg-promoted:     #222;
+@dark-bc-shadow-large:          rgba(0, 0, 0, 0.5);
+@dark-bc-shadow-small:          rgba(0, 0, 0, 0.06);
+@dark-bc-text:                  #ccc;
+
+#quick-view-container {
+    display: none;
+    pointer-events: auto;
+
+    -webkit-transition: opacity 0.125s ease-in, -webkit-transform 0.125s;
+    transition: opacity 0.125s ease-in, transform 0.125s;
+
+    transform: scale(0);
+    opacity: 0;
+
+    background: @bc-panel-bg;
+    position: absolute;
+    z-index: 5000;
+    user-select: text;
+
+    padding: 8px;
+    text-align: center;
+    max-width: 75%;
+    max-height: 75%;
+
+    border-radius: 4px;
+    box-shadow: 0 4px 15px @bc-shadow-large;
+
+    .dark & {
+        background: @dark-bc-panel-bg;
+        box-shadow: 0 4px 15px @dark-bc-shadow-large;
+    }
+}
+
+#quick-view-container.active {
+    transform: scale(1);
+    opacity: 1;
+}
+
+#quick-view-container.preview-bubble-above {
+    -webkit-transform-origin: center bottom;
+}
+
+#quick-view-container.preview-bubble-above:before {
+    display: none;
+}
+
+#quick-view-container.preview-bubble-below {
+    -webkit-transform-origin: center top;
+}
+
+#quick-view-container.preview-bubble-below:before {
+    -webkit-filter: drop-shadow(0px 1px 0 rgba(255, 255, 255, 0.18));
+    transform: rotate(180deg);
+    top: -9px;
+}
+
+#quick-view-container.preview-bubble-below:after {
