@@ -1728,3 +1728,828 @@ a, img {
 }
 
 #quick-view-container.preview-bubble-below:after {
+    display: none;
+}
+
+.quick-view-highlight {
+    background-color: rgba(200, 200, 150, 0.4);
+}
+
+// selection view
+#selection-view-container {
+    display: none;
+    pointer-events: auto;
+
+    -webkit-transition: opacity 0.125s ease-in, -webkit-transform 0.125s;
+    transition: opacity 0.125s ease-in, transform 0.125s;
+
+    transform: scale(0);
+    opacity: 0;
+
+    background: @bc-panel-bg;
+    position: absolute;
+    z-index: 5000;
+    user-select: text;
+
+    padding: 8px;
+    text-align: center;
+    max-width: 75%;
+    max-height: 75%;
+
+    border-radius: 4px;
+    box-shadow: 0 4px 15px @bc-shadow-large;
+
+    .dark & {
+        background: @dark-bc-panel-bg;
+        box-shadow: 0 4px 15px @dark-bc-shadow-large;
+    }
+}
+
+#selection-view-container.active {
+    transform: scale(1);
+    opacity: 1;
+}
+
+#selection-view-container.preview-bubble-above {
+    -webkit-transform-origin: center bottom;
+}
+
+#selection-view-container.preview-bubble-above:before {
+    display: none;
+}
+
+#selection-view-container.preview-bubble-below {
+    -webkit-transform-origin: center top;
+}
+
+#selection-view-container.preview-bubble-below:before {
+    -webkit-filter: drop-shadow(0px 1px 0 rgba(255, 255, 255, 0.18));
+    transform: rotate(180deg);
+    top: -9px;
+}
+
+#selection-view-container.preview-bubble-below:after {
+    display: none;
+}
+
+/* Modal bar for Find/Quick Open */
+
+.modal-bar {
+    display: block;
+    text-align: left;
+
+    font-family: @sansFontFamily;
+    font-size: 14px;
+    color: @bc-text;
+    background: @bc-panel-bg;
+    overflow: visible;  // needed for .error popup
+    padding: 5px 4px 4px 14px;
+
+    -webkit-transform: translate(0, 0); // Prefix still required.
+    transform: translate(0, 0);
+    transition: -webkit-transform 66ms cubic-bezier(0, 0.62, 0.04, 0.99);
+    transition: transform 66ms cubic-bezier(0, 0.62, 0.04, 0.99);
+    z-index: @z-index-brackets-modalbar;
+
+    .dark & {
+        color: @dark-bc-text;
+        background: @dark-bc-panel-bg;
+    }
+
+    body.in-browser &,
+    body:not(.has-appshell-menus) & {
+        // Separator line between us and the HTML menu/titlebar above
+        border-top: 1px solid @bc-panel-border;
+
+        .dark & {
+            border-top: 1px solid @dark-bc-panel-border;
+        }
+    }
+
+    &.popout {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+    }
+
+    &.offscreen {
+        -webkit-transform: translate(0, -100%);
+        transform: translate(0, -100%);
+        transition: -webkit-transform 266ms cubic-bezier(0, 0.56, 0, 1);
+        transition: transform 266ms cubic-bezier(0, 0.56, 0, 1);
+    }
+
+    input {
+        font-family: @sansFontFamily;
+        outline: none;
+        width: 20em;
+        margin: 5px 5px 0;
+        position: relative;
+        top: -3px;
+        &.no-results {
+            border: 1px solid  @bc-btn-border-error;
+            box-shadow: inset 0 1px 0 @bc-shadow-small, 0 0 0 1px @bc-btn-border-error-glow;
+
+            .dark & {
+                border: 1px solid  @dark-bc-btn-border-error;
+                box-shadow: inset 0 1px 0 @dark-bc-shadow-small, 0 0 0 1px @dark-bc-btn-border-error-glow;
+            }
+        }
+    }
+
+    #find-what, #replace-with {
+        width: 295px;
+    }
+
+    .search-input-container {
+        position: relative;
+        display: inline;
+
+        .error {  // "popup" that hangs below search field
+            position: absolute;
+            left: 5px;
+            top: 24px;
+            min-width: 291px + 2px;  // to align with search field above it
+            z-index: 1; // to appear above any controls that wrap below
+
+            background-color: @bc-error;
+            color: @bc-text-alt;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 0 0 3px 3px;
+            box-shadow: 0 1px 3px @bc-shadow-small;
+
+            .dark & {
+                background-color: @dark-bc-error;
+                color: @dark-bc-text-alt;
+                box-shadow: 0 1px 3px @dark-bc-shadow-small;
+            }
+        }
+
+        #find-what {
+            padding-right: 78px;  // room for #find-counter overlay
+            width: 295px - (62px - 6px);  // maintain width, accounting for differing padding
+        }
+
+        .dropdown-icon {
+            background: url(images/dropdown-icon.svg) no-repeat scroll 15px 15px;
+            background-position: center right;
+            width: 20px;
+            height: 20px;
+        }
+
+        #find-counter, .dropdown-icon {
+            position: absolute;
+            color: @bc-text-thin-quiet;
+            top: 1px;
+            right: 2px;
+            font-size: 12px;
+
+            .dark & {
+                color: @dark-bc-text-thin-quiet;
+            }
+        }
+    }
+
+    .find-input-group {
+        display: inline-block;
+    }
+    #find-group, #replace-group {
+        display: inline-block;
+        white-space: nowrap;
+    }
+    #replace-group.has-scope {
+        // If scope controls are showing, force the replace controls to a second line.
+        display: block;
+    }
+
+    .scope-group {
+        display: inline-block;
+        margin-left: 10px;
+    }
+
+    .indexing-group {
+        display: inline-block;
+        margin-left: 10px;
+    }
+
+    .indexing-message {
+        display: inline-block;
+        font-style: italic;
+        margin-left: 5px;
+    }
+
+    .message, .no-results-message {
+        display: inline-block;
+    }
+
+    #find-case-sensitive, #find-regexp {
+        padding: 1px 5px;
+    }
+    .button-icon {  // icons must be nested inside button so we can apply padding w/o tiling icon
+        .sprite-icon(0, 0, 24px, 24px, @button-icon);
+        background-repeat: no-repeat;
+
+        .dark & {
+            .sprite-icon(0, 0, 24px, 24px, @dark-button-icon);
+        }
+    }
+    #find-regexp.active .button-icon {
+        .sprite-swap(0, 24px);
+    }
+    #find-case-sensitive .button-icon {
+        .sprite-swap(0, 48px);
+    }
+    #find-case-sensitive.active .button-icon {
+        .sprite-swap(0, 72px);
+    }
+    #find-regexp.active,
+    #find-regexp:active,
+    #find-case-sensitive.active,
+    #find-case-sensitive:active { // Make the toggle buttons' down states the same color as 'on' state to prevent a flash of different color.
+        background-color: @bc-bg-highlight;
+
+        .dark & {
+            background-color: @dark-bc-bg-highlight;
+        }
+    }
+
+    .navigator {  // next/prev buttons
+        display: inline-block;
+    }
+    button {
+        margin: 2px 1px 3px;
+    }
+    #find-prev {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        margin-left: 5px;
+    }
+
+    // Make button pairs snug
+    #find-prev, #replace-yes, #replace-batch, #find-case-sensitive {
+        border-right: none;
+        margin-right: 0;
+    }
+    #find-next, #replace-all, #find-regexp {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        margin-left: 0;
+    }
+    #replace-batch {
+        border-radius: 0;
+        margin-left: 0;
+    }
+    #replace-batch.solo {
+        border-top-right-radius: 3px;
+        border-bottom-right-radius: 3px;
+        border-left: none;
+        border-right: 1px solid @bc-btn-border;
+
+        .dark & {
+            border-right-color: @dark-bc-btn-border;
+        }
+    }
+
+    // Make find field snug with options buttons
+    //    & replace snug with replace commands
+    #find-what, #replace-with {
+        margin-right: 0;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    #find-case-sensitive, #replace-yes {
+        border-left: none;
+        margin-left: 0;
+        border-radius: 0;
+    }
+
+    .close {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        margin-top: -8px;
+    }
+}
+
+// File exclusion filter (used only in Find in Files search bar, for now)
+.filter-trash-icon {
+    position: absolute;
+    left: 7px;
+    width: 16px;
+    height: 16px;
+    font-size: 20px;
+    color: rgba(0, 0, 0, 0.5);
+    line-height: 15px;
+    text-align: center;
+    visibility: hidden;
+}
+
+.filter-trash-icon:hover {
+    color: rgba(0, 0, 0, 1);
+}
+
+.filter-edit-icon {
+    float: right;
+    width: 13px;
+    height: 13px;
+    background-image: url("images/edit-icon.svg");
+    background-repeat: no-repeat;
+    opacity: 0.5;
+    visibility: hidden;
+    position: relative;
+    top: 2px;
+    right: -4px;
+}
+
+.filter-edit-icon:hover {
+    opacity: 1;
+}
+
+li:hover .filter-trash-icon,
+li:hover .filter-edit-icon {
+    visibility: visible;
+}
+
+.recent-filter-name {
+    margin-left: 12px;
+}
+
+.recent-filter-patterns {
+    color: @bc-text-thin-quiet;
+    padding-right: 52px;
+
+    .dark & {
+        color: @dark-bc-text-thin-quiet;
+    }
+}
+
+button.file-filter-picker {
+    margin-left: 10px;
+}
+
+// File exclusion filter editor dialog
+input.exclusions-name {
+    display: block;
+    width: 100%;
+    height: 30px;
+    box-sizing: border-box; // needed for width: 100% since it has padding
+    margin-top: 12px;
+    margin-bottom: 0;
+}
+textarea.exclusions-editor {
+    display: block;
+    width: 100%;
+    height: 120px;
+    box-sizing: border-box; // needed for width: 100% since it has padding
+    margin-top: 5px;
+    margin-bottom: 0;
+    .code-font();
+}
+.exclusions-name-characters-remaining {
+    text-align: right;
+    padding-top: 4px;
+}
+.exclusions-name-characters-limit-reached {
+    color: red;
+}
+.exclusions-filecount {
+    margin: 12px 0 -14px 0;
+    padding: 4px 8px;
+    background-color: @bc-bg-highlight;
+    border-radius: @bc-border-radius;
+
+    .dark & {
+        background-color: @dark-bc-bg-highlight;
+    }
+}
+
+
+// Find/Replace result highlighting
+.CodeMirror-searching {
+    background-color: @cm-match-highlight;
+    box-shadow: 0 1px 3px @bc-shadow-small;
+    color: @match-text !important;
+
+    .dark & {
+        box-shadow: 0 1px 3px @dark-bc-shadow-small;
+    }
+
+    &.searching-current-match {
+        background-color: @cm-current-match-highlight;
+    }
+    &.searching-first {  // first in a contiguous run of highlights
+        border-top-left-radius: @bc-border-radius-small;
+        border-bottom-left-radius: @bc-border-radius-small;
+    }
+    &.searching-last {  // last in a contiguous run of highlights
+        border-top-right-radius: @bc-border-radius-small;
+        border-bottom-right-radius: @bc-border-radius-small;
+    }
+}
+#find-counter {
+    font-weight: @font-weight-semibold;
+    padding: 0 5px;
+    margin-right: 17px;
+}
+
+.tickmark-track {
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    right: 0;
+    width: 12px;
+    z-index: @z-index-cm-max;
+    pointer-events: none;
+
+    .tickmark {
+        position: absolute;
+        width: 12px;
+        height: 1px;
+        background-color: #eddd23;
+        border-top: 1px solid #e0d123;
+        border-bottom: 1px solid #d4c620;
+        opacity: 0.85;  // allow thumb to show through
+        &.tickmark-current {
+            background-color: #ed9823;
+            border-top: 1px solid #dd9128;
+            border-bottom: 1px solid #cb8320;
+            z-index: 1;  // ensure this one appears above overlapping sibling highlights
+        }
+    }
+}
+
+
+/* Quick Open search bar & dropdown */
+
+.find-dialog-label {
+    background: @bc-input-bg;
+    color: @bc-text-quiet;
+    position: absolute;
+    right: 15px;
+    text-align: right;
+    top: 12px;
+    z-index: 9999;
+
+    .dark & {
+        background: @dark-bc-input-bg;
+        color: @dark-bc-text-quiet;
+    }
+}
+
+.quick-search-container {
+    border: 1px solid @bc-panel-border;
+    box-sizing: border-box;  // lets QuickSearchField size the width more nicely
+    background-color: @bc-panel-bg;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 5px 10px @bc-shadow;
+    opacity: 0;
+    overflow-wrap: break-word;
+
+    .animation (autocomplete, 90ms, cubic-bezier(.01, .91, 0, .99));
+    -webkit-animation-fill-mode: forwards;
+    animation-fill-mode: forwards;
+    -webkit-transform-origin: 0 0;
+    transform-origin: 0 0;
+
+    padding: 0;
+    margin: 9px 0 0;
+
+    z-index: @z-index-brackets-context-menu-base;
+
+    .dark & {
+        background-color: @dark-bc-panel-bg;
+        border-radius: 0 0 4px 4px;
+        box-shadow: 0 5px 10px @dark-bc-shadow;
+    }
+
+    .quick-open-path {
+        color: @bc-text-medium;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        line-height: 11px;
+
+        .dark & {
+            color: @dark-bc-text-medium;
+        }
+    }
+
+    li {
+        color: @bc-text-emphasized;
+        line-height: 15px;
+        list-style: none;
+        cursor: default;
+        padding: 6px 10px;
+
+        .dark & {
+            color: @dark-bc-text-emphasized;
+        }
+
+        &:nth-child(odd) {
+            background-color: @bc-panel-bg-alt;
+
+            .dark & {
+                background-color: @dark-bc-panel-bg-alt;
+            }
+        }
+        &:last-child {
+            border-radius: 0 0 4px 4px;  // don't cover over quick-search-container's rounded corners
+        }
+
+        &:hover {
+            background-color: @bc-panel-bg-hover;
+
+            .dark & {
+                background-color: @dark-bc-panel-bg-hover;
+            }
+        }
+
+        &.highlight {
+            background-color: @bc-bg-highlight;
+            color: @bc-menu-text;
+
+            .dark & {
+                background-color: @dark-bc-bg-highlight;
+                color: @dark-bc-menu-text;
+            }
+        }
+    }
+}
+
+@-webkit-keyframes autocomplete {
+    0%   { opacity: 0.6; -webkit-transform: translate3d(0, 0, 0) scale(0.6); }
+    100% { opacity: 1; -webkit-transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes autocomplete {
+    0%   { opacity: 0.6; transform: translate3d(0, 0, 0) scale(0.6); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.quicksearch-pathmatch,
+.quicksearch-namematch {
+    font-weight: @font-weight-semibold;
+}
+
+.quicksearch-pathmatch {
+    color: @bc-text-medium;
+
+    .dark & {
+        color: @dark-bc-text-medium;
+    }
+}
+
+
+/* Spinner */
+
+.spinner {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 14px;
+    height: 14px;
+    border-left: 3px solid @bc-spinner;
+    border-right: 3px solid @bc-spinner;
+    overflow: hidden;
+    position: relative;
+    visibility: hidden;
+
+    .dark & {
+        border-left: 3px solid @dark-bc-spinner;
+        border-right: 3px solid @dark-bc-spinner;
+    }
+
+    &:before,
+    &:after {
+        border-left: 3px solid @bc-spinner;
+        border-right: 3px solid @bc-spinner;
+        box-sizing: border-box;
+        content: "";
+        display: block;
+        position: absolute;
+        width: 100%;
+        height: 3px;
+        left: 0;
+
+        .dark & {
+            border-left: 3px solid @dark-bc-spinner;
+            border-right: 3px solid @dark-bc-spinner;
+        }
+    }
+    &:before {
+        top: 0;
+    }
+    &:after {
+        bottom: 0;
+    }
+
+    &.spin {
+        -webkit-animation: spinner-rotateplane 1.2s infinite ease-in-out;
+        animation: spinner-rotateplane 1.2s infinite ease-in-out;
+        visibility: visible;
+    }
+
+    &.large {
+        width: 36px;
+        height: 36px;
+        border-left: 9px solid @bc-spinner;
+        border-right: 9px solid @bc-spinner;
+
+        .dark & {
+            border-left: 9px solid @dark-bc-spinner;
+            border-right: 9px solid @dark-bc-spinner;
+        }
+
+        &:before,
+        &:after {
+            border-left: 7px solid @bc-spinner;
+            border-right: 7px solid @bc-spinner;
+            height: 9px;
+
+            .dark & {
+                border-left: 7px solid @dark-bc-spinner;
+                border-right: 7px solid @dark-bc-spinner;
+            }
+        }
+    }
+
+    &.inline {
+        margin-left: 8px;
+        position: relative;
+        top: 3px;
+    }
+}
+
+@-webkit-keyframes spinner-rotateplane {
+    0% { -webkit-transform: perspective(120px); }
+    50% { -webkit-transform: perspective(120px) rotateY(180deg); }
+    100% { -webkit-transform: perspective(120px) rotateY(180deg)  rotateX(180deg); }
+}
+@keyframes spinner-rotateplane {
+    0% { transform: perspective(120px) rotateX(0deg) rotateY(0deg); }
+    50% { transform: perspective(120px) rotateX(-180.1deg) rotateY(0deg); }
+    100% { transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg); }
+}
+
+
+
+/* Problems panel & CodeInspection status bar indicator */
+
+#status-indicators #status-inspection {
+    border: none;
+    cursor: default;
+    width: 13px;
+
+    &.inspection-errors {
+        cursor: pointer;
+    }
+}
+
+.inspection-disabled {
+    background: url(images/topcoat-inactive-15.svg) 9px 5px no-repeat;
+}
+
+.inspection-errors {
+    background: url(images/topcoat-warning-15.svg) 9px 5px no-repeat;
+}
+
+.inspection-errors:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.inspection-errors:active {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.inspection-valid {
+    background: url(images/topcoat-okay-15.svg) 9px 5px no-repeat;
+}
+
+.line-icon-problem_type_error {
+    color: @error-underline-text;
+}
+.line-icon-problem_type_warning {
+    color: @warn-underline-text;
+}
+.line-icon-problem_type_info {
+    color: @info-underline-text;
+}
+.line-icon-problem_type_spell {
+    color: @spell-underline-text;
+}
+
+.CodeMirror .code-inspection-gutter {
+    width: 1em;
+    background-color: transparent;
+}
+
+.brackets-inspection-gutter-marker {
+    cursor: default;
+    display: inline-flex;
+    line-height: 1em;
+    height: 1em;
+    width: 1em;
+    font-size: .8em;
+    pointer-events: auto;
+}
+
+#problems-panel {
+    .user-select(text);  // allow selecting error messages for easy web searching
+    .line {
+        text-align: right;  // make line number line up with editor line numbers
+    }
+
+    .line-icon {
+        vertical-align: middle;
+
+        .line-icon-default {
+            width: 20px;
+            height: 18px;
+            background-image: url(images/topcoat-inactive-15.svg);
+            background-repeat: no-repeat;
+            background-position: 0px 1px;
+        }
+    }
+
+    .line-text {
+        white-space: nowrap;
+        width: auto;
+        padding-left: 5px;
+    }
+
+    .line-snippet {
+        white-space: nowrap;
+        width: 100%;
+        padding-left: 10px;
+    }
+
+    .inspector-section > td {
+        padding-left: 5px;
+    }
+}
+
+/* Line up label text and input text */
+label input {
+    position: relative;
+    top: -2px;
+}
+
+/* Live Preview */
+
+// CodeMirror uses inline styles for active line number, so must use !important here to override
+.live-preview-sync-error .CodeMirror-linenumber {
+    background-color: @live-preview-sync-error-background !important;
+    color: @live-preview-sync-error-color !important;
+}
+
+/* Quick Edit, Quick Docs */
+.popover-message {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: @z-index-brackets-inline-editor-error;
+    opacity: 1.0;
+
+    -webkit-transform: scale(0);
+    transform: scale(0);
+
+    .text {
+        padding: 5px 10px;
+        background-color: @bc-error;
+        border-radius: 3px;
+        color: @bc-text-alt;
+        box-shadow: 0 3px 9px @bc-shadow;
+        white-space: nowrap;
+
+        .dark & {
+            background-color: @dark-bc-error;
+            border-radius: 3px;
+            color: @dark-bc-text-alt;
+            box-shadow: 0 3px 9px @dark-bc-shadow;
+        }
+    }
+    .arrowAbove {
+        height: 0;
+        width: 0;
+        border-width: 0 10px 10px 10px;
+        border-color: transparent transparent @bc-error transparent;
+        border-style: solid;
+
+        .dark & {
+            border-color: transparent transparent @dark-bc-error transparent;
+        }
+    }
+    .arrowBelow {
+        height: 0;
+        width: 0;
+        border-width: 10px 10px 0 10px;
+        border-color: @bc-error transparent transparent transparent;
+        border-style: solid;
+
+        .dark & {
+            border-color: @dark-bc-error transparent transparent transparent;
+        }
+    }
+    &.animateOpen {
+        transition: -webkit-transform 125ms;
+        transition: transform 125ms;
+        -web
