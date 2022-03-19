@@ -2552,4 +2552,351 @@ label input {
     &.animateOpen {
         transition: -webkit-transform 125ms;
         transition: transform 125ms;
-        -web
+        -webkit-transform: scale(1);
+        transform: scale(1);
+    }
+    &.animateClose {
+        // Make the animation use the GPU--especially important for retina.
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        transition: opacity 500ms 5s ease-in, -webkit-transform 500ms 5s;
+        transition: opacity 500ms 5s ease-in, transform 500ms 5s;
+        opacity: 0.0;
+    }
+    &.open {
+        -webkit-transform: scale(1);
+        transform: scale(1);
+    }
+}
+
+.emphasized {
+    font-weight: 900;
+    font-size: 1.01em;
+}
+
+/* Extension Manager */
+#install-drop-zone {
+    background-color: transparent;
+    box-shadow: initial;
+    font-weight: normal;
+    border-style: dashed;
+    position: relative;
+
+    .dark & {
+        border-color: #5f5f5f;
+    }
+}
+
+#install-drop-zone .install-from-url {
+    cursor: pointer;
+}
+
+#install-drop-zone-mask {
+    position: absolute;
+    top: -1px;
+    left: -1px;
+
+    padding: 1px;
+    width: 100%;
+    height: 100%;
+    display: none;
+
+    cursor: copy;
+}
+
+#install-drop-zone.drop #install-drop-zone-mask {
+    display: block;
+}
+
+#install-drop-zone.drop {
+    background: @bc-primary-btn-bg;
+    box-shadow: initial;
+    font-weight: normal;
+    border: 1px solid @bc-primary-btn-bg;
+    color: @bc-text-alt;
+    text-shadow: none;
+
+    .dark & {
+        background: @dark-bc-primary-btn-bg;
+        border: 1px solid @dark-bc-primary-btn-bg;
+        color: @dark-bc-text-alt;
+    }
+}
+
+.install-drag-message {
+    display: none;
+}
+
+.install-drop-message {
+    display: none;
+}
+
+.install-validating-message {
+    display: none;
+}
+
+#install-drop-zone.drag .install-drag-message {
+    display: inline;
+}
+
+#install-drop-zone.drop .install-drop-message {
+    display: inline;
+}
+
+#install-drop-zone.validating .install-validating-message {
+    display: inline;
+}
+
+#hidden-editors {
+    display: none;
+}
+
+.theme-settings td {
+    padding: 2px;
+}
+
+.theme-settings .modal-body {
+    min-height: 300px;
+    max-height: 300px;
+}
+
+#status-language button, #status-encoding button {
+    width: auto;
+}
+
+// notification popup
+
+#toast-notification-container {
+    position: absolute;
+    max-width: 250px;
+    top: 0;
+    right: 39px;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    height: 100%;
+}
+
+.notification-popup-container {
+    border-radius: 3px;
+    background: #005f8f;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.24);
+    padding: 9px 12px 9px 12px;
+    font-family: "SourceSansPro", serif;
+    color: #eee;
+    line-height: 1.5;
+    margin-top: 7px;
+
+    /* animated properties */
+    opacity: 0;
+    transform: translateY(-50px);
+}
+
+.notification-popup-container.animateOpen {
+    opacity: 1;
+    transition: transform 500ms, opacity 500ms;
+    transition-delay: 2s;
+    transform: translateY(0);
+}
+
+.notification-popup-container.animateClose {
+    transition: transform 500ms, opacity 500ms;
+}
+
+.notification-popup-container p {
+    margin-bottom: 5px;
+}
+
+.notification-popup-close-button {
+    font-size: 16px;
+    font-weight: 900;
+    position: absolute;
+    top: 0;
+    right: 8px;
+    cursor: pointer;
+}
+.notification-popup-close-button:hover {
+    color: white;
+}
+
+.notification-dialog-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ddd;
+}
+
+.notification-dialog-content strong {
+    color: white;
+}
+
+.notification-dialog-content a {
+    color: #00ccff;
+}
+
+.github-stars-button {
+    .starContainer {
+        --fa-style-family-brands: "Font Awesome 6 Brands";
+        --fa-font-brands: normal 400 1em/1 "Font Awesome 6 Brands";
+        --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Free";
+        --fa-style-family-classic: "Font Awesome 6 Free";
+        --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
+        font-family: -apple-system, BlinkMacSystemFont, Segoe UI,
+        Helvetica, Arial, sans-serif;
+        display: inline-flex;
+        height: 14px;
+        padding: 2px 5px;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 14px;
+        vertical-align: bottom;
+        cursor: pointer;
+        user-select: none;
+        background-repeat: repeat-x;
+        background-position: -1px -1px;
+        background-size: 110% 110%;
+        color: #24292f;
+        background-color: #ebf0f4;
+        border: 1px solid rgba(27, 31, 36, .15);
+        background-image:  linear-gradient(180deg, #e5e9e9, #e5e9e9 90%);
+        border-radius: 0.25em 0 0 0.25em;
+    }
+    .starContainer:hover{
+        color: darkgoldenrod;
+    }
+    .star{
+        margin-right: 4px;
+        margin-top: 1px;
+    }
+    .count {
+        --fa-style-family-brands: "Font Awesome 6 Brands";
+        --fa-font-brands: normal 400 1em/1 "Font Awesome 6 Brands";
+        --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Free";
+        --fa-style-family-classic: "Font Awesome 6 Free";
+        --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
+        font-family: -apple-system, BlinkMacSystemFont, Segoe UI,
+        Helvetica, Arial, sans-serif;
+        display: inline-flex;
+        height: 14px;
+        padding: 2px 5px;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 14px;
+        vertical-align: bottom;
+        cursor: pointer;
+        user-select: none;
+        background-repeat: repeat-x;
+        background-position: -1px -1px;
+        background-size: 110% 110%;
+        border-radius: 0 0.25em 0.44em 0;
+        color: #24292f;
+        background-color: #e5e9e9;
+        border: 1px solid rgba(27, 31, 36, .15);
+        border-left-width: 0;
+    }
+    .count:hover{
+        color: darkgoldenrod;
+    }
+    .parent {
+        --fa-style-family-brands: "Font Awesome 6 Brands";
+        --fa-font-brands: normal 400 -2em/1 "Font Awesome 6 Brands";
+        --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Free";
+        --fa-style-family-classic: "Font Awesome 6 Free";
+        --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
+        display: inline-block;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, Segoe UI,
+        Helvetica, Arial, sans-serif;
+        font-size: 0;
+        line-height: 0;
+        white-space: nowrap;
+    }
+
+    .dark & {
+        .starContainer {
+            --fa-style-family-brands: "Font Awesome 6 Brands";
+            --fa-font-brands: normal 400 1em/1 "Font Awesome 6 Brands";
+            --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Free";
+            --fa-style-family-classic: "Font Awesome 6 Free";
+            --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
+            font-family: -apple-system, BlinkMacSystemFont, Segoe UI,
+            Helvetica, Arial, sans-serif;
+            white-space: nowrap;
+            text-decoration: none;
+            outline: 0;
+            position: relative;
+            display: inline-flex;
+            height: 14px;
+            padding: 2px 5px;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 14px;
+            vertical-align: bottom;
+            cursor: pointer;
+            user-select: none;
+            background-repeat: repeat-x;
+            background-position: -1px -1px;
+            background-size: 110% 110%;
+            border: 1px solid;
+            color: #c9d1d9;
+            background-color: #0d1117;
+            border-color: rgba(240, 246, 252, 0.1);
+            background-image: linear-gradient(180deg, #333, #333 90%);
+            border-radius: 0.25em 0 0 0.25em;
+        }
+        .starContainer:hover{
+            color: darkgoldenrod;
+        }
+        .star{
+            margin-right: 4px;
+            margin-top: 1px;
+        }
+        .count {
+            --fa-style-family-brands: "Font Awesome 6 Brands";
+            --fa-font-brands: normal 400 1em/1 "Font Awesome 6 Brands";
+            --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Free";
+            --fa-style-family-classic: "Font Awesome 6 Free";
+            --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
+            font-family: -apple-system, BlinkMacSystemFont, Segoe UI,
+            Helvetica, Arial, sans-serif;
+            white-space: nowrap;
+            text-decoration: none;
+            outline: 0;
+            position: relative;
+            display: inline-flex;
+            height: 14px;
+            padding: 2px 5px;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 14px;
+            vertical-align: bottom;
+            cursor: pointer;
+            user-select: none;
+            background-repeat: repeat-x;
+            background-position: -1px -1px;
+            background-size: 110% 110%;
+            border: 1px solid;
+            border-left: 0;
+            border-radius: 0 0.25em 0.44em 0;
+            color: #c9d1d9;
+            background-color: #333;
+            border-color: rgba(240, 246, 252, 0.1);
+        }
+        .count:hover{
+            color: darkgoldenrod;
+        }
+        .parent {
+            --fa-style-family-brands: "Font Awesome 6 Brands";
+            --fa-font-brands: normal 400 -2em/1 "Font Awesome 6 Brands";
+            --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Free";
+            --fa-style-family-classic: "Font Awesome 6 Free";
+            --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
+            display: inline-block;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, Segoe UI,
+            Helvetica, Arial, sans-serif;
+            font-size: 0;
+            line-height: 0;
+            white-space: nowrap;
+        }
+    }
+}
