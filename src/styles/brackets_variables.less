@@ -31,4 +31,36 @@
 @menu-item-font-size: 14px; // individual menu items
 
 /* CSS triangles */
-@inline-triangle-s
+@inline-triangle-size: 9px;
+
+/* Main layout */
+@sidebar-width: 270px;  // user resizable, however
+@main-toolbar-width: 30px;
+
+/* Extension Manager */
+@extension-manager-min-width: 760px; // Used for responsive styling
+
+/* z-index */
+@z-index-cm-dialog-override: 11;
+@z-index-cm-dialog: 15;
+@z-index-cm-max: @z-index-cm-dialog;
+
+@z-index-brackets-ui: (@z-index-cm-max + 1);
+@z-index-brackets-results-panel: @z-index-brackets-ui;
+@z-index-brackets-selection-extension: (@z-index-brackets-ui + 1);
+@z-index-brackets-scroller-shadow: (@z-index-brackets-selection-extension + 1);
+@z-index-brackets-inline-editor-shadow: @z-index-brackets-ui;
+@z-index-brackets-toolbar: (@z-index-brackets-ui + 1);
+@z-index-brackets-max: @z-index-brackets-toolbar;
+@z-index-brackets-modalbar: (@z-index-brackets-toolbar - 1);
+@z-index-brackets-main-toolbar: (@z-index-brackets-toolbar + 1);
+@z-index-brackets-main-content: (@z-index-brackets-main-toolbar + 1);
+
+@z-index-brackets-sidebar-resizer: (@z-index-brackets-main-content + 3);
+@z-index-brackets-resizer-div: (@z-index-brackets-sidebar-resizer + 1);
+@z-index-brackets-panel-resizer: (@z-index-brackets-resizer-div + 2);
+
+@z-index-brackets-drag-ghost:            999;
+@z-index-brackets-context-menu-base:    1000;
+@z-index-brackets-stylesheet-menu:      1000;
+@z-index-brackets-inline-editor-error:  1000;
