@@ -376,4 +376,30 @@ The test suite consists of both unit and integration tests. If a template isn't 
   3. Create a file with the expected output in `mytest.txt` in the same
      directory.
 
-Then, you can ru
+Then, you can run the test with:
+
+    $ TEST=mytest mocha test/render_test.js
+
+## Thanks
+
+mustache.js wouldn't kick ass if it weren't for these fine souls:
+
+  * Chris Wanstrath / defunkt
+  * Alexander Lang / langalex
+  * Sebastian Cohnen / tisba
+  * J Chris Anderson / jchris
+  * Tom Robinson / tlrobinson
+  * Aaron Quint / quirkey
+  * Douglas Crockford
+  * Nikita Vasilyev / NV
+  * Elise Wood / glytch
+  * Damien Mathieu / dmathieu
+  * Jakub Kuźma / qoobaa
+  * Will Leinweber / will
+  * dpree
+  * Jason Smith / jhs
+  * Aaron Gibralter / agibralter
+  * Ross Boucher / boucher
+  * Matt Sanford / mzsanford
+  * Ben Cherry / bcherry
+  * Michael Jackson / mjijackson
