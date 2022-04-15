@@ -1,0 +1,5 @@
+
+({
+  name: 'Joe',
+  friends: null
+})

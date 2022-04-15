@@ -1,0 +1,4 @@
+
+({
+  html: "I like {{mustache}}"
+})
