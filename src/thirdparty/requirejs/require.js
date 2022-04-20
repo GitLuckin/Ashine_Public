@@ -859,4 +859,478 @@ var requirejs, require, define;
                     this.emit('error', this.error);
                 } else if (!this.defining) {
                     //The factory could trigger another require call
-                    //that would result in chec
+                    //that would result in checking this module to
+                    //define itself again. If already in the process
+                    //of doing that, skip this work.
+                    this.defining = true;
+
+                    if (this.depCount < 1 && !this.defined) {
+                        if (isFunction(factory)) {
+                            //If there is an error listener, favor passing
+                            //to that instead of throwing an error. However,
+                            //only do it for define()'d  modules. require
+                            //errbacks should not be called for failures in
+                            //their callbacks (#699). However if a global
+                            //onError is set, use that.
+                            if ((this.events.error && this.map.isDefine) ||
+                                req.onError !== defaultOnError) {
+                                try {
+                                    exports = context.execCb(id, factory, depExports, exports);
+                                } catch (e) {
+                                    err = e;
+                                }
+                            } else {
+                                exports = context.execCb(id, factory, depExports, exports);
+                            }
+
+                            // Favor return value over exports. If node/cjs in play,
+                            // then will not have a return value anyway. Favor
+                            // module.exports assignment over exports object.
+                            if (this.map.isDefine && exports === undefined) {
+                                cjsModule = this.module;
+                                if (cjsModule) {
+                                    exports = cjsModule.exports;
+                                } else if (this.usingExports) {
+                                    //exports already set the defined value.
+                                    exports = this.exports;
+                                }
+                            }
+
+                            if (err) {
+                                err.requireMap = this.map;
+                                err.requireModules = this.map.isDefine ? [this.map.id] : null;
+                                err.requireType = this.map.isDefine ? 'define' : 'require';
+                                return onError((this.error = err));
+                            }
+
+                        } else {
+                            //Just a literal value
+                            exports = factory;
+                        }
+
+                        this.exports = exports;
+
+                        if (this.map.isDefine && !this.ignore) {
+                            defined[id] = exports;
+
+                            if (req.onResourceLoad) {
+                                var resLoadMaps = [];
+                                each(this.depMaps, function (depMap) {
+                                    resLoadMaps.push(depMap.normalizedMap || depMap);
+                                });
+                                req.onResourceLoad(context, this.map, resLoadMaps);
+                            }
+                        }
+
+                        //Clean up
+                        cleanRegistry(id);
+
+                        this.defined = true;
+                    }
+
+                    //Finished the define stage. Allow calling check again
+                    //to allow define notifications below in the case of a
+                    //cycle.
+                    this.defining = false;
+
+                    if (this.defined && !this.defineEmitted) {
+                        this.defineEmitted = true;
+                        this.emit('defined', this.exports);
+                        this.defineEmitComplete = true;
+                    }
+
+                }
+            },
+
+            callPlugin: function () {
+                var map = this.map,
+                    id = map.id,
+                    //Map already normalized the prefix.
+                    pluginMap = makeModuleMap(map.prefix);
+
+                //Mark this as a dependency for this plugin, so it
+                //can be traced for cycles.
+                this.depMaps.push(pluginMap);
+
+                on(pluginMap, 'defined', bind(this, function (plugin) {
+                    var load, normalizedMap, normalizedMod,
+                        bundleId = getOwn(bundlesMap, this.map.id),
+                        name = this.map.name,
+                        parentName = this.map.parentMap ? this.map.parentMap.name : null,
+                        localRequire = context.makeRequire(map.parentMap, {
+                            enableBuildCallback: true
+                        });
+
+                    //If current map is not normalized, wait for that
+                    //normalized name to load instead of continuing.
+                    if (this.map.unnormalized) {
+                        //Normalize the ID if the plugin allows it.
+                        if (plugin.normalize) {
+                            name = plugin.normalize(name, function (name) {
+                                return normalize(name, parentName, true);
+                            }) || '';
+                        }
+
+                        //prefix and name should already be normalized, no need
+                        //for applying map config again either.
+                        normalizedMap = makeModuleMap(map.prefix + '!' + name,
+                                                      this.map.parentMap,
+                                                      true);
+                        on(normalizedMap,
+                            'defined', bind(this, function (value) {
+                                this.map.normalizedMap = normalizedMap;
+                                this.init([], function () { return value; }, null, {
+                                    enabled: true,
+                                    ignore: true
+                                });
+                            }));
+
+                        normalizedMod = getOwn(registry, normalizedMap.id);
+                        if (normalizedMod) {
+                            //Mark this as a dependency for this plugin, so it
+                            //can be traced for cycles.
+                            this.depMaps.push(normalizedMap);
+
+                            if (this.events.error) {
+                                normalizedMod.on('error', bind(this, function (err) {
+                                    this.emit('error', err);
+                                }));
+                            }
+                            normalizedMod.enable();
+                        }
+
+                        return;
+                    }
+
+                    //If a paths config, then just load that file instead to
+                    //resolve the plugin, as it is built into that paths layer.
+                    if (bundleId) {
+                        this.map.url = context.nameToUrl(bundleId);
+                        this.load();
+                        return;
+                    }
+
+                    load = bind(this, function (value) {
+                        this.init([], function () { return value; }, null, {
+                            enabled: true
+                        });
+                    });
+
+                    load.error = bind(this, function (err) {
+                        this.inited = true;
+                        this.error = err;
+                        err.requireModules = [id];
+
+                        //Remove temp unnormalized modules for this module,
+                        //since they will never be resolved otherwise now.
+                        eachProp(registry, function (mod) {
+                            if (mod.map.id.indexOf(id + '_unnormalized') === 0) {
+                                cleanRegistry(mod.map.id);
+                            }
+                        });
+
+                        onError(err);
+                    });
+
+                    //Allow plugins to load other code without having to know the
+                    //context or how to 'complete' the load.
+                    load.fromText = bind(this, function (text, textAlt) {
+                        /*jslint evil: true */
+                        var moduleName = map.name,
+                            moduleMap = makeModuleMap(moduleName),
+                            hasInteractive = useInteractive;
+
+                        //As of 2.1.0, support just passing the text, to reinforce
+                        //fromText only being called once per resource. Still
+                        //support old style of passing moduleName but discard
+                        //that moduleName in favor of the internal ref.
+                        if (textAlt) {
+                            text = textAlt;
+                        }
+
+                        //Turn off interactive script matching for IE for any define
+                        //calls in the text, then turn it back on at the end.
+                        if (hasInteractive) {
+                            useInteractive = false;
+                        }
+
+                        //Prime the system by creating a module instance for
+                        //it.
+                        getModule(moduleMap);
+
+                        //Transfer any config to this other module.
+                        if (hasProp(config.config, id)) {
+                            config.config[moduleName] = config.config[id];
+                        }
+
+                        try {
+                            req.exec(text);
+                        } catch (e) {
+                            return onError(makeError('fromtexteval',
+                                             'fromText eval for ' + id +
+                                            ' failed: ' + e,
+                                             e,
+                                             [id]));
+                        }
+
+                        if (hasInteractive) {
+                            useInteractive = true;
+                        }
+
+                        //Mark this as a dependency for the plugin
+                        //resource
+                        this.depMaps.push(moduleMap);
+
+                        //Support anonymous modules.
+                        context.completeLoad(moduleName);
+
+                        //Bind the value of that module to the value for this
+                        //resource ID.
+                        localRequire([moduleName], load);
+                    });
+
+                    //Use parentName here since the plugin's name is not reliable,
+                    //could be some weird string with no path that actually wants to
+                    //reference the parentName's path.
+                    plugin.load(map.name, localRequire, load, config);
+                }));
+
+                context.enable(pluginMap, this);
+                this.pluginMaps[pluginMap.id] = pluginMap;
+            },
+
+            enable: function () {
+                enabledRegistry[this.map.id] = this;
+                this.enabled = true;
+
+                //Set flag mentioning that the module is enabling,
+                //so that immediate calls to the defined callbacks
+                //for dependencies do not trigger inadvertent load
+                //with the depCount still being zero.
+                this.enabling = true;
+
+                //Enable each dependency
+                each(this.depMaps, bind(this, function (depMap, i) {
+                    var id, mod, handler;
+
+                    if (typeof depMap === 'string') {
+                        //Dependency needs to be converted to a depMap
+                        //and wired up to this module.
+                        depMap = makeModuleMap(depMap,
+                                               (this.map.isDefine ? this.map : this.map.parentMap),
+                                               false,
+                                               !this.skipMap);
+                        this.depMaps[i] = depMap;
+
+                        handler = getOwn(handlers, depMap.id);
+
+                        if (handler) {
+                            this.depExports[i] = handler(this);
+                            return;
+                        }
+
+                        this.depCount += 1;
+
+                        on(depMap, 'defined', bind(this, function (depExports) {
+                            if (this.undefed) {
+                                return;
+                            }
+                            this.defineDep(i, depExports);
+                            this.check();
+                        }));
+
+                        if (this.errback) {
+                            on(depMap, 'error', bind(this, this.errback));
+                        } else if (this.events.error) {
+                            // No direct errback on this module, but something
+                            // else is listening for errors, so be sure to
+                            // propagate the error correctly.
+                            on(depMap, 'error', bind(this, function(err) {
+                                this.emit('error', err);
+                            }));
+                        }
+                    }
+
+                    id = depMap.id;
+                    mod = registry[id];
+
+                    //Skip special modules like 'require', 'exports', 'module'
+                    //Also, don't call enable if it is already enabled,
+                    //important in circular dependency cases.
+                    if (!hasProp(handlers, id) && mod && !mod.enabled) {
+                        context.enable(depMap, this);
+                    }
+                }));
+
+                //Enable each plugin that is used in
+                //a dependency
+                eachProp(this.pluginMaps, bind(this, function (pluginMap) {
+                    var mod = getOwn(registry, pluginMap.id);
+                    if (mod && !mod.enabled) {
+                        context.enable(pluginMap, this);
+                    }
+                }));
+
+                this.enabling = false;
+
+                this.check();
+            },
+
+            on: function (name, cb) {
+                var cbs = this.events[name];
+                if (!cbs) {
+                    cbs = this.events[name] = [];
+                }
+                cbs.push(cb);
+            },
+
+            emit: function (name, evt) {
+                each(this.events[name], function (cb) {
+                    cb(evt);
+                });
+                if (name === 'error') {
+                    //Now that the error handler was triggered, remove
+                    //the listeners, since this broken Module instance
+                    //can stay around for a while in the registry.
+                    delete this.events[name];
+                }
+            }
+        };
+
+        function callGetModule(args) {
+            //Skip modules already defined.
+            if (!hasProp(defined, args[0])) {
+                getModule(makeModuleMap(args[0], null, true)).init(args[1], args[2]);
+            }
+        }
+
+        function removeListener(node, func, name, ieName) {
+            //Favor detachEvent because of IE9
+            //issue, see attachEvent/addEventListener comment elsewhere
+            //in this file.
+            if (node.detachEvent && !isOpera) {
+                //Probably IE. If not it will throw an error, which will be
+                //useful to know.
+                if (ieName) {
+                    node.detachEvent(ieName, func);
+                }
+            } else {
+                node.removeEventListener(name, func, false);
+            }
+        }
+
+        /**
+         * Given an event from a script node, get the requirejs info from it,
+         * and then removes the event listeners on the node.
+         * @param {Event} evt
+         * @returns {Object}
+         */
+        function getScriptData(evt) {
+            //Using currentTarget instead of target for Firefox 2.0's sake. Not
+            //all old browsers will be supported, but this one was easy enough
+            //to support and still makes sense.
+            var node = evt.currentTarget || evt.srcElement;
+
+            //Remove the listeners once here.
+            removeListener(node, context.onScriptLoad, 'load', 'onreadystatechange');
+            removeListener(node, context.onScriptError, 'error');
+
+            return {
+                node: node,
+                id: node && node.getAttribute('data-requiremodule')
+            };
+        }
+
+        function intakeDefines() {
+            var args;
+
+            //Any defined modules in the global queue, intake them now.
+            takeGlobalQueue();
+
+            //Make sure any remaining defQueue items get properly processed.
+            while (defQueue.length) {
+                args = defQueue.shift();
+                if (args[0] === null) {
+                    return onError(makeError('mismatch', 'Mismatched anonymous define() module: ' +
+                        args[args.length - 1]));
+                } else {
+                    //args are id, deps, factory. Should be normalized by the
+                    //define() function.
+                    callGetModule(args);
+                }
+            }
+            context.defQueueMap = {};
+        }
+
+        context = {
+            config: config,
+            contextName: contextName,
+            registry: registry,
+            defined: defined,
+            urlFetched: urlFetched,
+            defQueue: defQueue,
+            defQueueMap: {},
+            Module: Module,
+            makeModuleMap: makeModuleMap,
+            nextTick: req.nextTick,
+            onError: onError,
+
+            /**
+             * Set a configuration for the context.
+             * @param {Object} cfg config object to integrate.
+             */
+            configure: function (cfg) {
+                //Make sure the baseUrl ends in a slash.
+                if (cfg.baseUrl) {
+                    if (cfg.baseUrl.charAt(cfg.baseUrl.length - 1) !== '/') {
+                        cfg.baseUrl += '/';
+                    }
+                }
+
+                // Convert old style urlArgs string to a function.
+                if (typeof cfg.urlArgs === 'string') {
+                    var urlArgs = cfg.urlArgs;
+                    cfg.urlArgs = function(id, url) {
+                        return (url.indexOf('?') === -1 ? '?' : '&') + urlArgs;
+                    };
+                }
+
+                //Save off the paths since they require special processing,
+                //they are additive.
+                var shim = config.shim,
+                    objs = {
+                        paths: true,
+                        bundles: true,
+                        config: true,
+                        map: true
+                    };
+
+                eachProp(cfg, function (value, prop) {
+                    if (objs[prop]) {
+                        if (!config[prop]) {
+                            config[prop] = {};
+                        }
+                        mixin(config[prop], value, true, true);
+                    } else {
+                        config[prop] = value;
+                    }
+                });
+
+                //Reverse map the bundles
+                if (cfg.bundles) {
+                    eachProp(cfg.bundles, function (value, prop) {
+                        each(value, function (v) {
+                            if (v !== prop) {
+                                bundlesMap[v] = prop;
+                            }
+                        });
+                    });
+                }
+
+                //Merge shim
+                if (cfg.shim) {
+                    eachProp(cfg.shim, function (value, id) {
+                        //Normalize the structure
+                        if (isArray(value)) {
+                            value = {
+                            
