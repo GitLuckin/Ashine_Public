@@ -970,4 +970,26 @@ define(function (require, exports, module) {
 
         var result = stringMatch(str, query, this.options, special);
 
-        // If this query was not a match, we cache that fact for next ti
+        // If this query was not a match, we cache that fact for next time.
+        if (!result) {
+            this._noMatchCache[str] = true;
+        }
+        return result;
+    };
+
+    exports._findSpecialCharacters  = findSpecialCharacters;
+    exports._wholeStringSearch      = _wholeStringSearch;
+    exports._lastSegmentSearch      = _lastSegmentSearch;
+    exports._setDebugScores         = _setDebugScores;
+    exports._generateMatchList      = _generateMatchList;
+    exports._SpecialMatch           = SpecialMatch;
+    exports._NormalMatch            = NormalMatch;
+    exports._computeRangesAndScore  = _computeRangesAndScore;
+
+    // public exports
+    exports.SearchResult            = SearchResult;
+    exports.stringMatch             = stringMatch;
+    exports.basicMatchSort          = basicMatchSort;
+    exports.multiFieldSort          = multiFieldSort;
+    exports.StringMatcher           = StringMatcher;
+});
