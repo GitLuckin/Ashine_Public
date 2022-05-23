@@ -53,4 +53,91 @@ define(function (require, exports, module) {
     /**
      * Dom node holding the rendered panel
      * @type {jQueryObject}
-   
+     */
+    Panel.prototype.$panel = null;
+
+    /**
+     * Determines if the panel is visible
+     * @return {boolean} true if visible, false if not
+     */
+    Panel.prototype.isVisible = function () {
+        return this.$panel.is(":visible");
+    };
+
+    /**
+     * Registers a call back function that will be called just before panel is shown. The handler should return true
+     * if the panel can be shown, else return false and the panel will not be shown.
+     * @param {function|null} canShowHandlerFn function that should return true of false if the panel can be shown/not.
+     * or null to clear the handler.
+     * @return {boolean} true if visible, false if not
+     */
+    Panel.prototype.registerCanBeShownHandler = function (canShowHandlerFn) {
+        if(this.canBeShownHandler && canShowHandlerFn){
+            console.warn(`canBeShownHandler already registered for panel: ${this.panelID}. will be overwritten`);
+        }
+        this.canBeShownHandler = canShowHandlerFn;
+    };
+
+    /**
+     * Returns true if th panel can be shown, else false.
+     * @return {boolean}
+     */
+    Panel.prototype.canBeShown = function () {
+        let self = this;
+        if(self.canBeShownHandler){
+            return self.canBeShownHandler();
+        }
+        return true;
+    };
+
+    /**
+     * Shows the panel
+     */
+    Panel.prototype.show = function () {
+        if(!this.isVisible() && this.canBeShown()){
+            this.$toolbarIcon.addClass("selected-button");
+            this.$panel.show();
+            exports.trigger(EVENT_PANEL_SHOWN, this.panelID);
+        }
+    };
+
+    /**
+     * Hides the panel
+     */
+    Panel.prototype.hide = function () {
+        if(this.isVisible()){
+            this.$toolbarIcon.removeClass("selected-button");
+            this.$panel.hide();
+            exports.trigger(EVENT_PANEL_HIDDEN, this.panelID);
+        }
+    };
+
+    /**
+     * Sets the panel's visibility state
+     * @param {boolean} visible true to show, false to hide
+     */
+    Panel.prototype.setVisible = function (visible) {
+        if (visible) {
+            this.show();
+        } else {
+            this.hide();
+        }
+    };
+
+    /**
+     * gets the Panle's type
+     * @return {string}
+     */
+    Panel.prototype.getPanelType = function () {
+        return PANEL_TYPE_PLUGIN_PANEL;
+    };
+
+    EventDispatcher.makeEventDispatcher(exports);
+
+    // Public API
+    exports.Panel = Panel;
+    //events
+    exports.EVENT_PANEL_HIDDEN = EVENT_PANEL_HIDDEN;
+    exports.EVENT_PANEL_SHOWN = EVENT_PANEL_SHOWN;
+    exports.PANEL_TYPE_PLUGIN_PANEL = PANEL_TYPE_PLUGIN_PANEL;
+});
