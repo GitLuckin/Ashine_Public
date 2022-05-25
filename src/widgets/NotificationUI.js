@@ -290,4 +290,68 @@ define(function (require, exports, module) {
         return floatingDom;
     }
 
-    /
+    /**
+     * Creates a new toast notification popup from given title and html message.
+     * The message can either be a string or a jQuery object representing a DOM node that is *not* in the current DOM.
+     *
+     * @example <caption>Creating a toast notification popup</caption>
+     * // note that you can even provide an HTML Element node with
+     * // custom event handlers directly here instead of HTML text.
+     * let notification1 = NotificationUI.createToastFromTemplate( "Title here",
+     *   "<div>Click me to </br>locate the file in file tree</div>", {
+     *       dismissOnClick: false,
+     *       autoCloseTimeS: 300 // auto close the popup after 5 minutes
+     *   });
+     *
+     * @param {string} title The title for the notification.
+     * @param {string|Element} template A string template or HTML Element to use as the dialog HTML.
+     * @param {{dismissOnClick, autoCloseTimeS}} [options] optional, supported
+     *   * options are:
+     *   * `autoCloseTimeS` - Time in seconds after which the notification should be auto closed. Default is never.
+     *   * `dismissOnClick` - when clicked, the notification is closed. Default is true(dismiss).
+     * @return {Notification} Object with a done handler that resolves when the notification closes.
+     * @type {function}
+     */
+    function createToastFromTemplate(title, template, options = {}) {
+        options.dismissOnClick = options.dismissOnClick === undefined ? true : options.dismissOnClick;
+        notificationWidgetCount++;
+        const widgetID = `notification-toast-${notificationWidgetCount}`,
+            $NotificationPopup = $(Mustache.render(ToastPopupHtml,
+                {id: widgetID, title: title}));
+        $NotificationPopup.find(".notification-dialog-content")
+            .append($(template));
+
+        Dialogs.addLinkTooltips($NotificationPopup);
+        let notification = (new Notification($NotificationPopup, NOTIFICATION_TYPE_TOAST));
+
+        $NotificationPopup.appendTo("#toast-notification-container").hide()
+            .find(".notification-popup-close-button").click(function () {
+                notification.close(CLOSE_REASON.CLOSE_BTN_CLICK);
+                MainViewManager.focusActivePane();
+            });
+        $NotificationPopup.show();
+
+        // Animate in
+        // Must wait a cycle for the "display: none" to drop out before CSS transitions will work
+        setTimeout(function () {
+            $NotificationPopup.addClass("animateOpen");
+        }, 0);
+
+        if(options.autoCloseTimeS){
+            setTimeout(()=>{
+                notification.close(CLOSE_REASON.TIMEOUT);
+            }, options.autoCloseTimeS * 1000);
+        }
+
+        if(options.dismissOnClick){
+            $NotificationPopup.click(()=>{
+                notification.close(CLOSE_REASON.CLICK_DISMISS);
+            });
+        }
+        return notification;
+    }
+
+    exports.createFromTemplate = createFromTemplate;
+    exports.createToastFromTemplate = createToastFromTemplate;
+    exports.CLOSE_REASON = CLOSE_REASON;
+});
