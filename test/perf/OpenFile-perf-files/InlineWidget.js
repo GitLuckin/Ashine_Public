@@ -74,4 +74,31 @@ define(function (require, exports, module) {
 
     /**
      * Called once content is parented in the host editor's DOM. Useful for performing tasks like setting
-     * focus or measuring content, which re
+     * focus or measuring content, which require htmlContent to be in the DOM tree.
+     */
+    InlineWidget.prototype.onAdded = function () {
+        // do nothing - base implementation
+    };
+
+    /**
+     * @param {Editor} hostEditor
+     */
+    InlineWidget.prototype.load = function (hostEditor) {
+        this.hostEditor = hostEditor;
+
+        // TODO: incomplete impelementation. It's not clear yet if InlineTextEditor
+        // will fuction as an abstract class or as generic inline editor implementation
+        // that just shows a range of text. See CSSInlineEditor.css for an implementation of load()
+    };
+
+
+    /**
+     * Called when the editor containing the inline is made visible.
+     */
+    InlineWidget.prototype.onParentShown = function () {
+        // do nothing - base implementation
+    };
+
+    exports.InlineWidget = InlineWidget;
+
+});
