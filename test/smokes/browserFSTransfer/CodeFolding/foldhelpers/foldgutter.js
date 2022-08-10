@@ -311,4 +311,86 @@ define(function (require, exports, module) {
                         state.to = vp.to;
                     } else {
                         updateFoldInfo(cm, vp.from, vp.to);
-                     
+                        state.to = vp.to;
+                        state.from = vp.from;
+                    }
+                });
+            }
+        }, 400);
+    }
+
+    /**
+     * Triggered when the cursor moves in the editor and used to detect text selection changes
+     * in the editor.
+     * @param {!CodeMirror} cm the CodeMirror instance for the active editor
+     */
+    function onCursorActivity(cm) {
+        var state = cm.state.foldGutter;
+        var vp = cm.getViewport();
+        window.clearTimeout(state.changeUpdate);
+        state.changeUpdate = window.setTimeout(function () {
+            //need to render the entire visible viewport to remove fold marks rendered from previous selections if any
+            updateInViewport(cm, vp.from, vp.to);
+        }, 400);
+    }
+
+    /**
+      * Triggered when a code segment is folded.
+      * @param {!CodeMirror} cm the CodeMirror instance for the active editor
+      * @param {!Object} from  the ch and line position that designates the start of the region
+      * @param {!Object} to the ch and line position that designates the end of the region
+      */
+    function onFold(cm, from, to) {
+        var state = cm.state.foldGutter;
+        updateFoldInfo(cm, from.line, from.line + 1);
+    }
+
+    /**
+      * Triggered when a folded code segment is unfolded.
+      * @param {!CodeMirror} cm the CodeMirror instance for the active editor
+      * @param {!{line:number, ch:number}} from  the ch and line position that designates the start of the region
+      * @param {!{line:number, ch:number}} to the ch and line position that designates the end of the region
+      */
+    function onUnFold(cm, from, to) {
+        var state = cm.state.foldGutter;
+        var vp = cm.getViewport();
+        delete cm._lineFolds[from.line];
+        updateFoldInfo(cm, from.line, to.line || vp.to);
+    }
+
+    /**
+      * Initialises the fold gutter and registers event handlers for changes to document, viewport
+      * and user interactions.
+      */
+    function init() {
+        CodeMirror.defineOption("foldGutter", false, function (cm, val, old) {
+            if (old && old !== CodeMirror.Init) {
+                cm.clearGutter(cm.state.foldGutter.options.gutter);
+                cm.state.foldGutter = null;
+                cm.off("gutterClick", old.onGutterClick);
+                cm.off("change", onChange);
+                cm.off("viewportChange", onViewportChange);
+                cm.off("cursorActivity", onCursorActivity);
+
+                cm.off("fold", onFold);
+                cm.off("unfold", onUnFold);
+                cm.off("swapDoc", updateInViewport);
+            }
+            if (val) {
+                cm.state.foldGutter = new State(parseOptions(val));
+                updateInViewport(cm);
+                cm.on("gutterClick", val.onGutterClick);
+                cm.on("change", onChange);
+                cm.on("viewportChange", onViewportChange);
+                cm.on("cursorActivity", onCursorActivity);
+                cm.on("fold", onFold);
+                cm.on("unfold", onUnFold);
+                cm.on("swapDoc", updateInViewport);
+            }
+        });
+    }
+
+    exports.init = init;
+    exports.updateInViewport = updateInViewport;
+
+});
