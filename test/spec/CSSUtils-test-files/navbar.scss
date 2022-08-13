@@ -49,4 +49,9 @@
       }
     }
 
-    &.navbar
+    &.navbar-right:last-child {
+      margin-right: -$navbar-padding-horizontal;
+    }
+  }
+}
+
