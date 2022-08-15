@@ -304,4 +304,142 @@ define(function (require, exports, module) {
 
                 var codeHintList = expectSomeHints();
                 hintBefore = codeHintList.selectedIndex;
-                var numberOfHints 
+                var numberOfHints = codeHintList.$hintMenu.find("li").length-1;
+
+                // should be at last hint
+                expect(hintBefore).toEqual(numberOfHints);
+
+                // call ctrl+space to loop it to first hint
+                e.keyCode = KeyEvent.DOM_VK_SPACE;
+                e.ctrlKey = true;
+
+                // simulate ctrl+space keyhook to send it to first hint
+                CodeHintManager._getCodeHintList()._keydownHook(e);
+                hintAfter = codeHintList.selectedIndex;
+
+                // should now be at hint 0
+                expect(hintAfter).toEqual(0);
+
+                editor = null;
+            });
+
+            it("should not show code hints if there is a multiple selection", async function () {
+                // minimal markup with an open '<' before IP
+                // Note: line for pos is 0-based and editor lines numbers are 1-based
+                await initCodeHintTest("test1.html", [
+                    {start: {line: 3, ch: 1}, end: {line: 3, ch: 1}, primary: true},
+                    {start: {line: 4, ch: 1}, end: {line: 4, ch: 1}}
+                ]);
+
+                invokeCodeHints();
+                expectNoHints();
+            });
+
+            it("should dismiss existing code hints if selection changes to a multiple selection", async function () {
+                var editor;
+
+                await initCodeHintTest("test1.html", {line: 3, ch: 1});
+
+                editor = EditorManager.getCurrentFullEditor();
+                expect(editor).toBeTruthy();
+
+                invokeCodeHints();
+                expectSomeHints();
+
+                editor.setSelections([
+                    {start: {line: 3, ch: 1}, end: {line: 3, ch: 1}, primary: true},
+                    {start: {line: 4, ch: 1}, end: {line: 4, ch: 1}}
+                ]);
+                expectNoHints();
+            });
+
+            it("should dismiss code hints menu with Esc key", async function () {
+                var pos = {line: 3, ch: 1};
+
+                // minimal markup with an open '<' before IP
+                // Note: line for pos is 0-based and editor lines numbers are 1-based
+                await initCodeHintTest("test1.html", pos);
+
+                invokeCodeHints();
+
+                // verify list is open
+                expectSomeHints();
+
+                // simulate Esc key to dismiss code hints menu
+                var key = KeyEvent.DOM_VK_ESCAPE,
+                    element = testWindow.$(".dropdown.open")[0];
+                SpecRunnerUtils.simulateKeyEvent(key, "keydown", element);
+
+                // verify list is no longer open
+                expectNoHints();
+            });
+
+            it("should dismiss code hints menu when launching a command", async function () {
+                var editor,
+                    pos = {line: 3, ch: 1};
+
+                // minimal markup with an open '<' before IP
+                // Note: line for pos is 0-based and editor lines numbers are 1-based
+                await initCodeHintTest("test1.html", pos);
+
+                editor = EditorManager.getCurrentFullEditor();
+                expect(editor).toBeTruthy();
+
+                editor.document.replaceRange("di", pos);
+                invokeCodeHints();
+
+                // verify list is open
+                expectSomeHints();
+
+                // Call Undo command to remove "di" and then verify no code hints
+                CommandManager.execute(Commands.EDIT_UNDO);
+
+                // verify list is no longer open
+                expectNoHints();
+
+                editor = null;
+            });
+
+            it("should stop handling keydowns if closed by a click outside", async function () {
+                var editor,
+                    pos = {line: 3, ch: 1};
+
+                // minimal markup with an open '<' before IP
+                // Note: line for pos is 0-based and editor lines numbers are 1-based
+                await initCodeHintTest("test1.html", pos);
+
+                editor = EditorManager.getCurrentFullEditor();
+                expect(editor).toBeTruthy();
+
+                editor.document.replaceRange("di", pos);
+                invokeCodeHints();
+
+                // verify list is open
+                expectSomeHints();
+
+                // get the document text and make sure it doesn't change if we
+                // click outside and then keydown
+                var text = editor.document.getText();
+
+                testWindow.$("body").click();
+                KeyBindingManager._handleKeyEvent({
+                    keyCode: KeyEvent.DOM_VK_ENTER,
+                    stopImmediatePropagation: function () { },
+                    stopPropagation: function () { },
+                    preventDefault: function () { }
+                });
+
+                // Verify that after the keydown, the session is closed
+                // (not just the hint popup). Because of #1381, we don't
+                // actually have a way to close the session as soon as the
+                // popup is dismissed by Bootstrap, so we do so on the next
+                // keydown. Eventually, once that's fixed, we should be able
+                // to move this expectNoHints() up after the click.
+                expectNoHints();
+                expect(editor.document.getText()).toEqual(text);
+
+                editor = null;
+            });
+        });
+    });
+});
