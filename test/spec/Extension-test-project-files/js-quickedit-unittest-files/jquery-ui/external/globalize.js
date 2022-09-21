@@ -926,4 +926,648 @@ getEraYear = function( date, cal, era, sortable ) {
 			];
 		}
 		value = toUpper( value );
-		var i = arrayIndexOf( abbr ? upperMonths[1] : upp
+		var i = arrayIndexOf( abbr ? upperMonths[1] : upperMonths[0], value );
+		if ( i < 0 ) {
+			i = arrayIndexOf( abbr ? upperMonthsGen[1] : upperMonthsGen[0], value );
+		}
+		return i;
+	};
+
+	getParseRegExp = function( cal, format ) {
+		// converts a format string into a regular expression with groups that
+		// can be used to extract date fields from a date string.
+		// check for a cached parse regex.
+		var re = cal._parseRegExp;
+		if ( !re ) {
+			cal._parseRegExp = re = {};
+		}
+		else {
+			var reFormat = re[ format ];
+			if ( reFormat ) {
+				return reFormat;
+			}
+		}
+
+		// expand single digit formats, then escape regular expression characters.
+		var expFormat = expandFormat( cal, format ).replace( /([\^\$\.\*\+\?\|\[\]\(\)\{\}])/g, "\\\\$1" ),
+			regexp = [ "^" ],
+			groups = [],
+			index = 0,
+			quoteCount = 0,
+			tokenRegExp = getTokenRegExp(),
+			match;
+
+		// iterate through each date token found.
+		while ( (match = tokenRegExp.exec(expFormat)) !== null ) {
+			var preMatch = expFormat.slice( index, match.index );
+			index = tokenRegExp.lastIndex;
+
+			// don't replace any matches that occur inside a string literal.
+			quoteCount += appendPreOrPostMatch( preMatch, regexp );
+			if ( quoteCount % 2 ) {
+				regexp.push( match[0] );
+				continue;
+			}
+
+			// add a regex group for the token.
+			var m = match[ 0 ],
+				len = m.length,
+				add;
+			switch ( m ) {
+				case "dddd": case "ddd":
+				case "MMMM": case "MMM":
+				case "gg": case "g":
+					add = "(\\D+)";
+					break;
+				case "tt": case "t":
+					add = "(\\D*)";
+					break;
+				case "yyyy":
+				case "fff":
+				case "ff":
+				case "f":
+					add = "(\\d{" + len + "})";
+					break;
+				case "dd": case "d":
+				case "MM": case "M":
+				case "yy": case "y":
+				case "HH": case "H":
+				case "hh": case "h":
+				case "mm": case "m":
+				case "ss": case "s":
+					add = "(\\d\\d?)";
+					break;
+				case "zzz":
+					add = "([+-]?\\d\\d?:\\d{2})";
+					break;
+				case "zz": case "z":
+					add = "([+-]?\\d\\d?)";
+					break;
+				case "/":
+					add = "(\\" + cal[ "/" ] + ")";
+					break;
+				default:
+					throw "Invalid date format pattern \'" + m + "\'.";
+					break;
+			}
+			if ( add ) {
+				regexp.push( add );
+			}
+			groups.push( match[0] );
+		}
+		appendPreOrPostMatch( expFormat.slice(index), regexp );
+		regexp.push( "$" );
+
+		// allow whitespace to differ when matching formats.
+		var regexpStr = regexp.join( "" ).replace( /\s+/g, "\\s+" ),
+			parseRegExp = { "regExp": regexpStr, "groups": groups };
+
+		// cache the regex for this format.
+		return re[ format ] = parseRegExp;
+	};
+
+	outOfRange = function( value, low, high ) {
+		return value < low || value > high;
+	};
+
+	toUpper = function( value ) {
+		// "he-IL" has non-breaking space in weekday names.
+		return value.split( "\u00A0" ).join( " " ).toUpperCase();
+	};
+
+	toUpperArray = function( arr ) {
+		var results = [];
+		for ( var i = 0, l = arr.length; i < l; i++ ) {
+			results[ i ] = toUpper( arr[i] );
+		}
+		return results;
+	};
+
+	parseExact = function( value, format, culture ) {
+		// try to parse the date string by matching against the format string
+		// while using the specified culture for date field names.
+		value = trim( value );
+		var cal = culture.calendar,
+			// convert date formats into regular expressions with groupings.
+			// use the regexp to determine the input format and extract the date fields.
+			parseInfo = getParseRegExp( cal, format ),
+			match = new RegExp( parseInfo.regExp ).exec( value );
+		if ( match === null ) {
+			return null;
+		}
+		// found a date format that matches the input.
+		var groups = parseInfo.groups,
+			era = null, year = null, month = null, date = null, weekDay = null,
+			hour = 0, hourOffset, min = 0, sec = 0, msec = 0, tzMinOffset = null,
+			pmHour = false;
+		// iterate the format groups to extract and set the date fields.
+		for ( var j = 0, jl = groups.length; j < jl; j++ ) {
+			var matchGroup = match[ j + 1 ];
+			if ( matchGroup ) {
+				var current = groups[ j ],
+					clength = current.length,
+					matchInt = parseInt( matchGroup, 10 );
+				switch ( current ) {
+					case "dd": case "d":
+						// Day of month.
+						date = matchInt;
+						// check that date is generally in valid range, also checking overflow below.
+						if ( outOfRange(date, 1, 31) ) return null;
+						break;
+					case "MMM": case "MMMM":
+						month = getMonthIndex( cal, matchGroup, clength === 3 );
+						if ( outOfRange(month, 0, 11) ) return null;
+						break;
+					case "M": case "MM":
+						// Month.
+						month = matchInt - 1;
+						if ( outOfRange(month, 0, 11) ) return null;
+						break;
+					case "y": case "yy":
+					case "yyyy":
+						year = clength < 4 ? expandYear( cal, matchInt ) : matchInt;
+						if ( outOfRange(year, 0, 9999) ) return null;
+						break;
+					case "h": case "hh":
+						// Hours (12-hour clock).
+						hour = matchInt;
+						if ( hour === 12 ) hour = 0;
+						if ( outOfRange(hour, 0, 11) ) return null;
+						break;
+					case "H": case "HH":
+						// Hours (24-hour clock).
+						hour = matchInt;
+						if ( outOfRange(hour, 0, 23) ) return null;
+						break;
+					case "m": case "mm":
+						// Minutes.
+						min = matchInt;
+						if ( outOfRange(min, 0, 59) ) return null;
+						break;
+					case "s": case "ss":
+						// Seconds.
+						sec = matchInt;
+						if ( outOfRange(sec, 0, 59) ) return null;
+						break;
+					case "tt": case "t":
+						// AM/PM designator.
+						// see if it is standard, upper, or lower case PM. If not, ensure it is at least one of
+						// the AM tokens. If not, fail the parse for this format.
+						pmHour = cal.PM && ( matchGroup === cal.PM[0] || matchGroup === cal.PM[1] || matchGroup === cal.PM[2] );
+						if (
+							!pmHour && (
+								!cal.AM || ( matchGroup !== cal.AM[0] && matchGroup !== cal.AM[1] && matchGroup !== cal.AM[2] )
+							)
+						) return null;
+						break;
+					case "f":
+						// Deciseconds.
+					case "ff":
+						// Centiseconds.
+					case "fff":
+						// Milliseconds.
+						msec = matchInt * Math.pow( 10, 3 - clength );
+						if ( outOfRange(msec, 0, 999) ) return null;
+						break;
+					case "ddd":
+						// Day of week.
+					case "dddd":
+						// Day of week.
+						weekDay = getDayIndex( cal, matchGroup, clength === 3 );
+						if ( outOfRange(weekDay, 0, 6) ) return null;
+						break;
+					case "zzz":
+						// Time zone offset in +/- hours:min.
+						var offsets = matchGroup.split( /:/ );
+						if ( offsets.length !== 2 ) return null;
+						hourOffset = parseInt( offsets[0], 10 );
+						if ( outOfRange(hourOffset, -12, 13) ) return null;
+						var minOffset = parseInt( offsets[1], 10 );
+						if ( outOfRange(minOffset, 0, 59) ) return null;
+						tzMinOffset = ( hourOffset * 60 ) + ( startsWith(matchGroup, "-") ? -minOffset : minOffset );
+						break;
+					case "z": case "zz":
+						// Time zone offset in +/- hours.
+						hourOffset = matchInt;
+						if ( outOfRange(hourOffset, -12, 13) ) return null;
+						tzMinOffset = hourOffset * 60;
+						break;
+					case "g": case "gg":
+						var eraName = matchGroup;
+						if ( !eraName || !cal.eras ) return null;
+						eraName = trim( eraName.toLowerCase() );
+						for ( var i = 0, l = cal.eras.length; i < l; i++ ) {
+							if ( eraName === cal.eras[i].name.toLowerCase() ) {
+								era = i;
+								break;
+							}
+						}
+						// could not find an era with that name
+						if ( era === null ) return null;
+						break;
+				}
+			}
+		}
+		var result = new Date(), defaultYear, convert = cal.convert;
+		defaultYear = convert ? convert.fromGregorian( result )[ 0 ] : result.getFullYear();
+		if ( year === null ) {
+			year = defaultYear;
+		}
+		else if ( cal.eras ) {
+			// year must be shifted to normal gregorian year
+			// but not if year was not specified, its already normal gregorian
+			// per the main if clause above.
+			year += cal.eras[( era || 0 )].offset;
+		}
+		// set default day and month to 1 and January, so if unspecified, these are the defaults
+		// instead of the current day/month.
+		if ( month === null ) {
+			month = 0;
+		}
+		if ( date === null ) {
+			date = 1;
+		}
+		// now have year, month, and date, but in the culture's calendar.
+		// convert to gregorian if necessary
+		if ( convert ) {
+			result = convert.toGregorian( year, month, date );
+			// conversion failed, must be an invalid match
+			if ( result === null ) return null;
+		}
+		else {
+			// have to set year, month and date together to avoid overflow based on current date.
+			result.setFullYear( year, month, date );
+			// check to see if date overflowed for specified month (only checked 1-31 above).
+			if ( result.getDate() !== date ) return null;
+			// invalid day of week.
+			if ( weekDay !== null && result.getDay() !== weekDay ) {
+				return null;
+			}
+		}
+		// if pm designator token was found make sure the hours fit the 24-hour clock.
+		if ( pmHour && hour < 12 ) {
+			hour += 12;
+		}
+		result.setHours( hour, min, sec, msec );
+		if ( tzMinOffset !== null ) {
+			// adjust timezone to utc before applying local offset.
+			var adjustedMin = result.getMinutes() - ( tzMinOffset + result.getTimezoneOffset() );
+			// Safari limits hours and minutes to the range of -127 to 127.	 We need to use setHours
+			// to ensure both these fields will not exceed this range.	adjustedMin will range
+			// somewhere between -1440 and 1500, so we only need to split this into hours.
+			result.setHours( result.getHours() + parseInt(adjustedMin / 60, 10), adjustedMin % 60 );
+		}
+		return result;
+	};
+}());
+
+parseNegativePattern = function( value, nf, negativePattern ) {
+	var neg = nf[ "-" ],
+		pos = nf[ "+" ],
+		ret;
+	switch ( negativePattern ) {
+		case "n -":
+			neg = " " + neg;
+			pos = " " + pos;
+			// fall through
+		case "n-":
+			if ( endsWith(value, neg) ) {
+				ret = [ "-", value.substr(0, value.length - neg.length) ];
+			}
+			else if ( endsWith(value, pos) ) {
+				ret = [ "+", value.substr(0, value.length - pos.length) ];
+			}
+			break;
+		case "- n":
+			neg += " ";
+			pos += " ";
+			// fall through
+		case "-n":
+			if ( startsWith(value, neg) ) {
+				ret = [ "-", value.substr(neg.length) ];
+			}
+			else if ( startsWith(value, pos) ) {
+				ret = [ "+", value.substr(pos.length) ];
+			}
+			break;
+		case "(n)":
+			if ( startsWith(value, "(") && endsWith(value, ")") ) {
+				ret = [ "-", value.substr(1, value.length - 2) ];
+			}
+			break;
+	}
+	return ret || [ "", value ];
+};
+
+//
+// public instance functions
+//
+
+Globalize.prototype.findClosestCulture = function( cultureSelector ) {
+	return Globalize.findClosestCulture.call( this, cultureSelector );
+};
+
+Globalize.prototype.format = function( value, format, cultureSelector ) {
+	return Globalize.format.call( this, value, format, cultureSelector );
+};
+
+Globalize.prototype.localize = function( key, cultureSelector ) {
+	return Globalize.localize.call( this, key, cultureSelector );
+};
+
+Globalize.prototype.parseInt = function( value, radix, cultureSelector ) {
+	return Globalize.parseInt.call( this, value, radix, cultureSelector );
+};
+
+Globalize.prototype.parseFloat = function( value, radix, cultureSelector ) {
+	return Globalize.parseFloat.call( this, value, radix, cultureSelector );
+};
+
+Globalize.prototype.culture = function( cultureSelector ) {
+	return Globalize.culture.call( this, cultureSelector );
+};
+
+//
+// public singleton functions
+//
+
+Globalize.addCultureInfo = function( cultureName, baseCultureName, info ) {
+
+	var base = {},
+		isNew = false;
+
+	if ( typeof cultureName !== "string" ) {
+		// cultureName argument is optional string. If not specified, assume info is first
+		// and only argument. Specified info deep-extends current culture.
+		info = cultureName;
+		cultureName = this.culture().name;
+		base = this.cultures[ cultureName ];
+	} else if ( typeof baseCultureName !== "string" ) {
+		// baseCultureName argument is optional string. If not specified, assume info is second
+		// argument. Specified info deep-extends specified culture.
+		// If specified culture does not exist, create by deep-extending default
+		info = baseCultureName;
+		isNew = ( this.cultures[ cultureName ] == null );
+		base = this.cultures[ cultureName ] || this.cultures[ "default" ];
+	} else {
+		// cultureName and baseCultureName specified. Assume a new culture is being created
+		// by deep-extending an specified base culture
+		isNew = true;
+		base = this.cultures[ baseCultureName ];
+	}
+
+	this.cultures[ cultureName ] = extend(true, {},
+		base,
+		info
+	);
+	// Make the standard calendar the current culture if it's a new culture
+	if ( isNew ) {
+		this.cultures[ cultureName ].calendar = this.cultures[ cultureName ].calendars.standard;
+	}
+};
+
+Globalize.findClosestCulture = function( name ) {
+	var match;
+	if ( !name ) {
+		return this.cultures[ this.cultureSelector ] || this.cultures[ "default" ];
+	}
+	if ( typeof name === "string" ) {
+		name = name.split( "," );
+	}
+	if ( isArray(name) ) {
+		var lang,
+			cultures = this.cultures,
+			list = name,
+			i, l = list.length,
+			prioritized = [];
+		for ( i = 0; i < l; i++ ) {
+			name = trim( list[i] );
+			var pri, parts = name.split( ";" );
+			lang = trim( parts[0] );
+			if ( parts.length === 1 ) {
+				pri = 1;
+			}
+			else {
+				name = trim( parts[1] );
+				if ( name.indexOf("q=") === 0 ) {
+					name = name.substr( 2 );
+					pri = parseFloat( name );
+					pri = isNaN( pri ) ? 0 : pri;
+				}
+				else {
+					pri = 1;
+				}
+			}
+			prioritized.push({ lang: lang, pri: pri });
+		}
+		prioritized.sort(function( a, b ) {
+			return a.pri < b.pri ? 1 : -1;
+		});
+
+		// exact match
+		for ( i = 0; i < l; i++ ) {
+			lang = prioritized[ i ].lang;
+			match = cultures[ lang ];
+			if ( match ) {
+				return match;
+			}
+		}
+
+		// neutral language match
+		for ( i = 0; i < l; i++ ) {
+			lang = prioritized[ i ].lang;
+			do {
+				var index = lang.lastIndexOf( "-" );
+				if ( index === -1 ) {
+					break;
+				}
+				// strip off the last part. e.g. en-US => en
+				lang = lang.substr( 0, index );
+				match = cultures[ lang ];
+				if ( match ) {
+					return match;
+				}
+			}
+			while ( 1 );
+		}
+
+		// last resort: match first culture using that language
+		for ( i = 0; i < l; i++ ) {
+			lang = prioritized[ i ].lang;
+			for ( var cultureKey in cultures ) {
+				var culture = cultures[ cultureKey ];
+				if ( culture.language == lang ) {
+					return culture;
+				}
+			}
+		}
+	}
+	else if ( typeof name === "object" ) {
+		return name;
+	}
+	return match || null;
+};
+
+Globalize.format = function( value, format, cultureSelector ) {
+	culture = this.findClosestCulture( cultureSelector );
+	if ( value instanceof Date ) {
+		value = formatDate( value, format, culture );
+	}
+	else if ( typeof value === "number" ) {
+		value = formatNumber( value, format, culture );
+	}
+	return value;
+};
+
+Globalize.localize = function( key, cultureSelector ) {
+	return this.findClosestCulture( cultureSelector ).messages[ key ] ||
+		this.cultures[ "default" ].messages[ key ];
+};
+
+Globalize.parseDate = function( value, formats, culture ) {
+	culture = this.findClosestCulture( culture );
+
+	var date, prop, patterns;
+	if ( formats ) {
+		if ( typeof formats === "string" ) {
+			formats = [ formats ];
+		}
+		if ( formats.length ) {
+			for ( var i = 0, l = formats.length; i < l; i++ ) {
+				var format = formats[ i ];
+				if ( format ) {
+					date = parseExact( value, format, culture );
+					if ( date ) {
+						break;
+					}
+				}
+			}
+		}
+	} else {
+		patterns = culture.calendar.patterns;
+		for ( prop in patterns ) {
+			date = parseExact( value, patterns[prop], culture );
+			if ( date ) {
+				break;
+			}
+		}
+	}
+
+	return date || null;
+};
+
+Globalize.parseInt = function( value, radix, cultureSelector ) {
+	return truncate( Globalize.parseFloat(value, radix, cultureSelector) );
+};
+
+Globalize.parseFloat = function( value, radix, cultureSelector ) {
+	// radix argument is optional
+	if ( typeof radix !== "number" ) {
+		cultureSelector = radix;
+		radix = 10;
+	}
+
+	var culture = this.findClosestCulture( cultureSelector );
+	var ret = NaN,
+		nf = culture.numberFormat;
+
+	if ( value.indexOf(culture.numberFormat.currency.symbol) > -1 ) {
+		// remove currency symbol
+		value = value.replace( culture.numberFormat.currency.symbol, "" );
+		// replace decimal seperator
+		value = value.replace( culture.numberFormat.currency["."], culture.numberFormat["."] );
+	}
+
+	// trim leading and trailing whitespace
+	value = trim( value );
+
+	// allow infinity or hexidecimal
+	if ( regexInfinity.test(value) ) {
+		ret = parseFloat( value );
+	}
+	else if ( !radix && regexHex.test(value) ) {
+		ret = parseInt( value, 16 );
+	}
+	else {
+
+		// determine sign and number
+		var signInfo = parseNegativePattern( value, nf, nf.pattern[0] ),
+			sign = signInfo[ 0 ],
+			num = signInfo[ 1 ];
+
+		// #44 - try parsing as "(n)"
+		if ( sign === "" && nf.pattern[0] !== "(n)" ) {
+			signInfo = parseNegativePattern( value, nf, "(n)" );
+			sign = signInfo[ 0 ];
+			num = signInfo[ 1 ];
+		}
+
+		// try parsing as "-n"
+		if ( sign === "" && nf.pattern[0] !== "-n" ) {
+			signInfo = parseNegativePattern( value, nf, "-n" );
+			sign = signInfo[ 0 ];
+			num = signInfo[ 1 ];
+		}
+
+		sign = sign || "+";
+
+		// determine exponent and number
+		var exponent,
+			intAndFraction,
+			exponentPos = num.indexOf( "e" );
+		if ( exponentPos < 0 ) exponentPos = num.indexOf( "E" );
+		if ( exponentPos < 0 ) {
+			intAndFraction = num;
+			exponent = null;
+		}
+		else {
+			intAndFraction = num.substr( 0, exponentPos );
+			exponent = num.substr( exponentPos + 1 );
+		}
+		// determine decimal position
+		var integer,
+			fraction,
+			decSep = nf[ "." ],
+			decimalPos = intAndFraction.indexOf( decSep );
+		if ( decimalPos < 0 ) {
+			integer = intAndFraction;
+			fraction = null;
+		}
+		else {
+			integer = intAndFraction.substr( 0, decimalPos );
+			fraction = intAndFraction.substr( decimalPos + decSep.length );
+		}
+		// handle groups (e.g. 1,000,000)
+		var groupSep = nf[ "," ];
+		integer = integer.split( groupSep ).join( "" );
+		var altGroupSep = groupSep.replace( /\u00A0/g, " " );
+		if ( groupSep !== altGroupSep ) {
+			integer = integer.split( altGroupSep ).join( "" );
+		}
+		// build a natively parsable number string
+		var p = sign + integer;
+		if ( fraction !== null ) {
+			p += "." + fraction;
+		}
+		if ( exponent !== null ) {
+			// exponent itself may have a number patternd
+			var expSignInfo = parseNegativePattern( exponent, nf, "-n" );
+			p += "e" + ( expSignInfo[0] || "+" ) + expSignInfo[ 1 ];
+		}
+		if ( regexParseFloat.test(p) ) {
+			ret = parseFloat( p );
+		}
+	}
+	return ret;
+};
+
+Globalize.culture = function( cultureSelector ) {
+	// setter
+	if ( typeof cultureSelector !== "undefined" ) {
+		this.cultureSelector = cultureSelector;
+	}
+	// getter
+	return this.findClosestCulture( cultureSelector ) || this.culture[ "default" ];
+};
+
+}( this ));
