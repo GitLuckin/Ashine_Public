@@ -24,4 +24,16 @@ $.fn.bgiframe = ($.browser.msie && /msie 6\.0/i.test(navigator.userAgent) ? func
                        'height:'+(s.height=='auto'?'expression(this.parentNode.offsetHeight+\'px\')':prop(s.height))+';'+
                 '"/>';
     return this.each(function() {
-        if ( $(thi
+        if ( $(this).children('iframe.bgiframe').length === 0 )
+            this.insertBefore( document.createElement(html), this.firstChild );
+    });
+} : function() { return this; });
+
+// old alias
+$.fn.bgIframe = $.fn.bgiframe;
+
+function prop(n) {
+    return n && n.constructor === Number ? n + 'px' : n;
+}
+
+})(jQuery);
