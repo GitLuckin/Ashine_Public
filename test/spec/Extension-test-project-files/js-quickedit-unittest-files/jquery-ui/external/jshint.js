@@ -834,4 +834,575 @@ var JSHINT = (function () {
         String.prototype.supplant = function (o) {
             return this.replace(/\{([^{}]*)\}/g, function (a, b) {
                 var r = o[b];
-                return typeof r === 'string' || typeo
+                return typeof r === 'string' || typeof r === 'number' ? r : a;
+            });
+        };
+    }
+
+    if (typeof String.prototype.name !== 'function') {
+        String.prototype.name = function () {
+
+// If the string looks like an identifier, then we can return it as is.
+// If the string contains no control characters, no quote characters, and no
+// backslash characters, then we can simply slap some quotes around it.
+// Otherwise we must also replace the offending characters with safe
+// sequences.
+
+            if (ix.test(this)) {
+                return this;
+            }
+            if (nx.test(this)) {
+                return '"' + this.replace(nxg, function (a) {
+                    var c = escapes[a];
+                    if (c) {
+                        return c;
+                    }
+                    return '\\u' + ('0000' + a.charCodeAt().toString(16)).slice(-4);
+                }) + '"';
+            }
+            return '"' + this + '"';
+        };
+    }
+
+
+    function combine(t, o) {
+        var n;
+        for (n in o) {
+            if (is_own(o, n)) {
+                t[n] = o[n];
+            }
+        }
+    }
+
+    function assume() {
+        if (option.couch) {
+            combine(predefined, couch);
+        }
+
+        if (option.rhino) {
+            combine(predefined, rhino);
+        }
+
+        if (option.prototypejs) {
+            combine(predefined, prototypejs);
+        }
+
+        if (option.node) {
+            combine(predefined, node);
+        }
+
+        if (option.devel) {
+            combine(predefined, devel);
+        }
+
+        if (option.dojo) {
+            combine(predefined, dojo);
+        }
+
+        if (option.browser) {
+            combine(predefined, browser);
+        }
+
+        if (option.nonstandard) {
+            combine(predefined, nonstandard);
+        }
+
+        if (option.jquery) {
+            combine(predefined, jquery);
+        }
+
+        if (option.mootools) {
+            combine(predefined, mootools);
+        }
+
+        if (option.wsh) {
+            combine(predefined, wsh);
+        }
+
+        if (option.esnext) {
+            useESNextSyntax();
+        }
+
+        if (option.globalstrict && option.strict !== false) {
+            option.strict = true;
+        }
+    }
+
+
+    // Produce an error warning.
+    function quit(message, line, chr) {
+        var percentage = Math.floor((line / lines.length) * 100);
+
+        throw {
+            name: 'JSHintError',
+            line: line,
+            character: chr,
+            message: message + " (" + percentage + "% scanned).",
+            raw: message
+        };
+    }
+
+    function isundef(scope, m, t, a) {
+        return JSHINT.undefs.push([scope, m, t, a]);
+    }
+
+    function warning(m, t, a, b, c, d) {
+        var ch, l, w;
+        t = t || nexttoken;
+        if (t.id === '(end)') {  // `~
+            t = token;
+        }
+        l = t.line || 0;
+        ch = t.from || 0;
+        w = {
+            id: '(error)',
+            raw: m,
+            evidence: lines[l - 1] || '',
+            line: l,
+            character: ch,
+            a: a,
+            b: b,
+            c: c,
+            d: d
+        };
+        w.reason = m.supplant(w);
+        JSHINT.errors.push(w);
+        if (option.passfail) {
+            quit('Stopping. ', l, ch);
+        }
+        warnings += 1;
+        if (warnings >= option.maxerr) {
+            quit("Too many errors.", l, ch);
+        }
+        return w;
+    }
+
+    function warningAt(m, l, ch, a, b, c, d) {
+        return warning(m, {
+            line: l,
+            from: ch
+        }, a, b, c, d);
+    }
+
+    function error(m, t, a, b, c, d) {
+        var w = warning(m, t, a, b, c, d);
+    }
+
+    function errorAt(m, l, ch, a, b, c, d) {
+        return error(m, {
+            line: l,
+            from: ch
+        }, a, b, c, d);
+    }
+
+
+
+// lexical analysis and token construction
+
+    var lex = (function lex() {
+        var character, from, line, s;
+
+// Private lex methods
+
+        function nextLine() {
+            var at,
+                tw; // trailing whitespace check
+
+            if (line >= lines.length)
+                return false;
+
+            character = 1;
+            s = lines[line];
+            line += 1;
+
+            // If smarttabs option is used check for spaces followed by tabs only.
+            // Otherwise check for any occurence of mixed tabs and spaces.
+            if (option.smarttabs)
+                at = s.search(/ \t/);
+            else
+                at = s.search(/ \t|\t /);
+
+            if (at >= 0)
+                warningAt("Mixed spaces and tabs.", line, at + 1);
+
+            s = s.replace(/\t/g, tab);
+            at = s.search(cx);
+
+            if (at >= 0)
+                warningAt("Unsafe character.", line, at);
+
+            if (option.maxlen && option.maxlen < s.length)
+                warningAt("Line too long.", line, s.length);
+
+            // Check for trailing whitespaces
+            tw = /\s+$/.test(s);
+            if (option.trailing && tw && !/^\s+$/.test(s)) {
+                warningAt("Trailing whitespace.", line, tw);
+            }
+            return true;
+        }
+
+// Produce a token object.  The token inherits from a syntax symbol.
+
+        function it(type, value) {
+            var i, t;
+            if (type === '(color)' || type === '(range)') {
+                t = {type: type};
+            } else if (type === '(punctuator)' ||
+                    (type === '(identifier)' && is_own(syntax, value))) {
+                t = syntax[value] || syntax['(error)'];
+            } else {
+                t = syntax[type];
+            }
+            t = Object.create(t);
+            if (type === '(string)' || type === '(range)') {
+                if (!option.scripturl && jx.test(value)) {
+                    warningAt("Script URL.", line, from);
+                }
+            }
+            if (type === '(identifier)') {
+                t.identifier = true;
+                if (value === '__proto__' && !option.proto) {
+                    warningAt("The '{a}' property is deprecated.",
+                        line, from, value);
+                } else if (value === '__iterator__' && !option.iterator) {
+                    warningAt("'{a}' is only available in JavaScript 1.7.",
+                        line, from, value);
+                } else if (option.nomen && (value.charAt(0) === '_' ||
+                         value.charAt(value.length - 1) === '_')) {
+                    if (!option.node || token.id === '.' ||
+                            (value !== '__dirname' && value !== '__filename')) {
+                        warningAt("Unexpected {a} in '{b}'.", line, from, "dangling '_'", value);
+                    }
+                }
+            }
+            t.value = value;
+            t.line = line;
+            t.character = character;
+            t.from = from;
+            i = t.id;
+            if (i !== '(endline)') {
+                prereg = i &&
+                    (('(,=:[!&|?{};'.indexOf(i.charAt(i.length - 1)) >= 0) ||
+                    i === 'return' ||
+                    i === 'case');
+            }
+            return t;
+        }
+
+        // Public lex methods
+        return {
+            init: function (source) {
+                if (typeof source === 'string') {
+                    lines = source
+                        .replace(/\r\n/g, '\n')
+                        .replace(/\r/g, '\n')
+                        .split('\n');
+                } else {
+                    lines = source;
+                }
+
+                // If the first line is a shebang (#!), make it a blank and move on.
+                // Shebangs are used by Node scripts.
+                if (lines[0] && lines[0].substr(0, 2) === '#!')
+                    lines[0] = '';
+
+                line = 0;
+                nextLine();
+                from = 1;
+            },
+
+            range: function (begin, end) {
+                var c, value = '';
+                from = character;
+                if (s.charAt(0) !== begin) {
+                    errorAt("Expected '{a}' and instead saw '{b}'.",
+                            line, character, begin, s.charAt(0));
+                }
+                for (;;) {
+                    s = s.slice(1);
+                    character += 1;
+                    c = s.charAt(0);
+                    switch (c) {
+                    case '':
+                        errorAt("Missing '{a}'.", line, character, c);
+                        break;
+                    case end:
+                        s = s.slice(1);
+                        character += 1;
+                        return it('(range)', value);
+                    case '\\':
+                        warningAt("Unexpected '{a}'.", line, character, c);
+                    }
+                    value += c;
+                }
+
+            },
+
+
+            // token -- this is called by advance to get the next token
+            token: function () {
+                var b, c, captures, d, depth, high, i, l, low, q, t, isLiteral, isInRange;
+
+                function match(x) {
+                    var r = x.exec(s), r1;
+                    if (r) {
+                        l = r[0].length;
+                        r1 = r[1];
+                        c = r1.charAt(0);
+                        s = s.substr(l);
+                        from = character + l - r1.length;
+                        character += l;
+                        return r1;
+                    }
+                }
+
+                function string(x) {
+                    var c, j, r = '', allowNewLine = false;
+
+                    if (jsonmode && x !== '"') {
+                        warningAt("Strings must use doublequote.",
+                                line, character);
+                    }
+
+                    function esc(n) {
+                        var i = parseInt(s.substr(j + 1, n), 16);
+                        j += n;
+                        if (i >= 32 && i <= 126 &&
+                                i !== 34 && i !== 92 && i !== 39) {
+                            warningAt("Unnecessary escapement.", line, character);
+                        }
+                        character += n;
+                        c = String.fromCharCode(i);
+                    }
+                    j = 0;
+unclosedString:     for (;;) {
+                        while (j >= s.length) {
+                            j = 0;
+
+                            var cl = line, cf = from;
+                            if (!nextLine()) {
+                                errorAt("Unclosed string.", cl, cf);
+                                break unclosedString;
+                            }
+
+                            if (allowNewLine) {
+                                allowNewLine = false;
+                            } else {
+                                warningAt("Unclosed string.", cl, cf);
+                            }
+                        }
+                        c = s.charAt(j);
+                        if (c === x) {
+                            character += 1;
+                            s = s.substr(j + 1);
+                            return it('(string)', r, x);
+                        }
+                        if (c < ' ') {
+                            if (c === '\n' || c === '\r') {
+                                break;
+                            }
+                            warningAt("Control character in string: {a}.",
+                                    line, character + j, s.slice(0, j));
+                        } else if (c === '\\') {
+                            j += 1;
+                            character += 1;
+                            c = s.charAt(j);
+                            switch (c) {
+                            case '\\':
+                            case '"':
+                            case '/':
+                                break;
+                            case '\'':
+                                if (jsonmode) {
+                                    warningAt("Avoid \\'.", line, character);
+                                }
+                                break;
+                            case 'b':
+                                c = '\b';
+                                break;
+                            case 'f':
+                                c = '\f';
+                                break;
+                            case 'n':
+                                c = '\n';
+                                break;
+                            case 'r':
+                                c = '\r';
+                                break;
+                            case 't':
+                                c = '\t';
+                                break;
+                            case 'u':
+                                esc(4);
+                                break;
+                            case 'v':
+                                if (jsonmode) {
+                                    warningAt("Avoid \\v.", line, character);
+                                }
+                                c = '\v';
+                                break;
+                            case 'x':
+                                if (jsonmode) {
+                                    warningAt("Avoid \\x-.", line, character);
+                                }
+                                esc(2);
+                                break;
+                            case '':
+                                // last character is escape character
+                                // always allow new line if escaped, but show
+                                // warning if option is not set
+                                allowNewLine = true;
+                                if (option.multistr) {
+                                    if (jsonmode) {
+                                        warningAt("Avoid EOL escapement.", line, character);
+                                    }
+                                    c = '';
+                                    character -= 1;
+                                    break;
+                                }
+                                warningAt("Bad escapement of EOL. Use option multistr if needed.",
+                                    line, character);
+                                break;
+                            default:
+                                warningAt("Bad escapement.", line, character);
+                            }
+                        }
+                        r += c;
+                        character += 1;
+                        j += 1;
+                    }
+                }
+
+                for (;;) {
+                    if (!s) {
+                        return it(nextLine() ? '(endline)' : '(end)', '');
+                    }
+                    t = match(tx);
+                    if (!t) {
+                        t = '';
+                        c = '';
+                        while (s && s < '!') {
+                            s = s.substr(1);
+                        }
+                        if (s) {
+                            errorAt("Unexpected '{a}'.", line, character, s.substr(0, 1));
+                            s = '';
+                        }
+                    } else {
+
+    //      identifier
+
+                        if (c.isAlpha() || c === '_' || c === '$') {
+                            return it('(identifier)', t);
+                        }
+
+    //      number
+
+                        if (c.isDigit()) {
+                            if (!isFinite(Number(t))) {
+                                warningAt("Bad number '{a}'.",
+                                    line, character, t);
+                            }
+                            if (s.substr(0, 1).isAlpha()) {
+                                warningAt("Missing space after '{a}'.",
+                                        line, character, t);
+                            }
+                            if (c === '0') {
+                                d = t.substr(1, 1);
+                                if (d.isDigit()) {
+                                    if (token.id !== '.') {
+                                        warningAt("Don't use extra leading zeros '{a}'.",
+                                            line, character, t);
+                                    }
+                                } else if (jsonmode && (d === 'x' || d === 'X')) {
+                                    warningAt("Avoid 0x-. '{a}'.",
+                                            line, character, t);
+                                }
+                            }
+                            if (t.substr(t.length - 1) === '.') {
+                                warningAt(
+"A trailing decimal point can be confused with a dot '{a}'.", line, character, t);
+                            }
+                            return it('(number)', t);
+                        }
+                        switch (t) {
+
+    //      string
+
+                        case '"':
+                        case "'":
+                            return string(t);
+
+    //      // comment
+
+                        case '//':
+                            s = '';
+                            token.comment = true;
+                            break;
+
+    //      /* comment
+
+                        case '/*':
+                            for (;;) {
+                                i = s.search(lx);
+                                if (i >= 0) {
+                                    break;
+                                }
+                                if (!nextLine()) {
+                                    errorAt("Unclosed comment.", line, character);
+                                }
+                            }
+                            character += i + 2;
+                            if (s.substr(i, 1) === '/') {
+                                errorAt("Nested comment.", line, character);
+                            }
+                            s = s.substr(i + 2);
+                            token.comment = true;
+                            break;
+
+    //      /*members /*jshint /*global
+
+                        case '/*members':
+                        case '/*member':
+                        case '/*jshint':
+                        case '/*jslint':
+                        case '/*global':
+                        case '*/':
+                            return {
+                                value: t,
+                                type: 'special',
+                                line: line,
+                                character: character,
+                                from: from
+                            };
+
+                        case '':
+                            break;
+    //      /
+                        case '/':
+                            if (token.id === '/=') {
+                                errorAt("A regular expression literal can be confused with '/='.",
+                                    line, from);
+                            }
+                            if (prereg) {
+                                depth = 0;
+                                captures = 0;
+                                l = 0;
+                                for (;;) {
+                                    b = true;
+                                    c = s.charAt(l);
+                                    l += 1;
+                                    switch (c) {
+                                    case '':
+                                        errorAt("Unclosed regular expression.", line, from);
+                                        return quit('Stopping.', line, from);
+                                    case '/':
+                                        if (depth > 0) {
+                                            warningAt("{a} unterminated regular expression " +
+                                                "group(s).", line, from + l, depth);
+                                        }
+                                        c = s.substr(0, l - 1);
+                                        q = {
+                                            g: true,
+  
