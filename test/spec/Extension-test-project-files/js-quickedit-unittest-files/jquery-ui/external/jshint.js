@@ -3046,4 +3046,612 @@ loop:   for (;;) {
                 }
             }
         }
-        if (ne
+        if (nexttoken.id !== ')') {
+            for (;;) {
+                p[p.length] = expression(10);
+                n += 1;
+                if (nexttoken.id !== ',') {
+                    break;
+                }
+                comma();
+            }
+        }
+        advance(')');
+        nospace(prevtoken, token);
+        if (typeof left === 'object') {
+            if (left.value === 'parseInt' && n === 1) {
+                warning("Missing radix parameter.", left);
+            }
+            if (!option.evil) {
+                if (left.value === 'eval' || left.value === 'Function' ||
+                        left.value === 'execScript') {
+                    warning("eval is evil.", left);
+                } else if (p[0] && p[0].id === '(string)' &&
+                       (left.value === 'setTimeout' ||
+                        left.value === 'setInterval')) {
+                    warning(
+    "Implied eval is evil. Pass a function instead of a string.", left);
+                }
+            }
+            if (!left.identifier && left.id !== '.' && left.id !== '[' &&
+                    left.id !== '(' && left.id !== '&&' && left.id !== '||' &&
+                    left.id !== '?') {
+                warning("Bad invocation.", left);
+            }
+        }
+        that.left = left;
+        return that;
+    }, 155, true).exps = true;
+
+    prefix('(', function () {
+        nospace();
+        if (nexttoken.id === 'function') {
+            nexttoken.immed = true;
+        }
+        var v = expression(0);
+        advance(')', this);
+        nospace(prevtoken, token);
+        if (option.immed && v.id === 'function') {
+            if (nexttoken.id === '(' ||
+              (nexttoken.id === '.' && (peek().value === 'call' || peek().value === 'apply'))) {
+                warning(
+"Move the invocation into the parens that contain the function.", nexttoken);
+            } else {
+                warning(
+"Do not wrap function literals in parens unless they are to be immediately invoked.",
+                        this);
+            }
+        }
+        return v;
+    });
+
+    infix('[', function (left, that) {
+        nobreak(prevtoken, token);
+        nospace();
+        var e = expression(0), s;
+        if (e && e.type === '(string)') {
+            if (!option.evil && (e.value === 'eval' || e.value === 'execScript')) {
+                warning("eval is evil.", that);
+            }
+            countMember(e.value);
+            if (!option.sub && ix.test(e.value)) {
+                s = syntax[e.value];
+                if (!s || !s.reserved) {
+                    warning("['{a}'] is better written in dot notation.",
+                            e, e.value);
+                }
+            }
+        }
+        advance(']', that);
+        nospace(prevtoken, token);
+        that.left = left;
+        that.right = e;
+        return that;
+    }, 160, true);
+
+    prefix('[', function () {
+        var b = token.line !== nexttoken.line;
+        this.first = [];
+        if (b) {
+            indent += option.indent;
+            if (nexttoken.from === indent + option.indent) {
+                indent += option.indent;
+            }
+        }
+        while (nexttoken.id !== '(end)') {
+            while (nexttoken.id === ',') {
+                warning("Extra comma.");
+                advance(',');
+            }
+            if (nexttoken.id === ']') {
+                break;
+            }
+            if (b && token.line !== nexttoken.line) {
+                indentation();
+            }
+            this.first.push(expression(10));
+            if (nexttoken.id === ',') {
+                comma();
+                if (nexttoken.id === ']' && !option.es5) {
+                    warning("Extra comma.", token);
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+        if (b) {
+            indent -= option.indent;
+            indentation();
+        }
+        advance(']', this);
+        return this;
+    }, 160);
+
+
+    function property_name() {
+        var id = optionalidentifier(true);
+        if (!id) {
+            if (nexttoken.id === '(string)') {
+                id = nexttoken.value;
+                advance();
+            } else if (nexttoken.id === '(number)') {
+                id = nexttoken.value.toString();
+                advance();
+            }
+        }
+        return id;
+    }
+
+
+    function functionparams() {
+        var i, t = nexttoken, p = [];
+        advance('(');
+        nospace();
+        if (nexttoken.id === ')') {
+            advance(')');
+            return;
+        }
+        for (;;) {
+            i = identifier(true);
+            p.push(i);
+            addlabel(i, 'parameter');
+            if (nexttoken.id === ',') {
+                comma();
+            } else {
+                advance(')', t);
+                nospace(prevtoken, token);
+                return p;
+            }
+        }
+    }
+
+
+    function doFunction(i, statement) {
+        var f,
+            oldOption = option,
+            oldScope  = scope;
+
+        option = Object.create(option);
+        scope = Object.create(scope);
+
+        funct = {
+            '(name)'     : i || '"' + anonname + '"',
+            '(line)'     : nexttoken.line,
+            '(context)'  : funct,
+            '(breakage)' : 0,
+            '(loopage)'  : 0,
+            '(scope)'    : scope,
+            '(statement)': statement
+        };
+        f = funct;
+        token.funct = funct;
+        functions.push(funct);
+        if (i) {
+            addlabel(i, 'function');
+        }
+        funct['(params)'] = functionparams();
+
+        block(false, false, true);
+        scope = oldScope;
+        option = oldOption;
+        funct['(last)'] = token.line;
+        funct = funct['(context)'];
+        return f;
+    }
+
+
+    (function (x) {
+        x.nud = function () {
+            var b, f, i, j, p, t;
+            var props = {}; // All properties, including accessors
+
+            function saveProperty(name, token) {
+                if (props[name] && is_own(props, name))
+                    warning("Duplicate member '{a}'.", nexttoken, i);
+                else
+                    props[name] = {};
+
+                props[name].basic = true;
+                props[name].basicToken = token;
+            }
+
+            function saveSetter(name, token) {
+                if (props[name] && is_own(props, name)) {
+                    if (props[name].basic || props[name].setter)
+                        warning("Duplicate member '{a}'.", nexttoken, i);
+                } else {
+                    props[name] = {};
+                }
+
+                props[name].setter = true;
+                props[name].setterToken = token;
+            }
+
+            function saveGetter(name) {
+                if (props[name] && is_own(props, name)) {
+                    if (props[name].basic || props[name].getter)
+                        warning("Duplicate member '{a}'.", nexttoken, i);
+                } else {
+                    props[name] = {};
+                }
+
+                props[name].getter = true;
+                props[name].getterToken = token;
+            }
+
+            b = token.line !== nexttoken.line;
+            if (b) {
+                indent += option.indent;
+                if (nexttoken.from === indent + option.indent) {
+                    indent += option.indent;
+                }
+            }
+            for (;;) {
+                if (nexttoken.id === '}') {
+                    break;
+                }
+                if (b) {
+                    indentation();
+                }
+                if (nexttoken.value === 'get' && peek().id !== ':') {
+                    advance('get');
+                    if (!option.es5) {
+                        error("get/set are ES5 features.");
+                    }
+                    i = property_name();
+                    if (!i) {
+                        error("Missing property name.");
+                    }
+                    saveGetter(i);
+                    t = nexttoken;
+                    adjacent(token, nexttoken);
+                    f = doFunction();
+                    p = f['(params)'];
+                    if (p) {
+                        warning("Unexpected parameter '{a}' in get {b} function.", t, p[0], i);
+                    }
+                    adjacent(token, nexttoken);
+                } else if (nexttoken.value === 'set' && peek().id !== ':') {
+                    advance('set');
+                    if (!option.es5) {
+                        error("get/set are ES5 features.");
+                    }
+                    i = property_name();
+                    if (!i) {
+                        error("Missing property name.");
+                    }
+                    saveSetter(i, nexttoken);
+                    t = nexttoken;
+                    adjacent(token, nexttoken);
+                    f = doFunction();
+                    p = f['(params)'];
+                    if (!p || p.length !== 1) {
+                        warning("Expected a single parameter in set {a} function.", t, i);
+                    }
+                } else {
+                    i = property_name();
+                    saveProperty(i, nexttoken);
+                    if (typeof i !== 'string') {
+                        break;
+                    }
+                    advance(':');
+                    nonadjacent(token, nexttoken);
+                    expression(10);
+                }
+
+                countMember(i);
+                if (nexttoken.id === ',') {
+                    comma();
+                    if (nexttoken.id === ',') {
+                        warning("Extra comma.", token);
+                    } else if (nexttoken.id === '}' && !option.es5) {
+                        warning("Extra comma.", token);
+                    }
+                } else {
+                    break;
+                }
+            }
+            if (b) {
+                indent -= option.indent;
+                indentation();
+            }
+            advance('}', this);
+
+            // Check for lonely setters if in the ES5 mode.
+            if (option.es5) {
+                for (var name in props) {
+                    if (is_own(props, name) && props[name].setter && !props[name].getter) {
+                        warning("Setter is defined without getter.", props[name].setterToken);
+                    }
+                }
+            }
+            return this;
+        };
+        x.fud = function () {
+            error("Expected to see a statement and instead saw a block.", token);
+        };
+    }(delim('{')));
+
+// This Function is called when esnext option is set to true
+// it adds the `const` statement to JSHINT
+
+    useESNextSyntax = function () {
+        var conststatement = stmt('const', function (prefix) {
+            var id, name, value;
+
+            this.first = [];
+            for (;;) {
+                nonadjacent(token, nexttoken);
+                id = identifier();
+                if (funct[id] === "const") {
+                    warning("const '" + id + "' has already been declared");
+                }
+                if (funct['(global)'] && predefined[id] === false) {
+                    warning("Redefinition of '{a}'.", token, id);
+                }
+                addlabel(id, 'const');
+                if (prefix) {
+                    break;
+                }
+                name = token;
+                this.first.push(token);
+
+                if (nexttoken.id !== "=") {
+                    warning("const " +
+                      "'{a}' is initialized to 'undefined'.", token, id);
+                }
+
+                if (nexttoken.id === '=') {
+                    nonadjacent(token, nexttoken);
+                    advance('=');
+                    nonadjacent(token, nexttoken);
+                    if (nexttoken.id === 'undefined') {
+                        warning("It is not necessary to initialize " +
+                          "'{a}' to 'undefined'.", token, id);
+                    }
+                    if (peek(0).id === '=' && nexttoken.identifier) {
+                        error("Constant {a} was not declared correctly.",
+                                nexttoken, nexttoken.value);
+                    }
+                    value = expression(0);
+                    name.first = value;
+                }
+
+                if (nexttoken.id !== ',') {
+                    break;
+                }
+                comma();
+            }
+            return this;
+        });
+        conststatement.exps = true;
+    };
+
+    var varstatement = stmt('var', function (prefix) {
+        // JavaScript does not have block scope. It only has function scope. So,
+        // declaring a variable in a block can have unexpected consequences.
+        var id, name, value;
+
+        if (funct['(onevar)'] && option.onevar) {
+            warning("Too many var statements.");
+        } else if (!funct['(global)']) {
+            funct['(onevar)'] = true;
+        }
+        this.first = [];
+        for (;;) {
+            nonadjacent(token, nexttoken);
+            id = identifier();
+            if (option.esnext && funct[id] === "const") {
+                warning("const '" + id + "' has already been declared");
+            }
+            if (funct['(global)'] && predefined[id] === false) {
+                warning("Redefinition of '{a}'.", token, id);
+            }
+            addlabel(id, 'unused');
+            if (prefix) {
+                break;
+            }
+            name = token;
+            this.first.push(token);
+            if (nexttoken.id === '=') {
+                nonadjacent(token, nexttoken);
+                advance('=');
+                nonadjacent(token, nexttoken);
+                if (nexttoken.id === 'undefined') {
+                    warning("It is not necessary to initialize '{a}' to 'undefined'.", token, id);
+                }
+                if (peek(0).id === '=' && nexttoken.identifier) {
+                    error("Variable {a} was not declared correctly.",
+                            nexttoken, nexttoken.value);
+                }
+                value = expression(0);
+                name.first = value;
+            }
+            if (nexttoken.id !== ',') {
+                break;
+            }
+            comma();
+        }
+        return this;
+    });
+    varstatement.exps = true;
+
+    blockstmt('function', function () {
+        if (inblock) {
+            warning("Function declarations should not be placed in blocks. " +
+                "Use a function expression or move the statement to the top of " +
+                "the outer function.", token);
+
+        }
+        var i = identifier();
+        if (option.esnext && funct[i] === "const") {
+            warning("const '" + i + "' has already been declared");
+        }
+        adjacent(token, nexttoken);
+        addlabel(i, 'unction');
+        doFunction(i, true);
+        if (nexttoken.id === '(' && nexttoken.line === token.line) {
+            error(
+"Function declarations are not invocable. Wrap the whole function invocation in parens.");
+        }
+        return this;
+    });
+
+    prefix('function', function () {
+        var i = optionalidentifier();
+        if (i) {
+            adjacent(token, nexttoken);
+        } else {
+            nonadjacent(token, nexttoken);
+        }
+        doFunction(i);
+        if (!option.loopfunc && funct['(loopage)']) {
+            warning("Don't make functions within a loop.");
+        }
+        return this;
+    });
+
+    blockstmt('if', function () {
+        var t = nexttoken;
+        advance('(');
+        nonadjacent(this, t);
+        nospace();
+        expression(20);
+        if (nexttoken.id === '=') {
+            if (!option.boss)
+                warning("Expected a conditional expression and instead saw an assignment.");
+            advance('=');
+            expression(20);
+        }
+        advance(')', t);
+        nospace(prevtoken, token);
+        block(true, true);
+        if (nexttoken.id === 'else') {
+            nonadjacent(token, nexttoken);
+            advance('else');
+            if (nexttoken.id === 'if' || nexttoken.id === 'switch') {
+                statement(true);
+            } else {
+                block(true, true);
+            }
+        }
+        return this;
+    });
+
+    blockstmt('try', function () {
+        var b, e, s;
+
+        block(false);
+        if (nexttoken.id === 'catch') {
+            advance('catch');
+            nonadjacent(token, nexttoken);
+            advance('(');
+            s = scope;
+            scope = Object.create(s);
+            e = nexttoken.value;
+            if (nexttoken.type !== '(identifier)') {
+                warning("Expected an identifier and instead saw '{a}'.",
+                    nexttoken, e);
+            } else {
+                addlabel(e, 'exception');
+            }
+            advance();
+            advance(')');
+            block(false);
+            b = true;
+            scope = s;
+        }
+        if (nexttoken.id === 'finally') {
+            advance('finally');
+            block(false);
+            return;
+        } else if (!b) {
+            error("Expected '{a}' and instead saw '{b}'.",
+                    nexttoken, 'catch', nexttoken.value);
+        }
+        return this;
+    });
+
+    blockstmt('while', function () {
+        var t = nexttoken;
+        funct['(breakage)'] += 1;
+        funct['(loopage)'] += 1;
+        advance('(');
+        nonadjacent(this, t);
+        nospace();
+        expression(20);
+        if (nexttoken.id === '=') {
+            if (!option.boss)
+                warning("Expected a conditional expression and instead saw an assignment.");
+            advance('=');
+            expression(20);
+        }
+        advance(')', t);
+        nospace(prevtoken, token);
+        block(true, true);
+        funct['(breakage)'] -= 1;
+        funct['(loopage)'] -= 1;
+        return this;
+    }).labelled = true;
+
+    reserve('with');
+
+    blockstmt('switch', function () {
+        var t = nexttoken,
+            g = false;
+        funct['(breakage)'] += 1;
+        advance('(');
+        nonadjacent(this, t);
+        nospace();
+        this.condition = expression(20);
+        advance(')', t);
+        nospace(prevtoken, token);
+        nonadjacent(token, nexttoken);
+        t = nexttoken;
+        advance('{');
+        nonadjacent(token, nexttoken);
+        indent += option.indent;
+        this.cases = [];
+        for (;;) {
+            switch (nexttoken.id) {
+            case 'case':
+                switch (funct['(verb)']) {
+                case 'break':
+                case 'case':
+                case 'continue':
+                case 'return':
+                case 'switch':
+                case 'throw':
+                    break;
+                default:
+                    // You can tell JSHint that you don't use break intentionally by
+                    // adding a comment /* falls through */ on a line just before
+                    // the next `case`.
+                    if (!ft.test(lines[nexttoken.line - 2])) {
+                        warning(
+                            "Expected a 'break' statement before 'case'.",
+                            token);
+                    }
+                }
+                indentation(-option.indent);
+                advance('case');
+                this.cases.push(expression(20));
+                g = true;
+                advance(':');
+                funct['(verb)'] = 'case';
+                break;
+            case 'default':
+                switch (funct['(verb)']) {
+                case 'break':
+                case 'continue':
+                case 'return':
+                case 'throw':
+                    break;
+                default:
+                    if (!ft.test(lines[nexttoken.line - 2])) {
+                        warning(
+                            "Expected a 'break' statement before 'default'.",
+                            token);
+                    }
+       
