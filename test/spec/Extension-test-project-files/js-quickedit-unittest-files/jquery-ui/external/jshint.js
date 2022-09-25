@@ -1810,4 +1810,655 @@ loop:   for (;;) {
 
 
 // We need a peek function. If it has an argument, it peeks that much farther
-// ahead. I
+// ahead. It is used to distinguish
+//     for ( var i in ...
+// from
+//     for ( var i = ...
+
+    function peek(p) {
+        var i = p || 0, j = 0, t;
+
+        while (j <= i) {
+            t = lookahead[j];
+            if (!t) {
+                t = lookahead[j] = lex.token();
+            }
+            j += 1;
+        }
+        return t;
+    }
+
+
+
+// Produce the next token. It looks for programming errors.
+
+    function advance(id, t) {
+        switch (token.id) {
+        case '(number)':
+            if (nexttoken.id === '.') {
+                warning("A dot following a number can be confused with a decimal point.", token);
+            }
+            break;
+        case '-':
+            if (nexttoken.id === '-' || nexttoken.id === '--') {
+                warning("Confusing minusses.");
+            }
+            break;
+        case '+':
+            if (nexttoken.id === '+' || nexttoken.id === '++') {
+                warning("Confusing plusses.");
+            }
+            break;
+        }
+
+        if (token.type === '(string)' || token.identifier) {
+            anonname = token.value;
+        }
+
+        if (id && nexttoken.id !== id) {
+            if (t) {
+                if (nexttoken.id === '(end)') {
+                    warning("Unmatched '{a}'.", t, t.id);
+                } else {
+                    warning("Expected '{a}' to match '{b}' from line {c} and instead saw '{d}'.",
+                            nexttoken, id, t.id, t.line, nexttoken.value);
+                }
+            } else if (nexttoken.type !== '(identifier)' ||
+                            nexttoken.value !== id) {
+                warning("Expected '{a}' and instead saw '{b}'.",
+                        nexttoken, id, nexttoken.value);
+            }
+        }
+
+        prevtoken = token;
+        token = nexttoken;
+        for (;;) {
+            nexttoken = lookahead.shift() || lex.token();
+            if (nexttoken.id === '(end)' || nexttoken.id === '(error)') {
+                return;
+            }
+            if (nexttoken.type === 'special') {
+                doOption();
+            } else {
+                if (nexttoken.id !== '(endline)') {
+                    break;
+                }
+            }
+        }
+    }
+
+
+// This is the heart of JSHINT, the Pratt parser. In addition to parsing, it
+// is looking for ad hoc lint patterns. We add .fud to Pratt's model, which is
+// like .nud except that it is only used on the first token of a statement.
+// Having .fud makes it much easier to define statement-oriented languages like
+// JavaScript. I retained Pratt's nomenclature.
+
+// .nud     Null denotation
+// .fud     First null denotation
+// .led     Left denotation
+//  lbp     Left binding power
+//  rbp     Right binding power
+
+// They are elements of the parsing method called Top Down Operator Precedence.
+
+    function expression(rbp, initial) {
+        var left, isArray = false;
+
+        if (nexttoken.id === '(end)')
+            error("Unexpected early end of program.", token);
+
+        advance();
+        if (initial) {
+            anonname = 'anonymous';
+            funct['(verb)'] = token.value;
+        }
+        if (initial === true && token.fud) {
+            left = token.fud();
+        } else {
+            if (token.nud) {
+                left = token.nud();
+            } else {
+                if (nexttoken.type === '(number)' && token.id === '.') {
+                    warning("A leading decimal point can be confused with a dot: '.{a}'.",
+                            token, nexttoken.value);
+                    advance();
+                    return token;
+                } else {
+                    error("Expected an identifier and instead saw '{a}'.",
+                            token, token.id);
+                }
+            }
+            while (rbp < nexttoken.lbp) {
+                isArray = token.value === 'Array';
+                advance();
+                if (isArray && token.id === '(' && nexttoken.id === ')')
+                    warning("Use the array literal notation [].", token);
+                if (token.led) {
+                    left = token.led(left);
+                } else {
+                    error("Expected an operator and instead saw '{a}'.",
+                        token, token.id);
+                }
+            }
+        }
+        return left;
+    }
+
+
+// Functions for conformance of style.
+
+    function adjacent(left, right) {
+        left = left || token;
+        right = right || nexttoken;
+        if (option.white) {
+            if (left.character !== right.from && left.line === right.line) {
+                left.from += (left.character - left.from);
+                warning("Unexpected space after '{a}'.", left, left.value);
+            }
+        }
+    }
+
+    function nobreak(left, right) {
+        left = left || token;
+        right = right || nexttoken;
+        if (option.white && (left.character !== right.from || left.line !== right.line)) {
+            warning("Unexpected space before '{a}'.", right, right.value);
+        }
+    }
+
+    function nospace(left, right) {
+        left = left || token;
+        right = right || nexttoken;
+        if (option.white && !left.comment) {
+            if (left.line === right.line) {
+                adjacent(left, right);
+            }
+        }
+    }
+
+    function nonadjacent(left, right) {
+        if (option.white) {
+            left = left || token;
+            right = right || nexttoken;
+            if (left.line === right.line && left.character === right.from) {
+                left.from += (left.character - left.from);
+                warning("Missing space after '{a}'.",
+                        left, left.value);
+            }
+        }
+    }
+
+    function nobreaknonadjacent(left, right) {
+        left = left || token;
+        right = right || nexttoken;
+        if (!option.laxbreak && left.line !== right.line) {
+            warning("Bad line breaking before '{a}'.", right, right.id);
+        } else if (option.white) {
+            left = left || token;
+            right = right || nexttoken;
+            if (left.character === right.from) {
+                left.from += (left.character - left.from);
+                warning("Missing space after '{a}'.",
+                        left, left.value);
+            }
+        }
+    }
+
+    function indentation(bias) {
+        var i;
+        if (option.white && nexttoken.id !== '(end)') {
+            i = indent + (bias || 0);
+            if (nexttoken.from !== i) {
+                warning(
+"Expected '{a}' to have an indentation at {b} instead at {c}.",
+                        nexttoken, nexttoken.value, i, nexttoken.from);
+            }
+        }
+    }
+
+    function nolinebreak(t) {
+        t = t || token;
+        if (t.line !== nexttoken.line) {
+            warning("Line breaking error '{a}'.", t, t.value);
+        }
+    }
+
+
+    function comma() {
+        if (token.line !== nexttoken.line) {
+            if (!option.laxcomma) {
+                if (comma.first) {
+                    warning("Comma warnings can be turned off with 'laxcomma'");
+                    comma.first = false;
+                }
+                warning("Bad line breaking before '{a}'.", token, nexttoken.id);
+            }
+        } else if (!token.comment && token.character !== nexttoken.from && option.white) {
+            token.from += (token.character - token.from);
+            warning("Unexpected space after '{a}'.", token, token.value);
+        }
+        advance(',');
+        nonadjacent(token, nexttoken);
+    }
+
+    comma.first = true;
+
+
+// Functional constructors for making the symbols that will be inherited by
+// tokens.
+
+    function symbol(s, p) {
+        var x = syntax[s];
+        if (!x || typeof x !== 'object') {
+            syntax[s] = x = {
+                id: s,
+                lbp: p,
+                value: s
+            };
+        }
+        return x;
+    }
+
+
+    function delim(s) {
+        return symbol(s, 0);
+    }
+
+
+    function stmt(s, f) {
+        var x = delim(s);
+        x.identifier = x.reserved = true;
+        x.fud = f;
+        return x;
+    }
+
+
+    function blockstmt(s, f) {
+        var x = stmt(s, f);
+        x.block = true;
+        return x;
+    }
+
+
+    function reserveName(x) {
+        var c = x.id.charAt(0);
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+            x.identifier = x.reserved = true;
+        }
+        return x;
+    }
+
+
+    function prefix(s, f) {
+        var x = symbol(s, 150);
+        reserveName(x);
+        x.nud = (typeof f === 'function') ? f : function () {
+            this.right = expression(150);
+            this.arity = 'unary';
+            if (this.id === '++' || this.id === '--') {
+                if (option.plusplus) {
+                    warning("Unexpected use of '{a}'.", this, this.id);
+                } else if ((!this.right.identifier || this.right.reserved) &&
+                        this.right.id !== '.' && this.right.id !== '[') {
+                    warning("Bad operand.", this);
+                }
+            }
+            return this;
+        };
+        return x;
+    }
+
+
+    function type(s, f) {
+        var x = delim(s);
+        x.type = s;
+        x.nud = f;
+        return x;
+    }
+
+
+    function reserve(s, f) {
+        var x = type(s, f);
+        x.identifier = x.reserved = true;
+        return x;
+    }
+
+
+    function reservevar(s, v) {
+        return reserve(s, function () {
+            if (typeof v === 'function') {
+                v(this);
+            }
+            return this;
+        });
+    }
+
+
+    function infix(s, f, p, w) {
+        var x = symbol(s, p);
+        reserveName(x);
+        x.led = function (left) {
+            if (!w) {
+                nobreaknonadjacent(prevtoken, token);
+                nonadjacent(token, nexttoken);
+            }
+            if (s === "in" && left.id === "!") {
+                warning("Confusing use of '{a}'.", left, '!');
+            }
+            if (typeof f === 'function') {
+                return f(left, this);
+            } else {
+                this.left = left;
+                this.right = expression(p);
+                return this;
+            }
+        };
+        return x;
+    }
+
+
+    function relation(s, f) {
+        var x = symbol(s, 100);
+        x.led = function (left) {
+            nobreaknonadjacent(prevtoken, token);
+            nonadjacent(token, nexttoken);
+            var right = expression(100);
+            if ((left && left.id === 'NaN') || (right && right.id === 'NaN')) {
+                warning("Use the isNaN function to compare with NaN.", this);
+            } else if (f) {
+                f.apply(this, [left, right]);
+            }
+            if (left.id === '!') {
+                warning("Confusing use of '{a}'.", left, '!');
+            }
+            if (right.id === '!') {
+                warning("Confusing use of '{a}'.", right, '!');
+            }
+            this.left = left;
+            this.right = right;
+            return this;
+        };
+        return x;
+    }
+
+
+    function isPoorRelation(node) {
+        return node &&
+              ((node.type === '(number)' && +node.value === 0) ||
+               (node.type === '(string)' && node.value === '') ||
+               (node.type === 'null' && !option.eqnull) ||
+                node.type === 'true' ||
+                node.type === 'false' ||
+                node.type === 'undefined');
+    }
+
+
+    function assignop(s, f) {
+        symbol(s, 20).exps = true;
+        return infix(s, function (left, that) {
+            var l;
+            that.left = left;
+            if (predefined[left.value] === false &&
+                    scope[left.value]['(global)'] === true) {
+                warning("Read only.", left);
+            } else if (left['function']) {
+                warning("'{a}' is a function.", left, left.value);
+            }
+            if (left) {
+                if (option.esnext && funct[left.value] === 'const') {
+                    warning("Attempting to override '{a}' which is a constant", left, left.value);
+                }
+                if (left.id === '.' || left.id === '[') {
+                    if (!left.left || left.left.value === 'arguments') {
+                        warning('Bad assignment.', that);
+                    }
+                    that.right = expression(19);
+                    return that;
+                } else if (left.identifier && !left.reserved) {
+                    if (funct[left.value] === 'exception') {
+                        warning("Do not assign to the exception parameter.", left);
+                    }
+                    that.right = expression(19);
+                    return that;
+                }
+                if (left === syntax['function']) {
+                    warning(
+"Expected an identifier in an assignment and instead saw a function invocation.",
+                                token);
+                }
+            }
+            error("Bad assignment.", that);
+        }, 20);
+    }
+
+
+    function bitwise(s, f, p) {
+        var x = symbol(s, p);
+        reserveName(x);
+        x.led = (typeof f === 'function') ? f : function (left) {
+            if (option.bitwise) {
+                warning("Unexpected use of '{a}'.", this, this.id);
+            }
+            this.left = left;
+            this.right = expression(p);
+            return this;
+        };
+        return x;
+    }
+
+
+    function bitwiseassignop(s) {
+        symbol(s, 20).exps = true;
+        return infix(s, function (left, that) {
+            if (option.bitwise) {
+                warning("Unexpected use of '{a}'.", that, that.id);
+            }
+            nonadjacent(prevtoken, token);
+            nonadjacent(token, nexttoken);
+            if (left) {
+                if (left.id === '.' || left.id === '[' ||
+                        (left.identifier && !left.reserved)) {
+                    expression(19);
+                    return that;
+                }
+                if (left === syntax['function']) {
+                    warning(
+"Expected an identifier in an assignment, and instead saw a function invocation.",
+                                token);
+                }
+                return that;
+            }
+            error("Bad assignment.", that);
+        }, 20);
+    }
+
+
+    function suffix(s, f) {
+        var x = symbol(s, 150);
+        x.led = function (left) {
+            if (option.plusplus) {
+                warning("Unexpected use of '{a}'.", this, this.id);
+            } else if ((!left.identifier || left.reserved) &&
+                    left.id !== '.' && left.id !== '[') {
+                warning("Bad operand.", this);
+            }
+            this.left = left;
+            return this;
+        };
+        return x;
+    }
+
+
+    // fnparam means that this identifier is being defined as a function
+    // argument (see identifier())
+    function optionalidentifier(fnparam) {
+        if (nexttoken.identifier) {
+            advance();
+            if (token.reserved && !option.es5) {
+                // `undefined` as a function param is a common pattern to protect
+                // against the case when somebody does `undefined = true` and
+                // help with minification. More info: https://gist.github.com/315916
+                if (!fnparam || token.value !== 'undefined') {
+                    warning("Expected an identifier and instead saw '{a}' (a reserved word).",
+                            token, token.id);
+                }
+            }
+            return token.value;
+        }
+    }
+
+    // fnparam means that this identifier is being defined as a function
+    // argument
+    function identifier(fnparam) {
+        var i = optionalidentifier(fnparam);
+        if (i) {
+            return i;
+        }
+        if (token.id === 'function' && nexttoken.id === '(') {
+            warning("Missing name in function declaration.");
+        } else {
+            error("Expected an identifier and instead saw '{a}'.",
+                    nexttoken, nexttoken.value);
+        }
+    }
+
+
+    function reachable(s) {
+        var i = 0, t;
+        if (nexttoken.id !== ';' || noreach) {
+            return;
+        }
+        for (;;) {
+            t = peek(i);
+            if (t.reach) {
+                return;
+            }
+            if (t.id !== '(endline)') {
+                if (t.id === 'function') {
+                    if (!option.latedef) {
+                        break;
+                    }
+                    warning(
+"Inner functions should be listed at the top of the outer function.", t);
+                    break;
+                }
+                warning("Unreachable '{a}' after '{b}'.", t, t.value, s);
+                break;
+            }
+            i += 1;
+        }
+    }
+
+
+    function statement(noindent) {
+        var i = indent, r, s = scope, t = nexttoken;
+
+        if (t.id === ";") {
+            advance(";");
+            return;
+        }
+
+// Is this a labelled statement?
+
+        if (t.identifier && !t.reserved && peek().id === ':') {
+            advance();
+            advance(':');
+            scope = Object.create(s);
+            addlabel(t.value, 'label');
+            if (!nexttoken.labelled) {
+                warning("Label '{a}' on {b} statement.",
+                        nexttoken, t.value, nexttoken.value);
+            }
+            if (jx.test(t.value + ':')) {
+                warning("Label '{a}' looks like a javascript url.",
+                        t, t.value);
+            }
+            nexttoken.label = t.value;
+            t = nexttoken;
+        }
+
+// Parse the statement.
+
+        if (!noindent) {
+            indentation();
+        }
+        r = expression(0, true);
+
+        // Look for the final semicolon.
+        if (!t.block) {
+            if (!option.expr && (!r || !r.exps)) {
+                warning("Expected an assignment or function call and instead saw an expression.",
+                    token);
+            } else if (option.nonew && r.id === '(' && r.left.id === 'new') {
+                warning("Do not use 'new' for side effects.");
+            }
+
+            if (nexttoken.id !== ';') {
+                if (!option.asi) {
+                    // If this is the last statement in a block that ends on
+                    // the same line *and* option lastsemic is on, ignore the warning.
+                    // Otherwise, complain about missing semicolon.
+                    if (!option.lastsemic || nexttoken.id !== '}' ||
+                            nexttoken.line !== token.line) {
+                        warningAt("Missing semicolon.", token.line, token.character);
+                    }
+                }
+            } else {
+                adjacent(token, nexttoken);
+                advance(';');
+                nonadjacent(token, nexttoken);
+            }
+        }
+
+// Restore the indentation.
+
+        indent = i;
+        scope = s;
+        return r;
+    }
+
+
+    function statements(startLine) {
+        var a = [], f, p;
+
+        while (!nexttoken.reach && nexttoken.id !== '(end)') {
+            if (nexttoken.id === ';') {
+                p = peek();
+                if (!p || p.id !== "(") {
+                    warning("Unnecessary semicolon.");
+                }
+                advance(';');
+            } else {
+                a.push(statement(startLine === nexttoken.line));
+            }
+        }
+        return a;
+    }
+
+
+    /*
+     * read all directives
+     * recognizes a simple form of asi, but always
+     * warns, if it is used
+     */
+    function directives() {
+        var i, p, pn;
+
+        for (;;) {
+            if (nexttoken.id === "(string)") {
+                p = peek(0);
+                if (p.id === "(endline)") {
+                    i = 1;
+                    do {
+                        pn = peek(i);
+                        i = i + 1;
+                    } while (pn.id === "(endline)");
+
+                    if (pn.id !== ";") {
+                        if (pn.id !== "(string)" && pn.id !== "(number)" &&
+                            pn.id !== "(regexp)" && pn.identifier !== true &&
+                            pn.id !== "}") {
+                            break;
+                        }
+                        warn
