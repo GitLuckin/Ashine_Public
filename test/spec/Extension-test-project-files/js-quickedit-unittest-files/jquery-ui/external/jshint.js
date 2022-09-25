@@ -2461,4 +2461,589 @@ loop:   for (;;) {
                             pn.id !== "}") {
                             break;
                         }
-                        warn
+                        warning("Missing semicolon.", nexttoken);
+                    } else {
+                        p = pn;
+                    }
+                } else if (p.id === "}") {
+                    // directive with no other statements, warn about missing semicolon
+                    warning("Missing semicolon.", p);
+                } else if (p.id !== ";") {
+                    break;
+                }
+
+                indentation();
+                advance();
+                if (directive[token.value]) {
+                    warning("Unnecessary directive \"{a}\".", token, token.value);
+                }
+
+                if (token.value === "use strict") {
+                    option.newcap = true;
+                    option.undef = true;
+                }
+
+                // there's no directive negation, so always set to true
+                directive[token.value] = true;
+
+                if (p.id === ";") {
+                    advance(";");
+                }
+                continue;
+            }
+            break;
+        }
+    }
+
+
+    /*
+     * Parses a single block. A block is a sequence of statements wrapped in
+     * braces.
+     *
+     * ordinary - true for everything but function bodies and try blocks.
+     * stmt     - true if block can be a single statement (e.g. in if/for/while).
+     * isfunc   - true if block is a function body
+     */
+    function block(ordinary, stmt, isfunc) {
+        var a,
+            b = inblock,
+            old_indent = indent,
+            m,
+            s = scope,
+            t,
+            line,
+            d;
+
+        inblock = ordinary;
+        if (!ordinary || !option.funcscope) scope = Object.create(scope);
+        nonadjacent(token, nexttoken);
+        t = nexttoken;
+
+        if (nexttoken.id === '{') {
+            advance('{');
+            line = token.line;
+            if (nexttoken.id !== '}') {
+                indent += option.indent;
+                while (!ordinary && nexttoken.from > indent) {
+                    indent += option.indent;
+                }
+
+                if (isfunc) {
+                    m = {};
+                    for (d in directive) {
+                        if (is_own(directive, d)) {
+                            m[d] = directive[d];
+                        }
+                    }
+                    directives();
+
+                    if (option.strict && funct['(context)']['(global)']) {
+                        if (!m["use strict"] && !directive["use strict"]) {
+                            warning("Missing \"use strict\" statement.");
+                        }
+                    }
+                }
+
+                a = statements(line);
+
+                if (isfunc) {
+                    directive = m;
+                }
+
+                indent -= option.indent;
+                if (line !== nexttoken.line) {
+                    indentation();
+                }
+            } else if (line !== nexttoken.line) {
+                indentation();
+            }
+            advance('}', t);
+            indent = old_indent;
+        } else if (!ordinary) {
+            error("Expected '{a}' and instead saw '{b}'.",
+                  nexttoken, '{', nexttoken.value);
+        } else {
+            if (!stmt || option.curly)
+                warning("Expected '{a}' and instead saw '{b}'.",
+                        nexttoken, '{', nexttoken.value);
+
+            noreach = true;
+            indent += option.indent;
+            // test indentation only if statement is in new line
+            a = [statement(nexttoken.line === token.line)];
+            indent -= option.indent;
+            noreach = false;
+        }
+        funct['(verb)'] = null;
+        if (!ordinary || !option.funcscope) scope = s;
+        inblock = b;
+        if (ordinary && option.noempty && (!a || a.length === 0)) {
+            warning("Empty block.");
+        }
+        return a;
+    }
+
+
+    function countMember(m) {
+        if (membersOnly && typeof membersOnly[m] !== 'boolean') {
+            warning("Unexpected /*member '{a}'.", token, m);
+        }
+        if (typeof member[m] === 'number') {
+            member[m] += 1;
+        } else {
+            member[m] = 1;
+        }
+    }
+
+
+    function note_implied(token) {
+        var name = token.value, line = token.line, a = implied[name];
+        if (typeof a === 'function') {
+            a = false;
+        }
+
+        if (!a) {
+            a = [line];
+            implied[name] = a;
+        } else if (a[a.length - 1] !== line) {
+            a.push(line);
+        }
+    }
+
+
+    // Build the syntax table by declaring the syntactic elements of the language.
+
+    type('(number)', function () {
+        return this;
+    });
+
+    type('(string)', function () {
+        return this;
+    });
+
+    syntax['(identifier)'] = {
+        type: '(identifier)',
+        lbp: 0,
+        identifier: true,
+        nud: function () {
+            var v = this.value,
+                s = scope[v],
+                f;
+
+            if (typeof s === 'function') {
+                // Protection against accidental inheritance.
+                s = undefined;
+            } else if (typeof s === 'boolean') {
+                f = funct;
+                funct = functions[0];
+                addlabel(v, 'var');
+                s = funct;
+                funct = f;
+            }
+
+            // The name is in scope and defined in the current function.
+            if (funct === s) {
+                // Change 'unused' to 'var', and reject labels.
+                switch (funct[v]) {
+                case 'unused':
+                    funct[v] = 'var';
+                    break;
+                case 'unction':
+                    funct[v] = 'function';
+                    this['function'] = true;
+                    break;
+                case 'function':
+                    this['function'] = true;
+                    break;
+                case 'label':
+                    warning("'{a}' is a statement label.", token, v);
+                    break;
+                }
+            } else if (funct['(global)']) {
+                // The name is not defined in the function.  If we are in the global
+                // scope, then we have an undefined variable.
+                //
+                // Operators typeof and delete do not raise runtime errors even if
+                // the base object of a reference is null so no need to display warning
+                // if we're inside of typeof or delete.
+
+                if (option.undef && typeof predefined[v] !== 'boolean') {
+                    // Attempting to subscript a null reference will throw an
+                    // error, even within the typeof and delete operators
+                    if (!(anonname === 'typeof' || anonname === 'delete') ||
+                        (nexttoken && (nexttoken.value === '.' || nexttoken.value === '['))) {
+
+                        isundef(funct, "'{a}' is not defined.", token, v);
+                    }
+                }
+                note_implied(token);
+            } else {
+                // If the name is already defined in the current
+                // function, but not as outer, then there is a scope error.
+
+                switch (funct[v]) {
+                case 'closure':
+                case 'function':
+                case 'var':
+                case 'unused':
+                    warning("'{a}' used out of scope.", token, v);
+                    break;
+                case 'label':
+                    warning("'{a}' is a statement label.", token, v);
+                    break;
+                case 'outer':
+                case 'global':
+                    break;
+                default:
+                    // If the name is defined in an outer function, make an outer entry,
+                    // and if it was unused, make it var.
+                    if (s === true) {
+                        funct[v] = true;
+                    } else if (s === null) {
+                        warning("'{a}' is not allowed.", token, v);
+                        note_implied(token);
+                    } else if (typeof s !== 'object') {
+                        // Operators typeof and delete do not raise runtime errors even
+                        // if the base object of a reference is null so no need to
+                        // display warning if we're inside of typeof or delete.
+                        if (option.undef) {
+                            // Attempting to subscript a null reference will throw an
+                            // error, even within the typeof and delete operators
+                            if (!(anonname === 'typeof' || anonname === 'delete') ||
+                                (nexttoken &&
+                                    (nexttoken.value === '.' || nexttoken.value === '['))) {
+
+                                isundef(funct, "'{a}' is not defined.", token, v);
+                            }
+                        }
+                        funct[v] = true;
+                        note_implied(token);
+                    } else {
+                        switch (s[v]) {
+                        case 'function':
+                        case 'unction':
+                            this['function'] = true;
+                            s[v] = 'closure';
+                            funct[v] = s['(global)'] ? 'global' : 'outer';
+                            break;
+                        case 'var':
+                        case 'unused':
+                            s[v] = 'closure';
+                            funct[v] = s['(global)'] ? 'global' : 'outer';
+                            break;
+                        case 'closure':
+                        case 'parameter':
+                            funct[v] = s['(global)'] ? 'global' : 'outer';
+                            break;
+                        case 'label':
+                            warning("'{a}' is a statement label.", token, v);
+                        }
+                    }
+                }
+            }
+            return this;
+        },
+        led: function () {
+            error("Expected an operator and instead saw '{a}'.",
+                nexttoken, nexttoken.value);
+        }
+    };
+
+    type('(regexp)', function () {
+        return this;
+    });
+
+
+// ECMAScript parser
+
+    delim('(endline)');
+    delim('(begin)');
+    delim('(end)').reach = true;
+    delim('</').reach = true;
+    delim('<!');
+    delim('<!--');
+    delim('-->');
+    delim('(error)').reach = true;
+    delim('}').reach = true;
+    delim(')');
+    delim(']');
+    delim('"').reach = true;
+    delim("'").reach = true;
+    delim(';');
+    delim(':').reach = true;
+    delim(',');
+    delim('#');
+    delim('@');
+    reserve('else');
+    reserve('case').reach = true;
+    reserve('catch');
+    reserve('default').reach = true;
+    reserve('finally');
+    reservevar('arguments', function (x) {
+        if (directive['use strict'] && funct['(global)']) {
+            warning("Strict violation.", x);
+        }
+    });
+    reservevar('eval');
+    reservevar('false');
+    reservevar('Infinity');
+    reservevar('NaN');
+    reservevar('null');
+    reservevar('this', function (x) {
+        if (directive['use strict'] && !option.validthis && ((funct['(statement)'] &&
+                funct['(name)'].charAt(0) > 'Z') || funct['(global)'])) {
+            warning("Possible strict violation.", x);
+        }
+    });
+    reservevar('true');
+    reservevar('undefined');
+    assignop('=', 'assign', 20);
+    assignop('+=', 'assignadd', 20);
+    assignop('-=', 'assignsub', 20);
+    assignop('*=', 'assignmult', 20);
+    assignop('/=', 'assigndiv', 20).nud = function () {
+        error("A regular expression literal can be confused with '/='.");
+    };
+    assignop('%=', 'assignmod', 20);
+    bitwiseassignop('&=', 'assignbitand', 20);
+    bitwiseassignop('|=', 'assignbitor', 20);
+    bitwiseassignop('^=', 'assignbitxor', 20);
+    bitwiseassignop('<<=', 'assignshiftleft', 20);
+    bitwiseassignop('>>=', 'assignshiftright', 20);
+    bitwiseassignop('>>>=', 'assignshiftrightunsigned', 20);
+    infix('?', function (left, that) {
+        that.left = left;
+        that.right = expression(10);
+        advance(':');
+        that['else'] = expression(10);
+        return that;
+    }, 30);
+
+    infix('||', 'or', 40);
+    infix('&&', 'and', 50);
+    bitwise('|', 'bitor', 70);
+    bitwise('^', 'bitxor', 80);
+    bitwise('&', 'bitand', 90);
+    relation('==', function (left, right) {
+        var eqnull = option.eqnull && (left.value === 'null' || right.value === 'null');
+
+        if (!eqnull && option.eqeqeq)
+            warning("Expected '{a}' and instead saw '{b}'.", this, '===', '==');
+        else if (isPoorRelation(left))
+            warning("Use '{a}' to compare with '{b}'.", this, '===', left.value);
+        else if (isPoorRelation(right))
+            warning("Use '{a}' to compare with '{b}'.", this, '===', right.value);
+
+        return this;
+    });
+    relation('===');
+    relation('!=', function (left, right) {
+        var eqnull = option.eqnull &&
+                (left.value === 'null' || right.value === 'null');
+
+        if (!eqnull && option.eqeqeq) {
+            warning("Expected '{a}' and instead saw '{b}'.",
+                    this, '!==', '!=');
+        } else if (isPoorRelation(left)) {
+            warning("Use '{a}' to compare with '{b}'.",
+                    this, '!==', left.value);
+        } else if (isPoorRelation(right)) {
+            warning("Use '{a}' to compare with '{b}'.",
+                    this, '!==', right.value);
+        }
+        return this;
+    });
+    relation('!==');
+    relation('<');
+    relation('>');
+    relation('<=');
+    relation('>=');
+    bitwise('<<', 'shiftleft', 120);
+    bitwise('>>', 'shiftright', 120);
+    bitwise('>>>', 'shiftrightunsigned', 120);
+    infix('in', 'in', 120);
+    infix('instanceof', 'instanceof', 120);
+    infix('+', function (left, that) {
+        var right = expression(130);
+        if (left && right && left.id === '(string)' && right.id === '(string)') {
+            left.value += right.value;
+            left.character = right.character;
+            if (!option.scripturl && jx.test(left.value)) {
+                warning("JavaScript URL.", left);
+            }
+            return left;
+        }
+        that.left = left;
+        that.right = right;
+        return that;
+    }, 130);
+    prefix('+', 'num');
+    prefix('+++', function () {
+        warning("Confusing pluses.");
+        this.right = expression(150);
+        this.arity = 'unary';
+        return this;
+    });
+    infix('+++', function (left) {
+        warning("Confusing pluses.");
+        this.left = left;
+        this.right = expression(130);
+        return this;
+    }, 130);
+    infix('-', 'sub', 130);
+    prefix('-', 'neg');
+    prefix('---', function () {
+        warning("Confusing minuses.");
+        this.right = expression(150);
+        this.arity = 'unary';
+        return this;
+    });
+    infix('---', function (left) {
+        warning("Confusing minuses.");
+        this.left = left;
+        this.right = expression(130);
+        return this;
+    }, 130);
+    infix('*', 'mult', 140);
+    infix('/', 'div', 140);
+    infix('%', 'mod', 140);
+
+    suffix('++', 'postinc');
+    prefix('++', 'preinc');
+    syntax['++'].exps = true;
+
+    suffix('--', 'postdec');
+    prefix('--', 'predec');
+    syntax['--'].exps = true;
+    prefix('delete', function () {
+        var p = expression(0);
+        if (!p || (p.id !== '.' && p.id !== '[')) {
+            warning("Variables should not be deleted.");
+        }
+        this.first = p;
+        return this;
+    }).exps = true;
+
+    prefix('~', function () {
+        if (option.bitwise) {
+            warning("Unexpected '{a}'.", this, '~');
+        }
+        expression(150);
+        return this;
+    });
+
+    prefix('!', function () {
+        this.right = expression(150);
+        this.arity = 'unary';
+        if (bang[this.right.id] === true) {
+            warning("Confusing use of '{a}'.", this, '!');
+        }
+        return this;
+    });
+    prefix('typeof', 'typeof');
+    prefix('new', function () {
+        var c = expression(155), i;
+        if (c && c.id !== 'function') {
+            if (c.identifier) {
+                c['new'] = true;
+                switch (c.value) {
+                case 'Object':
+                    warning("Use the object literal notation {}.", token);
+                    break;
+                case 'Number':
+                case 'String':
+                case 'Boolean':
+                case 'Math':
+                case 'JSON':
+                    warning("Do not use {a} as a constructor.", token, c.value);
+                    break;
+                case 'Function':
+                    if (!option.evil) {
+                        warning("The Function constructor is eval.");
+                    }
+                    break;
+                case 'Date':
+                case 'RegExp':
+                    break;
+                default:
+                    if (c.id !== 'function') {
+                        i = c.value.substr(0, 1);
+                        if (option.newcap && (i < 'A' || i > 'Z')) {
+                            warning("A constructor name should start with an uppercase letter.",
+                                token);
+                        }
+                    }
+                }
+            } else {
+                if (c.id !== '.' && c.id !== '[' && c.id !== '(') {
+                    warning("Bad constructor.", token);
+                }
+            }
+        } else {
+            if (!option.supernew)
+                warning("Weird construction. Delete 'new'.", this);
+        }
+        adjacent(token, nexttoken);
+        if (nexttoken.id !== '(' && !option.supernew) {
+            warning("Missing '()' invoking a constructor.");
+        }
+        this.first = c;
+        return this;
+    });
+    syntax['new'].exps = true;
+
+    prefix('void').exps = true;
+
+    infix('.', function (left, that) {
+        adjacent(prevtoken, token);
+        nobreak();
+        var m = identifier();
+        if (typeof m === 'string') {
+            countMember(m);
+        }
+        that.left = left;
+        that.right = m;
+        if (left && left.value === 'arguments' && (m === 'callee' || m === 'caller')) {
+            if (option.noarg)
+                warning("Avoid arguments.{a}.", left, m);
+            else if (directive['use strict'])
+                error('Strict violation.');
+        } else if (!option.evil && left && left.value === 'document' &&
+                (m === 'write' || m === 'writeln')) {
+            warning("document.write can be a form of eval.", left);
+        }
+        if (!option.evil && (m === 'eval' || m === 'execScript')) {
+            warning('eval is evil.');
+        }
+        return that;
+    }, 160, true);
+
+    infix('(', function (left, that) {
+        if (prevtoken.id !== '}' && prevtoken.id !== ')') {
+            nobreak(prevtoken, token);
+        }
+        nospace();
+        if (option.immed && !left.immed && left.id === 'function') {
+            warning("Wrap an immediate function invocation in parentheses " +
+                "to assist the reader in understanding that the expression " +
+                "is the result of a function, and not the function itself.");
+        }
+        var n = 0,
+            p = [];
+        if (left) {
+            if (left.type === '(identifier)') {
+                if (left.value.match(/^[A-Z]([A-Z0-9_$]*[a-z][A-Za-z0-9_$]*)?$/)) {
+                    if (left.value !== 'Number' && left.value !== 'String' &&
+                            left.value !== 'Boolean' &&
+                            left.value !== 'Date') {
+                        if (left.value === 'Math') {
+                            warning("Math is not a function.", left);
+                        } else if (option.newcap) {
+                            warning(
+"Missing 'new' prefix when invoking a constructor.", left);
+                        }
+                    }
+                }
+            }
+        }
+        if (ne
