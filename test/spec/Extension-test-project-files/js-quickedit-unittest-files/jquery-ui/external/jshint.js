@@ -3654,4 +3654,630 @@ loop:   for (;;) {
                             "Expected a 'break' statement before 'default'.",
                             token);
                     }
+                }
+                indentation(-option.indent);
+                advance('default');
+                g = true;
+                advance(':');
+                break;
+            case '}':
+                indent -= option.indent;
+                indentation();
+                advance('}', t);
+                if (this.cases.length === 1 || this.condition.id === 'true' ||
+                        this.condition.id === 'false') {
+                    if (!option.onecase)
+                        warning("This 'switch' should be an 'if'.", this);
+                }
+                funct['(breakage)'] -= 1;
+                funct['(verb)'] = undefined;
+                return;
+            case '(end)':
+                error("Missing '{a}'.", nexttoken, '}');
+                return;
+            default:
+                if (g) {
+                    switch (token.id) {
+                    case ',':
+                        error("Each value should have its own case label.");
+                        return;
+                    case ':':
+                        g = false;
+                        statements();
+                        break;
+                    default:
+                        error("Missing ':' on a case clause.", token);
+                        return;
+                    }
+                } else {
+                    if (token.id === ':') {
+                        advance(':');
+                        error("Unexpected '{a}'.", token, ':');
+                        statements();
+                    } else {
+                        error("Expected '{a}' and instead saw '{b}'.",
+                            nexttoken, 'case', nexttoken.value);
+                        return;
+                    }
+                }
+            }
+        }
+    }).labelled = true;
+
+    stmt('debugger', function () {
+        if (!option.debug) {
+            warning("All 'debugger' statements should be removed.");
+        }
+        return this;
+    }).exps = true;
+
+    (function () {
+        var x = stmt('do', function () {
+            funct['(breakage)'] += 1;
+            funct['(loopage)'] += 1;
+            this.first = block(true);
+            advance('while');
+            var t = nexttoken;
+            nonadjacent(token, t);
+            advance('(');
+            nospace();
+            expression(20);
+            if (nexttoken.id === '=') {
+                if (!option.boss)
+                    warning("Expected a conditional expression and instead saw an assignment.");
+                advance('=');
+                expression(20);
+            }
+            advance(')', t);
+            nospace(prevtoken, token);
+            funct['(breakage)'] -= 1;
+            funct['(loopage)'] -= 1;
+            return this;
+        });
+        x.labelled = true;
+        x.exps = true;
+    }());
+
+    blockstmt('for', function () {
+        var s, t = nexttoken;
+        funct['(breakage)'] += 1;
+        funct['(loopage)'] += 1;
+        advance('(');
+        nonadjacent(this, t);
+        nospace();
+        if (peek(nexttoken.id === 'var' ? 1 : 0).id === 'in') {
+            if (nexttoken.id === 'var') {
+                advance('var');
+                varstatement.fud.call(varstatement, true);
+            } else {
+                switch (funct[nexttoken.value]) {
+                case 'unused':
+                    funct[nexttoken.value] = 'var';
+                    break;
+                case 'var':
+                    break;
+                default:
+                    warning("Bad for in variable '{a}'.",
+                            nexttoken, nexttoken.value);
+                }
+                advance();
+            }
+            advance('in');
+            expression(20);
+            advance(')', t);
+            s = block(true, true);
+            if (option.forin && s && (s.length > 1 || typeof s[0] !== 'object' ||
+                    s[0].value !== 'if')) {
+                warning("The body of a for in should be wrapped in an if statement to filter " +
+                        "unwanted properties from the prototype.", this);
+            }
+            funct['(breakage)'] -= 1;
+            funct['(loopage)'] -= 1;
+            return this;
+        } else {
+            if (nexttoken.id !== ';') {
+                if (nexttoken.id === 'var') {
+                    advance('var');
+                    varstatement.fud.call(varstatement);
+                } else {
+                    for (;;) {
+                        expression(0, 'for');
+                        if (nexttoken.id !== ',') {
+                            break;
+                        }
+                        comma();
+                    }
+                }
+            }
+            nolinebreak(token);
+            advance(';');
+            if (nexttoken.id !== ';') {
+                expression(20);
+                if (nexttoken.id === '=') {
+                    if (!option.boss)
+                        warning("Expected a conditional expression and instead saw an assignment.");
+                    advance('=');
+                    expression(20);
+                }
+            }
+            nolinebreak(token);
+            advance(';');
+            if (nexttoken.id === ';') {
+                error("Expected '{a}' and instead saw '{b}'.",
+                        nexttoken, ')', ';');
+            }
+            if (nexttoken.id !== ')') {
+                for (;;) {
+                    expression(0, 'for');
+                    if (nexttoken.id !== ',') {
+                        break;
+                    }
+                    comma();
+                }
+            }
+            advance(')', t);
+            nospace(prevtoken, token);
+            block(true, true);
+            funct['(breakage)'] -= 1;
+            funct['(loopage)'] -= 1;
+            return this;
+        }
+    }).labelled = true;
+
+
+    stmt('break', function () {
+        var v = nexttoken.value;
+
+        if (funct['(breakage)'] === 0)
+            warning("Unexpected '{a}'.", nexttoken, this.value);
+
+        if (!option.asi)
+            nolinebreak(this);
+
+        if (nexttoken.id !== ';') {
+            if (token.line === nexttoken.line) {
+                if (funct[v] !== 'label') {
+                    warning("'{a}' is not a statement label.", nexttoken, v);
+                } else if (scope[v] !== funct) {
+                    warning("'{a}' is out of scope.", nexttoken, v);
+                }
+                this.first = nexttoken;
+                advance();
+            }
+        }
+        reachable('break');
+        return this;
+    }).exps = true;
+
+
+    stmt('continue', function () {
+        var v = nexttoken.value;
+
+        if (funct['(breakage)'] === 0)
+            warning("Unexpected '{a}'.", nexttoken, this.value);
+
+        if (!option.asi)
+            nolinebreak(this);
+
+        if (nexttoken.id !== ';') {
+            if (token.line === nexttoken.line) {
+                if (funct[v] !== 'label') {
+                    warning("'{a}' is not a statement label.", nexttoken, v);
+                } else if (scope[v] !== funct) {
+                    warning("'{a}' is out of scope.", nexttoken, v);
+                }
+                this.first = nexttoken;
+                advance();
+            }
+        } else if (!funct['(loopage)']) {
+            warning("Unexpected '{a}'.", nexttoken, this.value);
+        }
+        reachable('continue');
+        return this;
+    }).exps = true;
+
+
+    stmt('return', function () {
+        if (this.line === nexttoken.line) {
+            if (nexttoken.id === '(regexp)')
+                warning("Wrap the /regexp/ literal in parens to disambiguate the slash operator.");
+
+            if (nexttoken.id !== ';' && !nexttoken.reach) {
+                nonadjacent(token, nexttoken);
+                if (peek().value === "=" && !option.boss) {
+                    warningAt("Did you mean to return a conditional instead of an assignment?",
+                              token.line, token.character + 1);
+                }
+                this.first = expression(0);
+            }
+        } else if (!option.asi) {
+            nolinebreak(this); // always warn (Line breaking error)
+        }
+        reachable('return');
+        return this;
+    }).exps = true;
+
+
+    stmt('throw', function () {
+        nolinebreak(this);
+        nonadjacent(token, nexttoken);
+        this.first = expression(20);
+        reachable('throw');
+        return this;
+    }).exps = true;
+
+//  Superfluous reserved words
+
+    reserve('class');
+    reserve('const');
+    reserve('enum');
+    reserve('export');
+    reserve('extends');
+    reserve('import');
+    reserve('super');
+
+    reserve('let');
+    reserve('yield');
+    reserve('implements');
+    reserve('interface');
+    reserve('package');
+    reserve('private');
+    reserve('protected');
+    reserve('public');
+    reserve('static');
+
+
+// Parse JSON
+
+    function jsonValue() {
+
+        function jsonObject() {
+            var o = {}, t = nexttoken;
+            advance('{');
+            if (nexttoken.id !== '}') {
+                for (;;) {
+                    if (nexttoken.id === '(end)') {
+                        error("Missing '}' to match '{' from line {a}.",
+                                nexttoken, t.line);
+                    } else if (nexttoken.id === '}') {
+                        warning("Unexpected comma.", token);
+                        break;
+                    } else if (nexttoken.id === ',') {
+                        error("Unexpected comma.", nexttoken);
+                    } else if (nexttoken.id !== '(string)') {
+                        warning("Expected a string and instead saw {a}.",
+                                nexttoken, nexttoken.value);
+                    }
+                    if (o[nexttoken.value] === true) {
+                        warning("Duplicate key '{a}'.",
+                                nexttoken, nexttoken.value);
+                    } else if ((nexttoken.value === '__proto__' &&
+                        !option.proto) || (nexttoken.value === '__iterator__' &&
+                        !option.iterator)) {
+                        warning("The '{a}' key may produce unexpected results.",
+                            nexttoken, nexttoken.value);
+                    } else {
+                        o[nexttoken.value] = true;
+                    }
+                    advance();
+                    advance(':');
+                    jsonValue();
+                    if (nexttoken.id !== ',') {
+                        break;
+                    }
+                    advance(',');
+                }
+            }
+            advance('}');
+        }
+
+        function jsonArray() {
+            var t = nexttoken;
+            advance('[');
+            if (nexttoken.id !== ']') {
+                for (;;) {
+                    if (nexttoken.id === '(end)') {
+                        error("Missing ']' to match '[' from line {a}.",
+                                nexttoken, t.line);
+                    } else if (nexttoken.id === ']') {
+                        warning("Unexpected comma.", token);
+                        break;
+                    } else if (nexttoken.id === ',') {
+                        error("Unexpected comma.", nexttoken);
+                    }
+                    jsonValue();
+                    if (nexttoken.id !== ',') {
+                        break;
+                    }
+                    advance(',');
+                }
+            }
+            advance(']');
+        }
+
+        switch (nexttoken.id) {
+        case '{':
+            jsonObject();
+            break;
+        case '[':
+            jsonArray();
+            break;
+        case 'true':
+        case 'false':
+        case 'null':
+        case '(number)':
+        case '(string)':
+            advance();
+            break;
+        case '-':
+            advance('-');
+            if (token.character !== nexttoken.from) {
+                warning("Unexpected space after '-'.", token);
+            }
+            adjacent(token, nexttoken);
+            advance('(number)');
+            break;
+        default:
+            error("Expected a JSON value.", nexttoken);
+        }
+    }
+
+
+// The actual JSHINT function itself.
+
+    var itself = function (s, o, g) {
+        var a, i, k;
+        JSHINT.errors = [];
+        JSHINT.undefs = [];
+        predefined = Object.create(standard);
+        combine(predefined, g || {});
+        if (o) {
+            a = o.predef;
+            if (a) {
+                if (Array.isArray(a)) {
+                    for (i = 0; i < a.length; i += 1) {
+                        predefined[a[i]] = true;
+                    }
+                } else if (typeof a === 'object') {
+                    k = Object.keys(a);
+                    for (i = 0; i < k.length; i += 1) {
+                        predefined[k[i]] = !!a[k[i]];
+                    }
+                }
+            }
+            option = o;
+        } else {
+            option = {};
+        }
+        option.indent = option.indent || 4;
+        option.maxerr = option.maxerr || 50;
+
+        tab = '';
+        for (i = 0; i < option.indent; i += 1) {
+            tab += ' ';
+        }
+        indent = 1;
+        global = Object.create(predefined);
+        scope = global;
+        funct = {
+            '(global)': true,
+            '(name)': '(global)',
+            '(scope)': scope,
+            '(breakage)': 0,
+            '(loopage)': 0
+        };
+        functions = [funct];
+        urls = [];
+        stack = null;
+        member = {};
+        membersOnly = null;
+        implied = {};
+        inblock = false;
+        lookahead = [];
+        jsonmode = false;
+        warnings = 0;
+        lex.init(s);
+        prereg = true;
+        directive = {};
+
+        prevtoken = token = nexttoken = syntax['(begin)'];
+        assume();
+
+        // combine the passed globals after we've assumed all our options
+        combine(predefined, g || {});
+
+        try {
+            advance();
+            switch (nexttoken.id) {
+            case '{':
+            case '[':
+                option.laxbreak = true;
+                jsonmode = true;
+                jsonValue();
+                break;
+            default:
+                directives();
+                if (directive["use strict"] && !option.globalstrict) {
+                    warning("Use the function form of \"use strict\".", prevtoken);
+                }
+
+                statements();
+            }
+            advance('(end)');
+
+            var markDefined = function (name, context) {
+                do {
+                    if (typeof context[name] === 'string') {
+                        // JSHINT marks unused variables as 'unused' and
+                        // unused function declaration as 'unction'. This
+                        // code changes such instances back 'var' and
+                        // 'closure' so that the code in JSHINT.data()
+                        // doesn't think they're unused.
+
+                        if (context[name] === 'unused')
+                            context[name] = 'var';
+                        else if (context[name] === 'unction')
+                            context[name] = 'closure';
+
+                        return true;
+                    }
+
+                    context = context['(context)'];
+                } while (context);
+
+                return false;
+            };
+
+            var clearImplied = function (name, line) {
+                if (!implied[name])
+                    return;
+
+                var newImplied = [];
+                for (var i = 0; i < implied[name].length; i += 1) {
+                    if (implied[name][i] !== line)
+                        newImplied.push(implied[name][i]);
+                }
+
+                if (newImplied.length === 0)
+                    delete implied[name];
+                else
+                    implied[name] = newImplied;
+            };
+
+            // Check queued 'x is not defined' instances to see if they're still undefined.
+            for (i = 0; i < JSHINT.undefs.length; i += 1) {
+                k = JSHINT.undefs[i].slice(0);
+
+                if (markDefined(k[2].value, k[0])) {
+                    clearImplied(k[2].value, k[2].line);
+                } else {
+                    warning.apply(warning, k.slice(1));
+                }
+            }
+        } catch (e) {
+            if (e) {
+                var nt = nexttoken || {};
+                JSHINT.errors.push({
+                    raw       : e.raw,
+                    reason    : e.message,
+                    line      : e.line || nt.line,
+                    character : e.character || nt.from
+                }, null);
+            }
+        }
+
+        return JSHINT.errors.length === 0;
+    };
+
+    // Data summary.
+    itself.data = function () {
+
+        var data = { functions: [], options: option }, fu, globals, implieds = [], f, i, j,
+            members = [], n, unused = [], v;
+        if (itself.errors.length) {
+            data.errors = itself.errors;
+        }
+
+        if (jsonmode) {
+            data.json = true;
+        }
+
+        for (n in implied) {
+            if (is_own(implied, n)) {
+                implieds.push({
+                    name: n,
+                    line: implied[n]
+                });
+            }
+        }
+        if (implieds.length > 0) {
+            data.implieds = implieds;
+        }
+
+        if (urls.length > 0) {
+            data.urls = urls;
+        }
+
+        globals = Object.keys(scope);
+        if (globals.length > 0) {
+            data.globals = globals;
+        }
+        for (i = 1; i < functions.length; i += 1) {
+            f = functions[i];
+            fu = {};
+            for (j = 0; j < functionicity.length; j += 1) {
+                fu[functionicity[j]] = [];
+            }
+            for (n in f) {
+                if (is_own(f, n) && n.charAt(0) !== '(') {
+                    v = f[n];
+                    if (v === 'unction') {
+                        v = 'unused';
+                    }
+                    if (Array.isArray(fu[v])) {
+                        fu[v].push(n);
+                        if (v === 'unused') {
+                            unused.push({
+                                name: n,
+                                line: f['(line)'],
+                                'function': f['(name)']
+                            });
+                        }
+                    }
+                }
+            }
+            for (j = 0; j < functionicity.length; j += 1) {
+                if (fu[functionicity[j]].length === 0) {
+                    delete fu[functionicity[j]];
+                }
+            }
+            fu.name = f['(name)'];
+            fu.param = f['(params)'];
+            fu.line = f['(line)'];
+            fu.last = f['(last)'];
+            data.functions.push(fu);
+        }
+
+        if (unused.length > 0) {
+            data.unused = unused;
+        }
+
+        members = [];
+        for (n in member) {
+            if (typeof member[n] === 'number') {
+                data.member = member;
+                break;
+            }
+        }
+
+        return data;
+    };
+
+    itself.report = function (option) {
+        var data = itself.data();
+
+        var a = [], c, e, err, f, i, k, l, m = '', n, o = [], s;
+
+        function detail(h, array) {
+            var b, i, singularity;
+            if (array) {
+                o.push('<div><i>' + h + '</i> ');
+                array = array.sort();
+                for (i = 0; i < array.length; i += 1) {
+                    if (array[i] !== singularity) {
+                        singularity = array[i];
+                        o.push((b ? ', ' : '') + singularity);
+                        b = true;
+                    }
+                }
+                o.push('</div>');
+            }
+        }
+
+
+        if (data.errors || data.implieds || data.unused) {
+            err = true;
+            o.push('<div id=errors><i>Error:</i>');
+            if (data.errors) {
+                for (i = 0; i < data.errors.length; i += 1) {
        
