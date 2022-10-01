@@ -958,4 +958,680 @@ jQuery.extend({
 	// Create a simple deferred (one callbacks list)
 	_Deferred: function() {
 		var // callbacks list
-			callbacks = [
+			callbacks = [],
+			// stored [ context , args ]
+			fired,
+			// to avoid firing when already doing so
+			firing,
+			// flag to know if the deferred has been cancelled
+			cancelled,
+			// the deferred itself
+			deferred  = {
+
+				// done( f1, f2, ...)
+				done: function() {
+					if ( !cancelled ) {
+						var args = arguments,
+							i,
+							length,
+							elem,
+							type,
+							_fired;
+						if ( fired ) {
+							_fired = fired;
+							fired = 0;
+						}
+						for ( i = 0, length = args.length; i < length; i++ ) {
+							elem = args[ i ];
+							type = jQuery.type( elem );
+							if ( type === "array" ) {
+								deferred.done.apply( deferred, elem );
+							} else if ( type === "function" ) {
+								callbacks.push( elem );
+							}
+						}
+						if ( _fired ) {
+							deferred.resolveWith( _fired[ 0 ], _fired[ 1 ] );
+						}
+					}
+					return this;
+				},
+
+				// resolve with given context and args
+				resolveWith: function( context, args ) {
+					if ( !cancelled && !fired && !firing ) {
+						// make sure args are available (#8421)
+						args = args || [];
+						firing = 1;
+						try {
+							while( callbacks[ 0 ] ) {
+								callbacks.shift().apply( context, args );
+							}
+						}
+						finally {
+							fired = [ context, args ];
+							firing = 0;
+						}
+					}
+					return this;
+				},
+
+				// resolve with this as context and given arguments
+				resolve: function() {
+					deferred.resolveWith( this, arguments );
+					return this;
+				},
+
+				// Has this deferred been resolved?
+				isResolved: function() {
+					return !!( firing || fired );
+				},
+
+				// Cancel
+				cancel: function() {
+					cancelled = 1;
+					callbacks = [];
+					return this;
+				}
+			};
+
+		return deferred;
+	},
+
+	// Full fledged deferred (two callbacks list)
+	Deferred: function( func ) {
+		var deferred = jQuery._Deferred(),
+			failDeferred = jQuery._Deferred(),
+			promise;
+		// Add errorDeferred methods, then and promise
+		jQuery.extend( deferred, {
+			then: function( doneCallbacks, failCallbacks ) {
+				deferred.done( doneCallbacks ).fail( failCallbacks );
+				return this;
+			},
+			always: function() {
+				return deferred.done.apply( deferred, arguments ).fail.apply( this, arguments );
+			},
+			fail: failDeferred.done,
+			rejectWith: failDeferred.resolveWith,
+			reject: failDeferred.resolve,
+			isRejected: failDeferred.isResolved,
+			pipe: function( fnDone, fnFail ) {
+				return jQuery.Deferred(function( newDefer ) {
+					jQuery.each( {
+						done: [ fnDone, "resolve" ],
+						fail: [ fnFail, "reject" ]
+					}, function( handler, data ) {
+						var fn = data[ 0 ],
+							action = data[ 1 ],
+							returned;
+						if ( jQuery.isFunction( fn ) ) {
+							deferred[ handler ](function() {
+								returned = fn.apply( this, arguments );
+								if ( returned && jQuery.isFunction( returned.promise ) ) {
+									returned.promise().then( newDefer.resolve, newDefer.reject );
+								} else {
+									newDefer[ action ]( returned );
+								}
+							});
+						} else {
+							deferred[ handler ]( newDefer[ action ] );
+						}
+					});
+				}).promise();
+			},
+			// Get a promise for this deferred
+			// If obj is provided, the promise aspect is added to the object
+			promise: function( obj ) {
+				if ( obj == null ) {
+					if ( promise ) {
+						return promise;
+					}
+					promise = obj = {};
+				}
+				var i = promiseMethods.length;
+				while( i-- ) {
+					obj[ promiseMethods[i] ] = deferred[ promiseMethods[i] ];
+				}
+				return obj;
+			}
+		});
+		// Make sure only one callback list will be used
+		deferred.done( failDeferred.cancel ).fail( deferred.cancel );
+		// Unexpose cancel
+		delete deferred.cancel;
+		// Call given func if any
+		if ( func ) {
+			func.call( deferred, deferred );
+		}
+		return deferred;
+	},
+
+	// Deferred helper
+	when: function( firstParam ) {
+		var args = arguments,
+			i = 0,
+			length = args.length,
+			count = length,
+			deferred = length <= 1 && firstParam && jQuery.isFunction( firstParam.promise ) ?
+				firstParam :
+				jQuery.Deferred();
+		function resolveFunc( i ) {
+			return function( value ) {
+				args[ i ] = arguments.length > 1 ? sliceDeferred.call( arguments, 0 ) : value;
+				if ( !( --count ) ) {
+					// Strange bug in FF4:
+					// Values changed onto the arguments object sometimes end up as undefined values
+					// outside the $.when method. Cloning the object into a fresh array solves the issue
+					deferred.resolveWith( deferred, sliceDeferred.call( args, 0 ) );
+				}
+			};
+		}
+		if ( length > 1 ) {
+			for( ; i < length; i++ ) {
+				if ( args[ i ] && jQuery.isFunction( args[ i ].promise ) ) {
+					args[ i ].promise().then( resolveFunc(i), deferred.reject );
+				} else {
+					--count;
+				}
+			}
+			if ( !count ) {
+				deferred.resolveWith( deferred, args );
+			}
+		} else if ( deferred !== firstParam ) {
+			deferred.resolveWith( deferred, length ? [ firstParam ] : [] );
+		}
+		return deferred.promise();
+	}
+});
+
+
+
+jQuery.support = (function() {
+
+	var div = document.createElement( "div" ),
+		documentElement = document.documentElement,
+		all,
+		a,
+		select,
+		opt,
+		input,
+		marginDiv,
+		support,
+		fragment,
+		body,
+		testElementParent,
+		testElement,
+		testElementStyle,
+		tds,
+		events,
+		eventName,
+		i,
+		isSupported;
+
+	// Preliminary tests
+	div.setAttribute("className", "t");
+	div.innerHTML = "   <link/><table></table><a href='/a' style='top:1px;float:left;opacity:.55;'>a</a><input type='checkbox'/>";
+
+	all = div.getElementsByTagName( "*" );
+	a = div.getElementsByTagName( "a" )[ 0 ];
+
+	// Can't get basic test support
+	if ( !all || !all.length || !a ) {
+		return {};
+	}
+
+	// First batch of supports tests
+	select = document.createElement( "select" );
+	opt = select.appendChild( document.createElement("option") );
+	input = div.getElementsByTagName( "input" )[ 0 ];
+
+	support = {
+		// IE strips leading whitespace when .innerHTML is used
+		leadingWhitespace: ( div.firstChild.nodeType === 3 ),
+
+		// Make sure that tbody elements aren't automatically inserted
+		// IE will insert them into empty tables
+		tbody: !div.getElementsByTagName( "tbody" ).length,
+
+		// Make sure that link elements get serialized correctly by innerHTML
+		// This requires a wrapper element in IE
+		htmlSerialize: !!div.getElementsByTagName( "link" ).length,
+
+		// Get the style information from getAttribute
+		// (IE uses .cssText instead)
+		style: /top/.test( a.getAttribute("style") ),
+
+		// Make sure that URLs aren't manipulated
+		// (IE normalizes it by default)
+		hrefNormalized: ( a.getAttribute( "href" ) === "/a" ),
+
+		// Make sure that element opacity exists
+		// (IE uses filter instead)
+		// Use a regex to work around a WebKit issue. See #5145
+		opacity: /^0.55$/.test( a.style.opacity ),
+
+		// Verify style float existence
+		// (IE uses styleFloat instead of cssFloat)
+		cssFloat: !!a.style.cssFloat,
+
+		// Make sure that if no value is specified for a checkbox
+		// that it defaults to "on".
+		// (WebKit defaults to "" instead)
+		checkOn: ( input.value === "on" ),
+
+		// Make sure that a selected-by-default option has a working selected property.
+		// (WebKit defaults to false instead of true, IE too, if it's in an optgroup)
+		optSelected: opt.selected,
+
+		// Test setAttribute on camelCase class. If it works, we need attrFixes when doing get/setAttribute (ie6/7)
+		getSetAttribute: div.className !== "t",
+
+		// Will be defined later
+		submitBubbles: true,
+		changeBubbles: true,
+		focusinBubbles: false,
+		deleteExpando: true,
+		noCloneEvent: true,
+		inlineBlockNeedsLayout: false,
+		shrinkWrapBlocks: false,
+		reliableMarginRight: true
+	};
+
+	// Make sure checked status is properly cloned
+	input.checked = true;
+	support.noCloneChecked = input.cloneNode( true ).checked;
+
+	// Make sure that the options inside disabled selects aren't marked as disabled
+	// (WebKit marks them as disabled)
+	select.disabled = true;
+	support.optDisabled = !opt.disabled;
+
+	// Test to see if it's possible to delete an expando from an element
+	// Fails in Internet Explorer
+	try {
+		delete div.test;
+	} catch( e ) {
+		support.deleteExpando = false;
+	}
+
+	if ( !div.addEventListener && div.attachEvent && div.fireEvent ) {
+		div.attachEvent( "onclick", function() {
+			// Cloning a node shouldn't copy over any
+			// bound event handlers (IE does this)
+			support.noCloneEvent = false;
+		});
+		div.cloneNode( true ).fireEvent( "onclick" );
+	}
+
+	// Check if a radio maintains it's value
+	// after being appended to the DOM
+	input = document.createElement("input");
+	input.value = "t";
+	input.setAttribute("type", "radio");
+	support.radioValue = input.value === "t";
+
+	input.setAttribute("checked", "checked");
+	div.appendChild( input );
+	fragment = document.createDocumentFragment();
+	fragment.appendChild( div.firstChild );
+
+	// WebKit doesn't clone checked state correctly in fragments
+	support.checkClone = fragment.cloneNode( true ).cloneNode( true ).lastChild.checked;
+
+	div.innerHTML = "";
+
+	// Figure out if the W3C box model works as expected
+	div.style.width = div.style.paddingLeft = "1px";
+
+	body = document.getElementsByTagName( "body" )[ 0 ];
+	// We use our own, invisible, body unless the body is already present
+	// in which case we use a div (#9239)
+	testElement = document.createElement( body ? "div" : "body" );
+	testElementStyle = {
+		visibility: "hidden",
+		width: 0,
+		height: 0,
+		border: 0,
+		margin: 0
+	};
+	if ( body ) {
+		jQuery.extend( testElementStyle, {
+			position: "absolute",
+			left: -1000,
+			top: -1000
+		});
+	}
+	for ( i in testElementStyle ) {
+		testElement.style[ i ] = testElementStyle[ i ];
+	}
+	testElement.appendChild( div );
+	testElementParent = body || documentElement;
+	testElementParent.insertBefore( testElement, testElementParent.firstChild );
+
+	// Check if a disconnected checkbox will retain its checked
+	// value of true after appended to the DOM (IE6/7)
+	support.appendChecked = input.checked;
+
+	support.boxModel = div.offsetWidth === 2;
+
+	if ( "zoom" in div.style ) {
+		// Check if natively block-level elements act like inline-block
+		// elements when setting their display to 'inline' and giving
+		// them layout
+		// (IE < 8 does this)
+		div.style.display = "inline";
+		div.style.zoom = 1;
+		support.inlineBlockNeedsLayout = ( div.offsetWidth === 2 );
+
+		// Check if elements with layout shrink-wrap their children
+		// (IE 6 does this)
+		div.style.display = "";
+		div.innerHTML = "<div style='width:4px;'></div>";
+		support.shrinkWrapBlocks = ( div.offsetWidth !== 2 );
+	}
+
+	div.innerHTML = "<table><tr><td style='padding:0;border:0;display:none'></td><td>t</td></tr></table>";
+	tds = div.getElementsByTagName( "td" );
+
+	// Check if table cells still have offsetWidth/Height when they are set
+	// to display:none and there are still other visible table cells in a
+	// table row; if so, offsetWidth/Height are not reliable for use when
+	// determining if an element has been hidden directly using
+	// display:none (it is still safe to use offsets if a parent element is
+	// hidden; don safety goggles and see bug #4512 for more information).
+	// (only IE 8 fails this test)
+	isSupported = ( tds[ 0 ].offsetHeight === 0 );
+
+	tds[ 0 ].style.display = "";
+	tds[ 1 ].style.display = "none";
+
+	// Check if empty table cells still have offsetWidth/Height
+	// (IE < 8 fail this test)
+	support.reliableHiddenOffsets = isSupported && ( tds[ 0 ].offsetHeight === 0 );
+	div.innerHTML = "";
+
+	// Check if div with explicit width and no margin-right incorrectly
+	// gets computed margin-right based on width of container. For more
+	// info see bug #3333
+	// Fails in WebKit before Feb 2011 nightlies
+	// WebKit Bug 13343 - getComputedStyle returns wrong value for margin-right
+	if ( document.defaultView && document.defaultView.getComputedStyle ) {
+		marginDiv = document.createElement( "div" );
+		marginDiv.style.width = "0";
+		marginDiv.style.marginRight = "0";
+		div.appendChild( marginDiv );
+		support.reliableMarginRight =
+			( parseInt( ( document.defaultView.getComputedStyle( marginDiv, null ) || { marginRight: 0 } ).marginRight, 10 ) || 0 ) === 0;
+	}
+
+	// Remove the body element we added
+	testElement.innerHTML = "";
+	testElementParent.removeChild( testElement );
+
+	// Technique from Juriy Zaytsev
+	// http://thinkweb2.com/projects/prototype/detecting-event-support-without-browser-sniffing/
+	// We only care about the case where non-standard event systems
+	// are used, namely in IE. Short-circuiting here helps us to
+	// avoid an eval call (in setAttribute) which can cause CSP
+	// to go haywire. See: https://developer.mozilla.org/en/Security/CSP
+	if ( div.attachEvent ) {
+		for( i in {
+			submit: 1,
+			change: 1,
+			focusin: 1
+		} ) {
+			eventName = "on" + i;
+			isSupported = ( eventName in div );
+			if ( !isSupported ) {
+				div.setAttribute( eventName, "return;" );
+				isSupported = ( typeof div[ eventName ] === "function" );
+			}
+			support[ i + "Bubbles" ] = isSupported;
+		}
+	}
+
+	// Null connected elements to avoid leaks in IE
+	testElement = fragment = select = opt = body = marginDiv = div = input = null;
+
+	return support;
+})();
+
+// Keep track of boxModel
+jQuery.boxModel = jQuery.support.boxModel;
+
+
+
+
+var rbrace = /^(?:\{.*\}|\[.*\])$/,
+	rmultiDash = /([a-z])([A-Z])/g;
+
+jQuery.extend({
+	cache: {},
+
+	// Please use with caution
+	uuid: 0,
+
+	// Unique for each copy of jQuery on the page
+	// Non-digits removed to match rinlinejQuery
+	expando: "jQuery" + ( jQuery.fn.jquery + Math.random() ).replace( /\D/g, "" ),
+
+	// The following elements throw uncatchable exceptions if you
+	// attempt to add expando properties to them.
+	noData: {
+		"embed": true,
+		// Ban all objects except for Flash (which handle expandos)
+		"object": "clsid:D27CDB6E-AE6D-11cf-96B8-444553540000",
+		"applet": true
+	},
+
+	hasData: function( elem ) {
+		elem = elem.nodeType ? jQuery.cache[ elem[jQuery.expando] ] : elem[ jQuery.expando ];
+
+		return !!elem && !isEmptyDataObject( elem );
+	},
+
+	data: function( elem, name, data, pvt /* Internal Use Only */ ) {
+		if ( !jQuery.acceptData( elem ) ) {
+			return;
+		}
+
+		var internalKey = jQuery.expando, getByName = typeof name === "string", thisCache,
+
+			// We have to handle DOM nodes and JS objects differently because IE6-7
+			// can't GC object references properly across the DOM-JS boundary
+			isNode = elem.nodeType,
+
+			// Only DOM nodes need the global jQuery cache; JS object data is
+			// attached directly to the object so GC can occur automatically
+			cache = isNode ? jQuery.cache : elem,
+
+			// Only defining an ID for JS objects if its cache already exists allows
+			// the code to shortcut on the same path as a DOM node with no cache
+			id = isNode ? elem[ jQuery.expando ] : elem[ jQuery.expando ] && jQuery.expando;
+
+		// Avoid doing any more work than we need to when trying to get data on an
+		// object that has no data at all
+		if ( (!id || (pvt && id && !cache[ id ][ internalKey ])) && getByName && data === undefined ) {
+			return;
+		}
+
+		if ( !id ) {
+			// Only DOM nodes need a new unique ID for each element since their data
+			// ends up in the global cache
+			if ( isNode ) {
+				elem[ jQuery.expando ] = id = ++jQuery.uuid;
+			} else {
+				id = jQuery.expando;
+			}
+		}
+
+		if ( !cache[ id ] ) {
+			cache[ id ] = {};
+
+			// TODO: This is a hack for 1.5 ONLY. Avoids exposing jQuery
+			// metadata on plain JS objects when the object is serialized using
+			// JSON.stringify
+			if ( !isNode ) {
+				cache[ id ].toJSON = jQuery.noop;
+			}
+		}
+
+		// An object can be passed to jQuery.data instead of a key/value pair; this gets
+		// shallow copied over onto the existing cache
+		if ( typeof name === "object" || typeof name === "function" ) {
+			if ( pvt ) {
+				cache[ id ][ internalKey ] = jQuery.extend(cache[ id ][ internalKey ], name);
+			} else {
+				cache[ id ] = jQuery.extend(cache[ id ], name);
+			}
+		}
+
+		thisCache = cache[ id ];
+
+		// Internal jQuery data is stored in a separate object inside the object's data
+		// cache in order to avoid key collisions between internal data and user-defined
+		// data
+		if ( pvt ) {
+			if ( !thisCache[ internalKey ] ) {
+				thisCache[ internalKey ] = {};
+			}
+
+			thisCache = thisCache[ internalKey ];
+		}
+
+		if ( data !== undefined ) {
+			thisCache[ jQuery.camelCase( name ) ] = data;
+		}
+
+		// TODO: This is a hack for 1.5 ONLY. It will be removed in 1.6. Users should
+		// not attempt to inspect the internal events object using jQuery.data, as this
+		// internal data object is undocumented and subject to change.
+		if ( name === "events" && !thisCache[name] ) {
+			return thisCache[ internalKey ] && thisCache[ internalKey ].events;
+		}
+
+		return getByName ? 
+			// Check for both converted-to-camel and non-converted data property names
+			thisCache[ jQuery.camelCase( name ) ] || thisCache[ name ] :
+			thisCache;
+	},
+
+	removeData: function( elem, name, pvt /* Internal Use Only */ ) {
+		if ( !jQuery.acceptData( elem ) ) {
+			return;
+		}
+
+		var internalKey = jQuery.expando, isNode = elem.nodeType,
+
+			// See jQuery.data for more information
+			cache = isNode ? jQuery.cache : elem,
+
+			// See jQuery.data for more information
+			id = isNode ? elem[ jQuery.expando ] : jQuery.expando;
+
+		// If there is already no cache entry for this object, there is no
+		// purpose in continuing
+		if ( !cache[ id ] ) {
+			return;
+		}
+
+		if ( name ) {
+			var thisCache = pvt ? cache[ id ][ internalKey ] : cache[ id ];
+
+			if ( thisCache ) {
+				delete thisCache[ name ];
+
+				// If there is no data left in the cache, we want to continue
+				// and let the cache object itself get destroyed
+				if ( !isEmptyDataObject(thisCache) ) {
+					return;
+				}
+			}
+		}
+
+		// See jQuery.data for more information
+		if ( pvt ) {
+			delete cache[ id ][ internalKey ];
+
+			// Don't destroy the parent cache unless the internal data object
+			// had been the only thing left in it
+			if ( !isEmptyDataObject(cache[ id ]) ) {
+				return;
+			}
+		}
+
+		var internalCache = cache[ id ][ internalKey ];
+
+		// Browsers that fail expando deletion also refuse to delete expandos on
+		// the window, but it will allow it on all other JS objects; other browsers
+		// don't care
+		if ( jQuery.support.deleteExpando || cache != window ) {
+			delete cache[ id ];
+		} else {
+			cache[ id ] = null;
+		}
+
+		// We destroyed the entire user cache at once because it's faster than
+		// iterating through each key, but we need to continue to persist internal
+		// data if it existed
+		if ( internalCache ) {
+			cache[ id ] = {};
+			// TODO: This is a hack for 1.5 ONLY. Avoids exposing jQuery
+			// metadata on plain JS objects when the object is serialized using
+			// JSON.stringify
+			if ( !isNode ) {
+				cache[ id ].toJSON = jQuery.noop;
+			}
+
+			cache[ id ][ internalKey ] = internalCache;
+
+		// Otherwise, we need to eliminate the expando on the node to avoid
+		// false lookups in the cache for entries that no longer exist
+		} else if ( isNode ) {
+			// IE does not allow us to delete expando properties from nodes,
+			// nor does it have a removeAttribute function on Document nodes;
+			// we must handle all of these cases
+			if ( jQuery.support.deleteExpando ) {
+				delete elem[ jQuery.expando ];
+			} else if ( elem.removeAttribute ) {
+				elem.removeAttribute( jQuery.expando );
+			} else {
+				elem[ jQuery.expando ] = null;
+			}
+		}
+	},
+
+	// For internal use only.
+	_data: function( elem, name, data ) {
+		return jQuery.data( elem, name, data, true );
+	},
+
+	// A method for determining if a DOM node can handle the data expando
+	acceptData: function( elem ) {
+		if ( elem.nodeName ) {
+			var match = jQuery.noData[ elem.nodeName.toLowerCase() ];
+
+			if ( match ) {
+				return !(match === true || elem.getAttribute("classid") !== match);
+			}
+		}
+
+		return true;
+	}
+});
+
+jQuery.fn.extend({
+	data: function( key, value ) {
+		var data = null;
+
+		if ( typeof key === "undefined" ) {
+			if ( this.length ) {
+				data = jQuery.data( this[0] );
+
+				if ( this[0].nodeType === 1 ) {
+			    var attr = this[0].attributes, name;
+					for ( var i = 0, l = attr.length; i < l; i++ ) {
+						name = attr[i].name;
+
+						if ( name.indexOf( 
