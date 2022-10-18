@@ -4133,4 +4133,876 @@ Sizzle.matches = function( expr, set ) {
 };
 
 Sizzle.matchesSelector = function( node, expr ) {
-	return Sizzle( expr, null, null, [node] 
+	return Sizzle( expr, null, null, [node] ).length > 0;
+};
+
+Sizzle.find = function( expr, context, isXML ) {
+	var set, i, len, match, type, left;
+
+	if ( !expr ) {
+		return [];
+	}
+
+	for ( i = 0, len = Expr.order.length; i < len; i++ ) {
+		type = Expr.order[i];
+
+		if ( (match = Expr.leftMatch[ type ].exec( expr )) ) {
+			left = match[1];
+			match.splice( 1, 1 );
+
+			if ( left.substr( left.length - 1 ) !== "\\" ) {
+				match[1] = (match[1] || "").replace( rBackslash, "" );
+				set = Expr.find[ type ]( match, context, isXML );
+
+				if ( set != null ) {
+					expr = expr.replace( Expr.match[ type ], "" );
+					break;
+				}
+			}
+		}
+	}
+
+	if ( !set ) {
+		set = typeof context.getElementsByTagName !== "undefined" ?
+			context.getElementsByTagName( "*" ) :
+			[];
+	}
+
+	return { set: set, expr: expr };
+};
+
+Sizzle.filter = function( expr, set, inplace, not ) {
+	var match, anyFound,
+		type, found, item, filter, left,
+		i, pass,
+		old = expr,
+		result = [],
+		curLoop = set,
+		isXMLFilter = set && set[0] && Sizzle.isXML( set[0] );
+
+	while ( expr && set.length ) {
+		for ( type in Expr.filter ) {
+			if ( (match = Expr.leftMatch[ type ].exec( expr )) != null && match[2] ) {
+				filter = Expr.filter[ type ];
+				left = match[1];
+
+				anyFound = false;
+
+				match.splice(1,1);
+
+				if ( left.substr( left.length - 1 ) === "\\" ) {
+					continue;
+				}
+
+				if ( curLoop === result ) {
+					result = [];
+				}
+
+				if ( Expr.preFilter[ type ] ) {
+					match = Expr.preFilter[ type ]( match, curLoop, inplace, result, not, isXMLFilter );
+
+					if ( !match ) {
+						anyFound = found = true;
+
+					} else if ( match === true ) {
+						continue;
+					}
+				}
+
+				if ( match ) {
+					for ( i = 0; (item = curLoop[i]) != null; i++ ) {
+						if ( item ) {
+							found = filter( item, match, i, curLoop );
+							pass = not ^ found;
+
+							if ( inplace && found != null ) {
+								if ( pass ) {
+									anyFound = true;
+
+								} else {
+									curLoop[i] = false;
+								}
+
+							} else if ( pass ) {
+								result.push( item );
+								anyFound = true;
+							}
+						}
+					}
+				}
+
+				if ( found !== undefined ) {
+					if ( !inplace ) {
+						curLoop = result;
+					}
+
+					expr = expr.replace( Expr.match[ type ], "" );
+
+					if ( !anyFound ) {
+						return [];
+					}
+
+					break;
+				}
+			}
+		}
+
+		// Improper expression
+		if ( expr === old ) {
+			if ( anyFound == null ) {
+				Sizzle.error( expr );
+
+			} else {
+				break;
+			}
+		}
+
+		old = expr;
+	}
+
+	return curLoop;
+};
+
+Sizzle.error = function( msg ) {
+	throw new Error( "Syntax error, unrecognized expression: " + msg );
+};
+
+/**
+ * Utility function for retreiving the text value of an array of DOM nodes
+ * @param {Array|Element} elem
+ */
+var getText = Sizzle.getText = function( elem ) {
+    var i, node,
+		nodeType = elem.nodeType,
+		ret = "";
+
+	if ( nodeType ) {
+		if ( nodeType === 1 || nodeType === 9 || nodeType === 11 ) {
+			// Use textContent || innerText for elements
+			if ( typeof elem.textContent === 'string' ) {
+				return elem.textContent;
+			} else if ( typeof elem.innerText === 'string' ) {
+				// Replace IE's carriage returns
+				return elem.innerText.replace( rReturn, '' );
+			} else {
+				// Traverse it's children
+				for ( elem = elem.firstChild; elem; elem = elem.nextSibling) {
+					ret += getText( elem );
+				}
+			}
+		} else if ( nodeType === 3 || nodeType === 4 ) {
+			return elem.nodeValue;
+		}
+	} else {
+
+		// If no nodeType, this is expected to be an array
+		for ( i = 0; (node = elem[i]); i++ ) {
+			// Do not traverse comment nodes
+			if ( node.nodeType !== 8 ) {
+				ret += getText( node );
+			}
+		}
+	}
+	return ret;
+};
+
+var Expr = Sizzle.selectors = {
+	order: [ "ID", "NAME", "TAG" ],
+
+	match: {
+		ID: /#((?:[\w\u00c0-\uFFFF\-]|\\.)+)/,
+		CLASS: /\.((?:[\w\u00c0-\uFFFF\-]|\\.)+)/,
+		NAME: /\[name=['"]*((?:[\w\u00c0-\uFFFF\-]|\\.)+)['"]*\]/,
+		ATTR: /\[\s*((?:[\w\u00c0-\uFFFF\-]|\\.)+)\s*(?:(\S?=)\s*(?:(['"])(.*?)\3|(#?(?:[\w\u00c0-\uFFFF\-]|\\.)*)|)|)\s*\]/,
+		TAG: /^((?:[\w\u00c0-\uFFFF\*\-]|\\.)+)/,
+		CHILD: /:(only|nth|last|first)-child(?:\(\s*(even|odd|(?:[+\-]?\d+|(?:[+\-]?\d*)?n\s*(?:[+\-]\s*\d+)?))\s*\))?/,
+		POS: /:(nth|eq|gt|lt|first|last|even|odd)(?:\((\d*)\))?(?=[^\-]|$)/,
+		PSEUDO: /:((?:[\w\u00c0-\uFFFF\-]|\\.)+)(?:\((['"]?)((?:\([^\)]+\)|[^\(\)]*)+)\2\))?/
+	},
+
+	leftMatch: {},
+
+	attrMap: {
+		"class": "className",
+		"for": "htmlFor"
+	},
+
+	attrHandle: {
+		href: function( elem ) {
+			return elem.getAttribute( "href" );
+		},
+		type: function( elem ) {
+			return elem.getAttribute( "type" );
+		}
+	},
+
+	relative: {
+		"+": function(checkSet, part){
+			var isPartStr = typeof part === "string",
+				isTag = isPartStr && !rNonWord.test( part ),
+				isPartStrNotTag = isPartStr && !isTag;
+
+			if ( isTag ) {
+				part = part.toLowerCase();
+			}
+
+			for ( var i = 0, l = checkSet.length, elem; i < l; i++ ) {
+				if ( (elem = checkSet[i]) ) {
+					while ( (elem = elem.previousSibling) && elem.nodeType !== 1 ) {}
+
+					checkSet[i] = isPartStrNotTag || elem && elem.nodeName.toLowerCase() === part ?
+						elem || false :
+						elem === part;
+				}
+			}
+
+			if ( isPartStrNotTag ) {
+				Sizzle.filter( part, checkSet, true );
+			}
+		},
+
+		">": function( checkSet, part ) {
+			var elem,
+				isPartStr = typeof part === "string",
+				i = 0,
+				l = checkSet.length;
+
+			if ( isPartStr && !rNonWord.test( part ) ) {
+				part = part.toLowerCase();
+
+				for ( ; i < l; i++ ) {
+					elem = checkSet[i];
+
+					if ( elem ) {
+						var parent = elem.parentNode;
+						checkSet[i] = parent.nodeName.toLowerCase() === part ? parent : false;
+					}
+				}
+
+			} else {
+				for ( ; i < l; i++ ) {
+					elem = checkSet[i];
+
+					if ( elem ) {
+						checkSet[i] = isPartStr ?
+							elem.parentNode :
+							elem.parentNode === part;
+					}
+				}
+
+				if ( isPartStr ) {
+					Sizzle.filter( part, checkSet, true );
+				}
+			}
+		},
+
+		"": function(checkSet, part, isXML){
+			var nodeCheck,
+				doneName = done++,
+				checkFn = dirCheck;
+
+			if ( typeof part === "string" && !rNonWord.test( part ) ) {
+				part = part.toLowerCase();
+				nodeCheck = part;
+				checkFn = dirNodeCheck;
+			}
+
+			checkFn( "parentNode", part, doneName, checkSet, nodeCheck, isXML );
+		},
+
+		"~": function( checkSet, part, isXML ) {
+			var nodeCheck,
+				doneName = done++,
+				checkFn = dirCheck;
+
+			if ( typeof part === "string" && !rNonWord.test( part ) ) {
+				part = part.toLowerCase();
+				nodeCheck = part;
+				checkFn = dirNodeCheck;
+			}
+
+			checkFn( "previousSibling", part, doneName, checkSet, nodeCheck, isXML );
+		}
+	},
+
+	find: {
+		ID: function( match, context, isXML ) {
+			if ( typeof context.getElementById !== "undefined" && !isXML ) {
+				var m = context.getElementById(match[1]);
+				// Check parentNode to catch when Blackberry 4.6 returns
+				// nodes that are no longer in the document #6963
+				return m && m.parentNode ? [m] : [];
+			}
+		},
+
+		NAME: function( match, context ) {
+			if ( typeof context.getElementsByName !== "undefined" ) {
+				var ret = [],
+					results = context.getElementsByName( match[1] );
+
+				for ( var i = 0, l = results.length; i < l; i++ ) {
+					if ( results[i].getAttribute("name") === match[1] ) {
+						ret.push( results[i] );
+					}
+				}
+
+				return ret.length === 0 ? null : ret;
+			}
+		},
+
+		TAG: function( match, context ) {
+			if ( typeof context.getElementsByTagName !== "undefined" ) {
+				return context.getElementsByTagName( match[1] );
+			}
+		}
+	},
+	preFilter: {
+		CLASS: function( match, curLoop, inplace, result, not, isXML ) {
+			match = " " + match[1].replace( rBackslash, "" ) + " ";
+
+			if ( isXML ) {
+				return match;
+			}
+
+			for ( var i = 0, elem; (elem = curLoop[i]) != null; i++ ) {
+				if ( elem ) {
+					if ( not ^ (elem.className && (" " + elem.className + " ").replace(/[\t\n\r]/g, " ").indexOf(match) >= 0) ) {
+						if ( !inplace ) {
+							result.push( elem );
+						}
+
+					} else if ( inplace ) {
+						curLoop[i] = false;
+					}
+				}
+			}
+
+			return false;
+		},
+
+		ID: function( match ) {
+			return match[1].replace( rBackslash, "" );
+		},
+
+		TAG: function( match, curLoop ) {
+			return match[1].replace( rBackslash, "" ).toLowerCase();
+		},
+
+		CHILD: function( match ) {
+			if ( match[1] === "nth" ) {
+				if ( !match[2] ) {
+					Sizzle.error( match[0] );
+				}
+
+				match[2] = match[2].replace(/^\+|\s*/g, '');
+
+				// parse equations like 'even', 'odd', '5', '2n', '3n+2', '4n-1', '-n+6'
+				var test = /(-?)(\d*)(?:n([+\-]?\d*))?/.exec(
+					match[2] === "even" && "2n" || match[2] === "odd" && "2n+1" ||
+					!/\D/.test( match[2] ) && "0n+" + match[2] || match[2]);
+
+				// calculate the numbers (first)n+(last) including if they are negative
+				match[2] = (test[1] + (test[2] || 1)) - 0;
+				match[3] = test[3] - 0;
+			}
+			else if ( match[2] ) {
+				Sizzle.error( match[0] );
+			}
+
+			// TODO: Move to normal caching system
+			match[0] = done++;
+
+			return match;
+		},
+
+		ATTR: function( match, curLoop, inplace, result, not, isXML ) {
+			var name = match[1] = match[1].replace( rBackslash, "" );
+
+			if ( !isXML && Expr.attrMap[name] ) {
+				match[1] = Expr.attrMap[name];
+			}
+
+			// Handle if an un-quoted value was used
+			match[4] = ( match[4] || match[5] || "" ).replace( rBackslash, "" );
+
+			if ( match[2] === "~=" ) {
+				match[4] = " " + match[4] + " ";
+			}
+
+			return match;
+		},
+
+		PSEUDO: function( match, curLoop, inplace, result, not ) {
+			if ( match[1] === "not" ) {
+				// If we're dealing with a complex expression, or a simple one
+				if ( ( chunker.exec(match[3]) || "" ).length > 1 || /^\w/.test(match[3]) ) {
+					match[3] = Sizzle(match[3], null, null, curLoop);
+
+				} else {
+					var ret = Sizzle.filter(match[3], curLoop, inplace, true ^ not);
+
+					if ( !inplace ) {
+						result.push.apply( result, ret );
+					}
+
+					return false;
+				}
+
+			} else if ( Expr.match.POS.test( match[0] ) || Expr.match.CHILD.test( match[0] ) ) {
+				return true;
+			}
+
+			return match;
+		},
+
+		POS: function( match ) {
+			match.unshift( true );
+
+			return match;
+		}
+	},
+
+	filters: {
+		enabled: function( elem ) {
+			return elem.disabled === false && elem.type !== "hidden";
+		},
+
+		disabled: function( elem ) {
+			return elem.disabled === true;
+		},
+
+		checked: function( elem ) {
+			return elem.checked === true;
+		},
+
+		selected: function( elem ) {
+			// Accessing this property makes selected-by-default
+			// options in Safari work properly
+			if ( elem.parentNode ) {
+				elem.parentNode.selectedIndex;
+			}
+
+			return elem.selected === true;
+		},
+
+		parent: function( elem ) {
+			return !!elem.firstChild;
+		},
+
+		empty: function( elem ) {
+			return !elem.firstChild;
+		},
+
+		has: function( elem, i, match ) {
+			return !!Sizzle( match[3], elem ).length;
+		},
+
+		header: function( elem ) {
+			return (/h\d/i).test( elem.nodeName );
+		},
+
+		text: function( elem ) {
+			var attr = elem.getAttribute( "type" ), type = elem.type;
+			// IE6 and 7 will map elem.type to 'text' for new HTML5 types (search, etc)
+			// use getAttribute instead to test this case
+			return elem.nodeName.toLowerCase() === "input" && "text" === type && ( attr === type || attr === null );
+		},
+
+		radio: function( elem ) {
+			return elem.nodeName.toLowerCase() === "input" && "radio" === elem.type;
+		},
+
+		checkbox: function( elem ) {
+			return elem.nodeName.toLowerCase() === "input" && "checkbox" === elem.type;
+		},
+
+		file: function( elem ) {
+			return elem.nodeName.toLowerCase() === "input" && "file" === elem.type;
+		},
+
+		password: function( elem ) {
+			return elem.nodeName.toLowerCase() === "input" && "password" === elem.type;
+		},
+
+		submit: function( elem ) {
+			var name = elem.nodeName.toLowerCase();
+			return (name === "input" || name === "button") && "submit" === elem.type;
+		},
+
+		image: function( elem ) {
+			return elem.nodeName.toLowerCase() === "input" && "image" === elem.type;
+		},
+
+		reset: function( elem ) {
+			var name = elem.nodeName.toLowerCase();
+			return (name === "input" || name === "button") && "reset" === elem.type;
+		},
+
+		button: function( elem ) {
+			var name = elem.nodeName.toLowerCase();
+			return name === "input" && "button" === elem.type || name === "button";
+		},
+
+		input: function( elem ) {
+			return (/input|select|textarea|button/i).test( elem.nodeName );
+		},
+
+		focus: function( elem ) {
+			return elem === elem.ownerDocument.activeElement;
+		}
+	},
+	setFilters: {
+		first: function( elem, i ) {
+			return i === 0;
+		},
+
+		last: function( elem, i, match, array ) {
+			return i === array.length - 1;
+		},
+
+		even: function( elem, i ) {
+			return i % 2 === 0;
+		},
+
+		odd: function( elem, i ) {
+			return i % 2 === 1;
+		},
+
+		lt: function( elem, i, match ) {
+			return i < match[3] - 0;
+		},
+
+		gt: function( elem, i, match ) {
+			return i > match[3] - 0;
+		},
+
+		nth: function( elem, i, match ) {
+			return match[3] - 0 === i;
+		},
+
+		eq: function( elem, i, match ) {
+			return match[3] - 0 === i;
+		}
+	},
+	filter: {
+		PSEUDO: function( elem, match, i, array ) {
+			var name = match[1],
+				filter = Expr.filters[ name ];
+
+			if ( filter ) {
+				return filter( elem, i, match, array );
+
+			} else if ( name === "contains" ) {
+				return (elem.textContent || elem.innerText || getText([ elem ]) || "").indexOf(match[3]) >= 0;
+
+			} else if ( name === "not" ) {
+				var not = match[3];
+
+				for ( var j = 0, l = not.length; j < l; j++ ) {
+					if ( not[j] === elem ) {
+						return false;
+					}
+				}
+
+				return true;
+
+			} else {
+				Sizzle.error( name );
+			}
+		},
+
+		CHILD: function( elem, match ) {
+			var first, last,
+				doneName, parent, cache,
+				count, diff,
+				type = match[1],
+				node = elem;
+
+			switch ( type ) {
+				case "only":
+				case "first":
+					while ( (node = node.previousSibling) ) {
+						if ( node.nodeType === 1 ) {
+							return false;
+						}
+					}
+
+					if ( type === "first" ) {
+						return true;
+					}
+
+					node = elem;
+
+					/* falls through */
+				case "last":
+					while ( (node = node.nextSibling) ) {
+						if ( node.nodeType === 1 ) {
+							return false;
+						}
+					}
+
+					return true;
+
+				case "nth":
+					first = match[2];
+					last = match[3];
+
+					if ( first === 1 && last === 0 ) {
+						return true;
+					}
+
+					doneName = match[0];
+					parent = elem.parentNode;
+
+					if ( parent && (parent[ expando ] !== doneName || !elem.nodeIndex) ) {
+						count = 0;
+
+						for ( node = parent.firstChild; node; node = node.nextSibling ) {
+							if ( node.nodeType === 1 ) {
+								node.nodeIndex = ++count;
+							}
+						}
+
+						parent[ expando ] = doneName;
+					}
+
+					diff = elem.nodeIndex - last;
+
+					if ( first === 0 ) {
+						return diff === 0;
+
+					} else {
+						return ( diff % first === 0 && diff / first >= 0 );
+					}
+			}
+		},
+
+		ID: function( elem, match ) {
+			return elem.nodeType === 1 && elem.getAttribute("id") === match;
+		},
+
+		TAG: function( elem, match ) {
+			return (match === "*" && elem.nodeType === 1) || !!elem.nodeName && elem.nodeName.toLowerCase() === match;
+		},
+
+		CLASS: function( elem, match ) {
+			return (" " + (elem.className || elem.getAttribute("class")) + " ")
+				.indexOf( match ) > -1;
+		},
+
+		ATTR: function( elem, match ) {
+			var name = match[1],
+				result = Sizzle.attr ?
+					Sizzle.attr( elem, name ) :
+					Expr.attrHandle[ name ] ?
+					Expr.attrHandle[ name ]( elem ) :
+					elem[ name ] != null ?
+						elem[ name ] :
+						elem.getAttribute( name ),
+				value = result + "",
+				type = match[2],
+				check = match[4];
+
+			return result == null ?
+				type === "!=" :
+				!type && Sizzle.attr ?
+				result != null :
+				type === "=" ?
+				value === check :
+				type === "*=" ?
+				value.indexOf(check) >= 0 :
+				type === "~=" ?
+				(" " + value + " ").indexOf(check) >= 0 :
+				!check ?
+				value && result !== false :
+				type === "!=" ?
+				value !== check :
+				type === "^=" ?
+				value.indexOf(check) === 0 :
+				type === "$=" ?
+				value.substr(value.length - check.length) === check :
+				type === "|=" ?
+				value === check || value.substr(0, check.length + 1) === check + "-" :
+				false;
+		},
+
+		POS: function( elem, match, i, array ) {
+			var name = match[2],
+				filter = Expr.setFilters[ name ];
+
+			if ( filter ) {
+				return filter( elem, i, match, array );
+			}
+		}
+	}
+};
+
+var origPOS = Expr.match.POS,
+	fescape = function(all, num){
+		return "\\" + (num - 0 + 1);
+	};
+
+for ( var type in Expr.match ) {
+	Expr.match[ type ] = new RegExp( Expr.match[ type ].source + (/(?![^\[]*\])(?![^\(]*\))/.source) );
+	Expr.leftMatch[ type ] = new RegExp( /(^(?:.|\r|\n)*?)/.source + Expr.match[ type ].source.replace(/\\(\d+)/g, fescape) );
+}
+// Expose origPOS
+// "global" as in regardless of relation to brackets/parens
+Expr.match.globalPOS = origPOS;
+
+var makeArray = function( array, results ) {
+	array = Array.prototype.slice.call( array, 0 );
+
+	if ( results ) {
+		results.push.apply( results, array );
+		return results;
+	}
+
+	return array;
+};
+
+// Perform a simple check to determine if the browser is capable of
+// converting a NodeList to an array using builtin methods.
+// Also verifies that the returned array holds DOM nodes
+// (which is not the case in the Blackberry browser)
+try {
+	Array.prototype.slice.call( document.documentElement.childNodes, 0 )[0].nodeType;
+
+// Provide a fallback method if it does not work
+} catch( e ) {
+	makeArray = function( array, results ) {
+		var i = 0,
+			ret = results || [];
+
+		if ( toString.call(array) === "[object Array]" ) {
+			Array.prototype.push.apply( ret, array );
+
+		} else {
+			if ( typeof array.length === "number" ) {
+				for ( var l = array.length; i < l; i++ ) {
+					ret.push( array[i] );
+				}
+
+			} else {
+				for ( ; array[i]; i++ ) {
+					ret.push( array[i] );
+				}
+			}
+		}
+
+		return ret;
+	};
+}
+
+var sortOrder, siblingCheck;
+
+if ( document.documentElement.compareDocumentPosition ) {
+	sortOrder = function( a, b ) {
+		if ( a === b ) {
+			hasDuplicate = true;
+			return 0;
+		}
+
+		if ( !a.compareDocumentPosition || !b.compareDocumentPosition ) {
+			return a.compareDocumentPosition ? -1 : 1;
+		}
+
+		return a.compareDocumentPosition(b) & 4 ? -1 : 1;
+	};
+
+} else {
+	sortOrder = function( a, b ) {
+		// The nodes are identical, we can exit early
+		if ( a === b ) {
+			hasDuplicate = true;
+			return 0;
+
+		// Fallback to using sourceIndex (in IE) if it's available on both nodes
+		} else if ( a.sourceIndex && b.sourceIndex ) {
+			return a.sourceIndex - b.sourceIndex;
+		}
+
+		var al, bl,
+			ap = [],
+			bp = [],
+			aup = a.parentNode,
+			bup = b.parentNode,
+			cur = aup;
+
+		// If the nodes are siblings (or identical) we can do a quick check
+		if ( aup === bup ) {
+			return siblingCheck( a, b );
+
+		// If no parents were found then the nodes are disconnected
+		} else if ( !aup ) {
+			return -1;
+
+		} else if ( !bup ) {
+			return 1;
+		}
+
+		// Otherwise they're somewhere else in the tree so we need
+		// to build up a full list of the parentNodes for comparison
+		while ( cur ) {
+			ap.unshift( cur );
+			cur = cur.parentNode;
+		}
+
+		cur = bup;
+
+		while ( cur ) {
+			bp.unshift( cur );
+			cur = cur.parentNode;
+		}
+
+		al = ap.length;
+		bl = bp.length;
+
+		// Start walking down the tree looking for a discrepancy
+		for ( var i = 0; i < al && i < bl; i++ ) {
+			if ( ap[i] !== bp[i] ) {
+				return siblingCheck( ap[i], bp[i] );
+			}
+		}
+
+		// We ended someplace up the tree so do a sibling check
+		return i === al ?
+			siblingCheck( a, bp[i], -1 ) :
+			siblingCheck( ap[i], b, 1 );
+	};
+
+	siblingCheck = function( a, b, ret ) {
+		if ( a === b ) {
+			return ret;
+		}
+
+		var cur = a.nextSibling;
+
+		while ( cur ) {
+			if ( cur === b ) {
+				return -1;
+			}
+
+			cur = cur.nextSibling;
+		}
+
+		return 1;
+	};
+}
+
+// Check to see if the browser returns elements by name when
+// querying by getElementById (and provide a workaround)
+(function(){
+	// We're going to inject a fake input element with a specified name
+	var form = document.createElement("div"),
+		id = "script" + (new Date()).getTime(),
+		root = document.documentElement;
+
+	form.innerHTML = "<a name='" + id + "'/>";
+
+	// Inject it into the root element, check its status, and remove it quickly
+	root.insertBefore( form, root.firstChild );
+
+	// The workaround has to do additional checks after a getElementById
+	// Which slows things down for other browsers (hence the branching)
+	if ( document.getElementBy
