@@ -5261,4 +5261,779 @@ function dirNodeCheck( dir, cur, doneName, checkSet, nodeCheck, isXML ) {
 }
 
 function dirCheck( dir, cur, doneName, checkSet, nodeCheck, isXML ) {
-	for ( var i = 0, l = checkSet.length; i < l;
+	for ( var i = 0, l = checkSet.length; i < l; i++ ) {
+		var elem = checkSet[i];
+
+		if ( elem ) {
+			var match = false;
+			
+			elem = elem[dir];
+
+			while ( elem ) {
+				if ( elem[ expando ] === doneName ) {
+					match = checkSet[elem.sizset];
+					break;
+				}
+
+				if ( elem.nodeType === 1 ) {
+					if ( !isXML ) {
+						elem[ expando ] = doneName;
+						elem.sizset = i;
+					}
+
+					if ( typeof cur !== "string" ) {
+						if ( elem === cur ) {
+							match = true;
+							break;
+						}
+
+					} else if ( Sizzle.filter( cur, [elem] ).length > 0 ) {
+						match = elem;
+						break;
+					}
+				}
+
+				elem = elem[dir];
+			}
+
+			checkSet[i] = match;
+		}
+	}
+}
+
+if ( document.documentElement.contains ) {
+	Sizzle.contains = function( a, b ) {
+		return a !== b && (a.contains ? a.contains(b) : true);
+	};
+
+} else if ( document.documentElement.compareDocumentPosition ) {
+	Sizzle.contains = function( a, b ) {
+		return !!(a.compareDocumentPosition(b) & 16);
+	};
+
+} else {
+	Sizzle.contains = function() {
+		return false;
+	};
+}
+
+Sizzle.isXML = function( elem ) {
+	// documentElement is verified for cases where it doesn't yet exist
+	// (such as loading iframes in IE - #4833) 
+	var documentElement = (elem ? elem.ownerDocument || elem : 0).documentElement;
+
+	return documentElement ? documentElement.nodeName !== "HTML" : false;
+};
+
+var posProcess = function( selector, context, seed ) {
+	var match,
+		tmpSet = [],
+		later = "",
+		root = context.nodeType ? [context] : context;
+
+	// Position selectors must be done after the filter
+	// And so must :not(positional) so we move all PSEUDOs to the end
+	while ( (match = Expr.match.PSEUDO.exec( selector )) ) {
+		later += match[0];
+		selector = selector.replace( Expr.match.PSEUDO, "" );
+	}
+
+	selector = Expr.relative[selector] ? selector + "*" : selector;
+
+	for ( var i = 0, l = root.length; i < l; i++ ) {
+		Sizzle( selector, root[i], tmpSet, seed );
+	}
+
+	return Sizzle.filter( later, tmpSet );
+};
+
+// EXPOSE
+// Override sizzle attribute retrieval
+Sizzle.attr = jQuery.attr;
+Sizzle.selectors.attrMap = {};
+jQuery.find = Sizzle;
+jQuery.expr = Sizzle.selectors;
+jQuery.expr[":"] = jQuery.expr.filters;
+jQuery.unique = Sizzle.uniqueSort;
+jQuery.text = Sizzle.getText;
+jQuery.isXMLDoc = Sizzle.isXML;
+jQuery.contains = Sizzle.contains;
+
+
+})();
+
+
+var runtil = /Until$/,
+	rparentsprev = /^(?:parents|prevUntil|prevAll)/,
+	// Note: This RegExp should be improved, or likely pulled from Sizzle
+	rmultiselector = /,/,
+	isSimple = /^.[^:#\[\.,]*$/,
+	slice = Array.prototype.slice,
+	POS = jQuery.expr.match.POS,
+	// methods guaranteed to produce a unique set when starting from a unique set
+	guaranteedUnique = {
+		children: true,
+		contents: true,
+		next: true,
+		prev: true
+	};
+
+jQuery.fn.extend({
+	find: function( selector ) {
+		var self = this,
+			i, l;
+
+		if ( typeof selector !== "string" ) {
+			return jQuery( selector ).filter(function() {
+				for ( i = 0, l = self.length; i < l; i++ ) {
+					if ( jQuery.contains( self[ i ], this ) ) {
+						return true;
+					}
+				}
+			});
+		}
+
+		var ret = this.pushStack( "", "find", selector ),
+			length, n, r;
+
+		for ( i = 0, l = this.length; i < l; i++ ) {
+			length = ret.length;
+			jQuery.find( selector, this[i], ret );
+
+			if ( i > 0 ) {
+				// Make sure that the results are unique
+				for ( n = length; n < ret.length; n++ ) {
+					for ( r = 0; r < length; r++ ) {
+						if ( ret[r] === ret[n] ) {
+							ret.splice(n--, 1);
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		return ret;
+	},
+
+	has: function( target ) {
+		var targets = jQuery( target );
+		return this.filter(function() {
+			for ( var i = 0, l = targets.length; i < l; i++ ) {
+				if ( jQuery.contains( this, targets[i] ) ) {
+					return true;
+				}
+			}
+		});
+	},
+
+	not: function( selector ) {
+		return this.pushStack( winnow(this, selector, false), "not", selector);
+	},
+
+	filter: function( selector ) {
+		return this.pushStack( winnow(this, selector, true), "filter", selector );
+	},
+
+	is: function( selector ) {
+		return !!selector && ( 
+			typeof selector === "string" ?
+				// If this is a positional selector, check membership in the returned set
+				// so $("p:first").is("p:last") won't return true for a doc with two "p".
+				POS.test( selector ) ? 
+					jQuery( selector, this.context ).index( this[0] ) >= 0 :
+					jQuery.filter( selector, this ).length > 0 :
+				this.filter( selector ).length > 0 );
+	},
+
+	closest: function( selectors, context ) {
+		var ret = [], i, l, cur = this[0];
+		
+		// Array (deprecated as of jQuery 1.7)
+		if ( jQuery.isArray( selectors ) ) {
+			var level = 1;
+
+			while ( cur && cur.ownerDocument && cur !== context ) {
+				for ( i = 0; i < selectors.length; i++ ) {
+
+					if ( jQuery( cur ).is( selectors[ i ] ) ) {
+						ret.push({ selector: selectors[ i ], elem: cur, level: level });
+					}
+				}
+
+				cur = cur.parentNode;
+				level++;
+			}
+
+			return ret;
+		}
+
+		// String
+		var pos = POS.test( selectors ) || typeof selectors !== "string" ?
+				jQuery( selectors, context || this.context ) :
+				0;
+
+		for ( i = 0, l = this.length; i < l; i++ ) {
+			cur = this[i];
+
+			while ( cur ) {
+				if ( pos ? pos.index(cur) > -1 : jQuery.find.matchesSelector(cur, selectors) ) {
+					ret.push( cur );
+					break;
+
+				} else {
+					cur = cur.parentNode;
+					if ( !cur || !cur.ownerDocument || cur === context || cur.nodeType === 11 ) {
+						break;
+					}
+				}
+			}
+		}
+
+		ret = ret.length > 1 ? jQuery.unique( ret ) : ret;
+
+		return this.pushStack( ret, "closest", selectors );
+	},
+
+	// Determine the position of an element within
+	// the matched set of elements
+	index: function( elem ) {
+
+		// No argument, return index in parent
+		if ( !elem ) {
+			return ( this[0] && this[0].parentNode ) ? this.prevAll().length : -1;
+		}
+
+		// index in selector
+		if ( typeof elem === "string" ) {
+			return jQuery.inArray( this[0], jQuery( elem ) );
+		}
+
+		// Locate the position of the desired element
+		return jQuery.inArray(
+			// If it receives a jQuery object, the first element is used
+			elem.jquery ? elem[0] : elem, this );
+	},
+
+	add: function( selector, context ) {
+		var set = typeof selector === "string" ?
+				jQuery( selector, context ) :
+				jQuery.makeArray( selector && selector.nodeType ? [ selector ] : selector ),
+			all = jQuery.merge( this.get(), set );
+
+		return this.pushStack( isDisconnected( set[0] ) || isDisconnected( all[0] ) ?
+			all :
+			jQuery.unique( all ) );
+	},
+
+	andSelf: function() {
+		return this.add( this.prevObject );
+	}
+});
+
+// A painfully simple check to see if an element is disconnected
+// from a document (should be improved, where feasible).
+function isDisconnected( node ) {
+	return !node || !node.parentNode || node.parentNode.nodeType === 11;
+}
+
+jQuery.each({
+	parent: function( elem ) {
+		var parent = elem.parentNode;
+		return parent && parent.nodeType !== 11 ? parent : null;
+	},
+	parents: function( elem ) {
+		return jQuery.dir( elem, "parentNode" );
+	},
+	parentsUntil: function( elem, i, until ) {
+		return jQuery.dir( elem, "parentNode", until );
+	},
+	next: function( elem ) {
+		return jQuery.nth( elem, 2, "nextSibling" );
+	},
+	prev: function( elem ) {
+		return jQuery.nth( elem, 2, "previousSibling" );
+	},
+	nextAll: function( elem ) {
+		return jQuery.dir( elem, "nextSibling" );
+	},
+	prevAll: function( elem ) {
+		return jQuery.dir( elem, "previousSibling" );
+	},
+	nextUntil: function( elem, i, until ) {
+		return jQuery.dir( elem, "nextSibling", until );
+	},
+	prevUntil: function( elem, i, until ) {
+		return jQuery.dir( elem, "previousSibling", until );
+	},
+	siblings: function( elem ) {
+		return jQuery.sibling( elem.parentNode.firstChild, elem );
+	},
+	children: function( elem ) {
+		return jQuery.sibling( elem.firstChild );
+	},
+	contents: function( elem ) {
+		return jQuery.nodeName( elem, "iframe" ) ?
+			elem.contentDocument || elem.contentWindow.document :
+			jQuery.makeArray( elem.childNodes );
+	}
+}, function( name, fn ) {
+	jQuery.fn[ name ] = function( until, selector ) {
+		var ret = jQuery.map( this, fn, until ),
+			// The variable 'args' was introduced in
+			// https://github.com/jquery/jquery/commit/52a0238
+			// to work around a bug in Chrome 10 (Dev) and should be removed when the bug is fixed.
+			// http://code.google.com/p/v8/issues/detail?id=1050
+			args = slice.call(arguments);
+
+		if ( !runtil.test( name ) ) {
+			selector = until;
+		}
+
+		if ( selector && typeof selector === "string" ) {
+			ret = jQuery.filter( selector, ret );
+		}
+
+		ret = this.length > 1 && !guaranteedUnique[ name ] ? jQuery.unique( ret ) : ret;
+
+		if ( (this.length > 1 || rmultiselector.test( selector )) && rparentsprev.test( name ) ) {
+			ret = ret.reverse();
+		}
+
+		return this.pushStack( ret, name, args.join(",") );
+	};
+});
+
+jQuery.extend({
+	filter: function( expr, elems, not ) {
+		if ( not ) {
+			expr = ":not(" + expr + ")";
+		}
+
+		return elems.length === 1 ?
+			jQuery.find.matchesSelector(elems[0], expr) ? [ elems[0] ] : [] :
+			jQuery.find.matches(expr, elems);
+	},
+
+	dir: function( elem, dir, until ) {
+		var matched = [],
+			cur = elem[ dir ];
+
+		while ( cur && cur.nodeType !== 9 && (until === undefined || cur.nodeType !== 1 || !jQuery( cur ).is( until )) ) {
+			if ( cur.nodeType === 1 ) {
+				matched.push( cur );
+			}
+			cur = cur[dir];
+		}
+		return matched;
+	},
+
+	nth: function( cur, result, dir, elem ) {
+		result = result || 1;
+		var num = 0;
+
+		for ( ; cur; cur = cur[dir] ) {
+			if ( cur.nodeType === 1 && ++num === result ) {
+				break;
+			}
+		}
+
+		return cur;
+	},
+
+	sibling: function( n, elem ) {
+		var r = [];
+
+		for ( ; n; n = n.nextSibling ) {
+			if ( n.nodeType === 1 && n !== elem ) {
+				r.push( n );
+			}
+		}
+
+		return r;
+	}
+});
+
+// Implement the identical functionality for filter and not
+function winnow( elements, qualifier, keep ) {
+
+	// Can't pass null or undefined to indexOf in Firefox 4
+	// Set to 0 to skip string check
+	qualifier = qualifier || 0;
+
+	if ( jQuery.isFunction( qualifier ) ) {
+		return jQuery.grep(elements, function( elem, i ) {
+			var retVal = !!qualifier.call( elem, i, elem );
+			return retVal === keep;
+		});
+
+	} else if ( qualifier.nodeType ) {
+		return jQuery.grep(elements, function( elem, i ) {
+			return ( elem === qualifier ) === keep;
+		});
+
+	} else if ( typeof qualifier === "string" ) {
+		var filtered = jQuery.grep(elements, function( elem ) {
+			return elem.nodeType === 1;
+		});
+
+		if ( isSimple.test( qualifier ) ) {
+			return jQuery.filter(qualifier, filtered, !keep);
+		} else {
+			qualifier = jQuery.filter( qualifier, filtered );
+		}
+	}
+
+	return jQuery.grep(elements, function( elem, i ) {
+		return ( jQuery.inArray( elem, qualifier ) >= 0 ) === keep;
+	});
+}
+
+
+
+
+function createSafeFragment( document ) {
+	var list = nodeNames.split( " " ),
+	safeFrag = document.createDocumentFragment();
+
+	if ( safeFrag.createElement ) {
+		while ( list.length ) {
+			safeFrag.createElement(
+				list.pop()
+			);
+		}
+	}
+	return safeFrag;
+}
+
+var nodeNames = "abbr article aside audio canvas datalist details figcaption figure footer " +
+		"header hgroup mark meter nav output progress section summary time video",
+	rinlinejQuery = / jQuery\d+="(?:\d+|null)"/g,
+	rleadingWhitespace = /^\s+/,
+	rxhtmlTag = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/ig,
+	rtagName = /<([\w:]+)/,
+	rtbody = /<tbody/i,
+	rhtml = /<|&#?\w+;/,
+	rnoInnerhtml = /<(?:script|style)/i,
+	rnocache = /<(?:script|object|embed|option|style)/i,
+	rnoshimcache = new RegExp("<(?:" + nodeNames.replace(" ", "|") + ")", "i"),
+	// checked="checked" or checked
+	rchecked = /checked\s*(?:[^=]|=\s*.checked.)/i,
+	rscriptType = /\/(java|ecma)script/i,
+	rcleanScript = /^\s*<!(?:\[CDATA\[|\-\-)/,
+	wrapMap = {
+		option: [ 1, "<select multiple='multiple'>", "</select>" ],
+		legend: [ 1, "<fieldset>", "</fieldset>" ],
+		thead: [ 1, "<table>", "</table>" ],
+		tr: [ 2, "<table><tbody>", "</tbody></table>" ],
+		td: [ 3, "<table><tbody><tr>", "</tr></tbody></table>" ],
+		col: [ 2, "<table><tbody></tbody><colgroup>", "</colgroup></table>" ],
+		area: [ 1, "<map>", "</map>" ],
+		_default: [ 0, "", "" ]
+	},
+	safeFragment = createSafeFragment( document );
+
+wrapMap.optgroup = wrapMap.option;
+wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
+wrapMap.th = wrapMap.td;
+
+// IE can't serialize <link> and <script> tags normally
+if ( !jQuery.support.htmlSerialize ) {
+	wrapMap._default = [ 1, "div<div>", "</div>" ];
+}
+
+jQuery.fn.extend({
+	text: function( text ) {
+		if ( jQuery.isFunction(text) ) {
+			return this.each(function(i) {
+				var self = jQuery( this );
+
+				self.text( text.call(this, i, self.text()) );
+			});
+		}
+
+		if ( typeof text !== "object" && text !== undefined ) {
+			return this.empty().append( (this[0] && this[0].ownerDocument || document).createTextNode( text ) );
+		}
+
+		return jQuery.text( this );
+	},
+
+	wrapAll: function( html ) {
+		if ( jQuery.isFunction( html ) ) {
+			return this.each(function(i) {
+				jQuery(this).wrapAll( html.call(this, i) );
+			});
+		}
+
+		if ( this[0] ) {
+			// The elements to wrap the target around
+			var wrap = jQuery( html, this[0].ownerDocument ).eq(0).clone(true);
+
+			if ( this[0].parentNode ) {
+				wrap.insertBefore( this[0] );
+			}
+
+			wrap.map(function() {
+				var elem = this;
+
+				while ( elem.firstChild && elem.firstChild.nodeType === 1 ) {
+					elem = elem.firstChild;
+				}
+
+				return elem;
+			}).append( this );
+		}
+
+		return this;
+	},
+
+	wrapInner: function( html ) {
+		if ( jQuery.isFunction( html ) ) {
+			return this.each(function(i) {
+				jQuery(this).wrapInner( html.call(this, i) );
+			});
+		}
+
+		return this.each(function() {
+			var self = jQuery( this ),
+				contents = self.contents();
+
+			if ( contents.length ) {
+				contents.wrapAll( html );
+
+			} else {
+				self.append( html );
+			}
+		});
+	},
+
+	wrap: function( html ) {
+		return this.each(function() {
+			jQuery( this ).wrapAll( html );
+		});
+	},
+
+	unwrap: function() {
+		return this.parent().each(function() {
+			if ( !jQuery.nodeName( this, "body" ) ) {
+				jQuery( this ).replaceWith( this.childNodes );
+			}
+		}).end();
+	},
+
+	append: function() {
+		return this.domManip(arguments, true, function( elem ) {
+			if ( this.nodeType === 1 ) {
+				this.appendChild( elem );
+			}
+		});
+	},
+
+	prepend: function() {
+		return this.domManip(arguments, true, function( elem ) {
+			if ( this.nodeType === 1 ) {
+				this.insertBefore( elem, this.firstChild );
+			}
+		});
+	},
+
+	before: function() {
+		if ( this[0] && this[0].parentNode ) {
+			return this.domManip(arguments, false, function( elem ) {
+				this.parentNode.insertBefore( elem, this );
+			});
+		} else if ( arguments.length ) {
+			var set = jQuery(arguments[0]);
+			set.push.apply( set, this.toArray() );
+			return this.pushStack( set, "before", arguments );
+		}
+	},
+
+	after: function() {
+		if ( this[0] && this[0].parentNode ) {
+			return this.domManip(arguments, false, function( elem ) {
+				this.parentNode.insertBefore( elem, this.nextSibling );
+			});
+		} else if ( arguments.length ) {
+			var set = this.pushStack( this, "after", arguments );
+			set.push.apply( set, jQuery(arguments[0]).toArray() );
+			return set;
+		}
+	},
+
+	// keepData is for internal use only--do not document
+	remove: function( selector, keepData ) {
+		for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+			if ( !selector || jQuery.filter( selector, [ elem ] ).length ) {
+				if ( !keepData && elem.nodeType === 1 ) {
+					jQuery.cleanData( elem.getElementsByTagName("*") );
+					jQuery.cleanData( [ elem ] );
+				}
+
+				if ( elem.parentNode ) {
+					elem.parentNode.removeChild( elem );
+				}
+			}
+		}
+
+		return this;
+	},
+
+	empty: function() {
+		for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+			// Remove element nodes and prevent memory leaks
+			if ( elem.nodeType === 1 ) {
+				jQuery.cleanData( elem.getElementsByTagName("*") );
+			}
+
+			// Remove any remaining nodes
+			while ( elem.firstChild ) {
+				elem.removeChild( elem.firstChild );
+			}
+		}
+
+		return this;
+	},
+
+	clone: function( dataAndEvents, deepDataAndEvents ) {
+		dataAndEvents = dataAndEvents == null ? false : dataAndEvents;
+		deepDataAndEvents = deepDataAndEvents == null ? dataAndEvents : deepDataAndEvents;
+
+		return this.map( function () {
+			return jQuery.clone( this, dataAndEvents, deepDataAndEvents );
+		});
+	},
+
+	html: function( value ) {
+		if ( value === undefined ) {
+			return this[0] && this[0].nodeType === 1 ?
+				this[0].innerHTML.replace(rinlinejQuery, "") :
+				null;
+
+		// See if we can take a shortcut and just use innerHTML
+		} else if ( typeof value === "string" && !rnoInnerhtml.test( value ) &&
+			(jQuery.support.leadingWhitespace || !rleadingWhitespace.test( value )) &&
+			!wrapMap[ (rtagName.exec( value ) || ["", ""])[1].toLowerCase() ] ) {
+
+			value = value.replace(rxhtmlTag, "<$1></$2>");
+
+			try {
+				for ( var i = 0, l = this.length; i < l; i++ ) {
+					// Remove element nodes and prevent memory leaks
+					if ( this[i].nodeType === 1 ) {
+						jQuery.cleanData( this[i].getElementsByTagName("*") );
+						this[i].innerHTML = value;
+					}
+				}
+
+			// If using innerHTML throws an exception, use the fallback method
+			} catch(e) {
+				this.empty().append( value );
+			}
+
+		} else if ( jQuery.isFunction( value ) ) {
+			this.each(function(i){
+				var self = jQuery( this );
+
+				self.html( value.call(this, i, self.html()) );
+			});
+
+		} else {
+			this.empty().append( value );
+		}
+
+		return this;
+	},
+
+	replaceWith: function( value ) {
+		if ( this[0] && this[0].parentNode ) {
+			// Make sure that the elements are removed from the DOM before they are inserted
+			// this can help fix replacing a parent with child elements
+			if ( jQuery.isFunction( value ) ) {
+				return this.each(function(i) {
+					var self = jQuery(this), old = self.html();
+					self.replaceWith( value.call( this, i, old ) );
+				});
+			}
+
+			if ( typeof value !== "string" ) {
+				value = jQuery( value ).detach();
+			}
+
+			return this.each(function() {
+				var next = this.nextSibling,
+					parent = this.parentNode;
+
+				jQuery( this ).remove();
+
+				if ( next ) {
+					jQuery(next).before( value );
+				} else {
+					jQuery(parent).append( value );
+				}
+			});
+		} else {
+			return this.length ?
+				this.pushStack( jQuery(jQuery.isFunction(value) ? value() : value), "replaceWith", value ) :
+				this;
+		}
+	},
+
+	detach: function( selector ) {
+		return this.remove( selector, true );
+	},
+
+	domManip: function( args, table, callback ) {
+		var results, first, fragment, parent,
+			value = args[0],
+			scripts = [];
+
+		// We can't cloneNode fragments that contain checked, in WebKit
+		if ( !jQuery.support.checkClone && arguments.length === 3 && typeof value === "string" && rchecked.test( value ) ) {
+			return this.each(function() {
+				jQuery(this).domManip( args, table, callback, true );
+			});
+		}
+
+		if ( jQuery.isFunction(value) ) {
+			return this.each(function(i) {
+				var self = jQuery(this);
+				args[0] = value.call(this, i, table ? self.html() : undefined);
+				self.domManip( args, table, callback );
+			});
+		}
+
+		if ( this[0] ) {
+			parent = value && value.parentNode;
+
+			// If we're in a fragment, just use that instead of building a new one
+			if ( jQuery.support.parentNode && parent && parent.nodeType === 11 && parent.childNodes.length === this.length ) {
+				results = { fragment: parent };
+
+			} else {
+				results = jQuery.buildFragment( args, this, scripts );
+			}
+
+			fragment = results.fragment;
+
+			if ( fragment.childNodes.length === 1 ) {
+				first = fragment = fragment.firstChild;
+			} else {
+				first = fragment.firstChild;
+			}
+
+			if ( first ) {
+				table = table && jQuery.nodeName( first, "tr" );
+
+				for ( var i = 0, l = this.length, lastIndex = l - 1; i < l; i++ ) {
+					callback.call(
+						table ?
+							root(this[i], first) :
+							this[i],
+						// Make sure that we do not leak memory by inadvertently discarding
+						// the original fragment (which might have attached data) instead of
+						// using it; in addition, use the original fragment object for the last
+						// item instead of first because it can end up being emptied incorrectly
+						// in certain situations (Bug #8070).
+						// Fragments from the fragment cache must always be cloned and never use
