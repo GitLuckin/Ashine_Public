@@ -6036,4 +6036,713 @@ jQuery.fn.extend({
 						// using it; in addition, use the original fragment object for the last
 						// item instead of first because it can end up being emptied incorrectly
 						// in certain situations (Bug #8070).
-						// Fragments from the fragment cache must always be cloned and never use
+						// Fragments from the fragment cache must always be cloned and never used
+						// in place.
+						results.cacheable || ( l > 1 && i < lastIndex ) ?
+							jQuery.clone( fragment, true, true ) :
+							fragment
+					);
+				}
+			}
+
+			if ( scripts.length ) {
+				jQuery.each( scripts, evalScript );
+			}
+		}
+
+		return this;
+	}
+});
+
+function root( elem, cur ) {
+	return jQuery.nodeName(elem, "table") ?
+		(elem.getElementsByTagName("tbody")[0] ||
+		elem.appendChild(elem.ownerDocument.createElement("tbody"))) :
+		elem;
+}
+
+function cloneCopyEvent( src, dest ) {
+
+	if ( dest.nodeType !== 1 || !jQuery.hasData( src ) ) {
+		return;
+	}
+
+	var type, i, l,
+		oldData = jQuery._data( src ),
+		curData = jQuery._data( dest, oldData ),
+		events = oldData.events;
+
+	if ( events ) {
+		delete curData.handle;
+		curData.events = {};
+
+		for ( type in events ) {
+			for ( i = 0, l = events[ type ].length; i < l; i++ ) {
+				jQuery.event.add( dest, type + ( events[ type ][ i ].namespace ? "." : "" ) + events[ type ][ i ].namespace, events[ type ][ i ], events[ type ][ i ].data );
+			}
+		}
+	}
+
+	// make the cloned public data object a copy from the original
+	if ( curData.data ) {
+		curData.data = jQuery.extend( {}, curData.data );
+	}
+}
+
+function cloneFixAttributes( src, dest ) {
+	var nodeName;
+
+	// We do not need to do anything for non-Elements
+	if ( dest.nodeType !== 1 ) {
+		return;
+	}
+
+	// clearAttributes removes the attributes, which we don't want,
+	// but also removes the attachEvent events, which we *do* want
+	if ( dest.clearAttributes ) {
+		dest.clearAttributes();
+	}
+
+	// mergeAttributes, in contrast, only merges back on the
+	// original attributes, not the events
+	if ( dest.mergeAttributes ) {
+		dest.mergeAttributes( src );
+	}
+
+	nodeName = dest.nodeName.toLowerCase();
+
+	// IE6-8 fail to clone children inside object elements that use
+	// the proprietary classid attribute value (rather than the type
+	// attribute) to identify the type of content to display
+	if ( nodeName === "object" ) {
+		dest.outerHTML = src.outerHTML;
+
+	} else if ( nodeName === "input" && (src.type === "checkbox" || src.type === "radio") ) {
+		// IE6-8 fails to persist the checked state of a cloned checkbox
+		// or radio button. Worse, IE6-7 fail to give the cloned element
+		// a checked appearance if the defaultChecked value isn't also set
+		if ( src.checked ) {
+			dest.defaultChecked = dest.checked = src.checked;
+		}
+
+		// IE6-7 get confused and end up setting the value of a cloned
+		// checkbox/radio button to an empty string instead of "on"
+		if ( dest.value !== src.value ) {
+			dest.value = src.value;
+		}
+
+	// IE6-8 fails to return the selected option to the default selected
+	// state when cloning options
+	} else if ( nodeName === "option" ) {
+		dest.selected = src.defaultSelected;
+
+	// IE6-8 fails to set the defaultValue to the correct value when
+	// cloning other types of input fields
+	} else if ( nodeName === "input" || nodeName === "textarea" ) {
+		dest.defaultValue = src.defaultValue;
+	}
+
+	// Event data gets referenced instead of copied if the expando
+	// gets copied too
+	dest.removeAttribute( jQuery.expando );
+}
+
+jQuery.buildFragment = function( args, nodes, scripts ) {
+	var fragment, cacheable, cacheresults, doc,
+	first = args[ 0 ];
+
+	// nodes may contain either an explicit document object,
+	// a jQuery collection or context object.
+	// If nodes[0] contains a valid object to assign to doc
+	if ( nodes && nodes[0] ) {
+		doc = nodes[0].ownerDocument || nodes[0];
+	}
+
+  // Ensure that an attr object doesn't incorrectly stand in as a document object
+	// Chrome and Firefox seem to allow this to occur and will throw exception
+	// Fixes #8950
+	if ( !doc.createDocumentFragment ) {
+		doc = document;
+	}
+
+	// Only cache "small" (1/2 KB) HTML strings that are associated with the main document
+	// Cloning options loses the selected state, so don't cache them
+	// IE 6 doesn't like it when you put <object> or <embed> elements in a fragment
+	// Also, WebKit does not clone 'checked' attributes on cloneNode, so don't cache
+	// Lastly, IE6,7,8 will not correctly reuse cached fragments that were created from unknown elems #10501
+	if ( args.length === 1 && typeof first === "string" && first.length < 512 && doc === document &&
+		first.charAt(0) === "<" && !rnocache.test( first ) &&
+		(jQuery.support.checkClone || !rchecked.test( first )) &&
+		(!jQuery.support.unknownElems && rnoshimcache.test( first )) ) {
+
+		cacheable = true;
+
+		cacheresults = jQuery.fragments[ first ];
+		if ( cacheresults && cacheresults !== 1 ) {
+			fragment = cacheresults;
+		}
+	}
+
+	if ( !fragment ) {
+		fragment = doc.createDocumentFragment();
+		jQuery.clean( args, doc, fragment, scripts );
+	}
+
+	if ( cacheable ) {
+		jQuery.fragments[ first ] = cacheresults ? fragment : 1;
+	}
+
+	return { fragment: fragment, cacheable: cacheable };
+};
+
+jQuery.fragments = {};
+
+jQuery.each({
+	appendTo: "append",
+	prependTo: "prepend",
+	insertBefore: "before",
+	insertAfter: "after",
+	replaceAll: "replaceWith"
+}, function( name, original ) {
+	jQuery.fn[ name ] = function( selector ) {
+		var ret = [],
+			insert = jQuery( selector ),
+			parent = this.length === 1 && this[0].parentNode;
+
+		if ( parent && parent.nodeType === 11 && parent.childNodes.length === 1 && insert.length === 1 ) {
+			insert[ original ]( this[0] );
+			return this;
+
+		} else {
+			for ( var i = 0, l = insert.length; i < l; i++ ) {
+				var elems = ( i > 0 ? this.clone(true) : this ).get();
+				jQuery( insert[i] )[ original ]( elems );
+				ret = ret.concat( elems );
+			}
+
+			return this.pushStack( ret, name, insert.selector );
+		}
+	};
+});
+
+function getAll( elem ) {
+	if ( typeof elem.getElementsByTagName !== "undefined" ) {
+		return elem.getElementsByTagName( "*" );
+
+	} else if ( typeof elem.querySelectorAll !== "undefined" ) {
+		return elem.querySelectorAll( "*" );
+
+	} else {
+		return [];
+	}
+}
+
+// Used in clean, fixes the defaultChecked property
+function fixDefaultChecked( elem ) {
+	if ( elem.type === "checkbox" || elem.type === "radio" ) {
+		elem.defaultChecked = elem.checked;
+	}
+}
+// Finds all inputs and passes them to fixDefaultChecked
+function findInputs( elem ) {
+	var nodeName = ( elem.nodeName || "" ).toLowerCase();
+	if ( nodeName === "input" ) {
+		fixDefaultChecked( elem );
+	// Skip scripts, get other children
+	} else if ( nodeName !== "script" && typeof elem.getElementsByTagName !== "undefined" ) {
+		jQuery.grep( elem.getElementsByTagName("input"), fixDefaultChecked );
+	}
+}
+
+jQuery.extend({
+	clone: function( elem, dataAndEvents, deepDataAndEvents ) {
+		var clone = elem.cloneNode(true),
+				srcElements,
+				destElements,
+				i;
+
+		if ( (!jQuery.support.noCloneEvent || !jQuery.support.noCloneChecked) &&
+				(elem.nodeType === 1 || elem.nodeType === 11) && !jQuery.isXMLDoc(elem) ) {
+			// IE copies events bound via attachEvent when using cloneNode.
+			// Calling detachEvent on the clone will also remove the events
+			// from the original. In order to get around this, we use some
+			// proprietary methods to clear the events. Thanks to MooTools
+			// guys for this hotness.
+
+			cloneFixAttributes( elem, clone );
+
+			// Using Sizzle here is crazy slow, so we use getElementsByTagName
+			// instead
+			srcElements = getAll( elem );
+			destElements = getAll( clone );
+
+			// Weird iteration because IE will replace the length property
+			// with an element if you are cloning the body and one of the
+			// elements on the page has a name or id of "length"
+			for ( i = 0; srcElements[i]; ++i ) {
+				// Ensure that the destination node is not null; Fixes #9587
+				if ( destElements[i] ) {
+					cloneFixAttributes( srcElements[i], destElements[i] );
+				}
+			}
+		}
+
+		// Copy the events from the original to the clone
+		if ( dataAndEvents ) {
+			cloneCopyEvent( elem, clone );
+
+			if ( deepDataAndEvents ) {
+				srcElements = getAll( elem );
+				destElements = getAll( clone );
+
+				for ( i = 0; srcElements[i]; ++i ) {
+					cloneCopyEvent( srcElements[i], destElements[i] );
+				}
+			}
+		}
+
+		srcElements = destElements = null;
+
+		// Return the cloned set
+		return clone;
+	},
+
+	clean: function( elems, context, fragment, scripts ) {
+		var checkScriptType;
+
+		context = context || document;
+
+		// !context.createElement fails in IE with an error but returns typeof 'object'
+		if ( typeof context.createElement === "undefined" ) {
+			context = context.ownerDocument || context[0] && context[0].ownerDocument || document;
+		}
+
+		var ret = [], j;
+
+		for ( var i = 0, elem; (elem = elems[i]) != null; i++ ) {
+			if ( typeof elem === "number" ) {
+				elem += "";
+			}
+
+			if ( !elem ) {
+				continue;
+			}
+
+			// Convert html string into DOM nodes
+			if ( typeof elem === "string" ) {
+				if ( !rhtml.test( elem ) ) {
+					elem = context.createTextNode( elem );
+				} else {
+					// Fix "XHTML"-style tags in all browsers
+					elem = elem.replace(rxhtmlTag, "<$1></$2>");
+
+					// Trim whitespace, otherwise indexOf won't work as expected
+					var tag = ( rtagName.exec( elem ) || ["", ""] )[1].toLowerCase(),
+						wrap = wrapMap[ tag ] || wrapMap._default,
+						depth = wrap[0],
+						div = context.createElement("div");
+
+					// Append wrapper element to unknown element safe doc fragment
+					if ( context === document ) {
+						// Use the fragment we've already created for this document
+						safeFragment.appendChild( div );
+					} else {
+						// Use a fragment created with the owner document
+						createSafeFragment( context ).appendChild( div );
+					}
+
+					// Go to html and back, then peel off extra wrappers
+					div.innerHTML = wrap[1] + elem + wrap[2];
+
+					// Move to the right depth
+					while ( depth-- ) {
+						div = div.lastChild;
+					}
+
+					// Remove IE's autoinserted <tbody> from table fragments
+					if ( !jQuery.support.tbody ) {
+
+						// String was a <table>, *may* have spurious <tbody>
+						var hasBody = rtbody.test(elem),
+							tbody = tag === "table" && !hasBody ?
+								div.firstChild && div.firstChild.childNodes :
+
+								// String was a bare <thead> or <tfoot>
+								wrap[1] === "<table>" && !hasBody ?
+									div.childNodes :
+									[];
+
+						for ( j = tbody.length - 1; j >= 0 ; --j ) {
+							if ( jQuery.nodeName( tbody[ j ], "tbody" ) && !tbody[ j ].childNodes.length ) {
+								tbody[ j ].parentNode.removeChild( tbody[ j ] );
+							}
+						}
+					}
+
+					// IE completely kills leading whitespace when innerHTML is used
+					if ( !jQuery.support.leadingWhitespace && rleadingWhitespace.test( elem ) ) {
+						div.insertBefore( context.createTextNode( rleadingWhitespace.exec(elem)[0] ), div.firstChild );
+					}
+
+					elem = div.childNodes;
+				}
+			}
+
+			// Resets defaultChecked for any radios and checkboxes
+			// about to be appended to the DOM in IE 6/7 (#8060)
+			var len;
+			if ( !jQuery.support.appendChecked ) {
+				if ( elem[0] && typeof (len = elem.length) === "number" ) {
+					for ( j = 0; j < len; j++ ) {
+						findInputs( elem[j] );
+					}
+				} else {
+					findInputs( elem );
+				}
+			}
+
+			if ( elem.nodeType ) {
+				ret.push( elem );
+			} else {
+				ret = jQuery.merge( ret, elem );
+			}
+		}
+
+		if ( fragment ) {
+			checkScriptType = function( elem ) {
+				return !elem.type || rscriptType.test( elem.type );
+			};
+			for ( i = 0; ret[i]; i++ ) {
+				if ( scripts && jQuery.nodeName( ret[i], "script" ) && (!ret[i].type || ret[i].type.toLowerCase() === "text/javascript") ) {
+					scripts.push( ret[i].parentNode ? ret[i].parentNode.removeChild( ret[i] ) : ret[i] );
+
+				} else {
+					if ( ret[i].nodeType === 1 ) {
+						var jsTags = jQuery.grep( ret[i].getElementsByTagName( "script" ), checkScriptType );
+
+						ret.splice.apply( ret, [i + 1, 0].concat( jsTags ) );
+					}
+					fragment.appendChild( ret[i] );
+				}
+			}
+		}
+
+		return ret;
+	},
+
+	cleanData: function( elems ) {
+		var data, id,
+			cache = jQuery.cache,
+			special = jQuery.event.special,
+			deleteExpando = jQuery.support.deleteExpando;
+
+		for ( var i = 0, elem; (elem = elems[i]) != null; i++ ) {
+			if ( elem.nodeName && jQuery.noData[elem.nodeName.toLowerCase()] ) {
+				continue;
+			}
+
+			id = elem[ jQuery.expando ];
+
+			if ( id ) {
+				data = cache[ id ];
+
+				if ( data && data.events ) {
+					for ( var type in data.events ) {
+						if ( special[ type ] ) {
+							jQuery.event.remove( elem, type );
+
+						// This is a shortcut to avoid jQuery.event.remove's overhead
+						} else {
+							jQuery.removeEvent( elem, type, data.handle );
+						}
+					}
+
+					// Null the DOM reference to avoid IE6/7/8 leak (#7054)
+					if ( data.handle ) {
+						data.handle.elem = null;
+					}
+				}
+
+				if ( deleteExpando ) {
+					delete elem[ jQuery.expando ];
+
+				} else if ( elem.removeAttribute ) {
+					elem.removeAttribute( jQuery.expando );
+				}
+
+				delete cache[ id ];
+			}
+		}
+	}
+});
+
+function evalScript( i, elem ) {
+	if ( elem.src ) {
+		jQuery.ajax({
+			url: elem.src,
+			async: false,
+			dataType: "script"
+		});
+	} else {
+		jQuery.globalEval( ( elem.text || elem.textContent || elem.innerHTML || "" ).replace( rcleanScript, "/*$0*/" ) );
+	}
+
+	if ( elem.parentNode ) {
+		elem.parentNode.removeChild( elem );
+	}
+}
+
+
+
+
+var ralpha = /alpha\([^)]*\)/i,
+	ropacity = /opacity=([^)]*)/,
+	// fixed for IE9, see #8346
+	rupper = /([A-Z]|^ms)/g,
+	rnumpx = /^-?\d+(?:px)?$/i,
+	rnum = /^-?\d/,
+	rrelNum = /^([\-+])=([\-+.\de]+)/,
+
+	cssShow = { position: "absolute", visibility: "hidden", display: "block" },
+	cssWidth = [ "Left", "Right" ],
+	cssHeight = [ "Top", "Bottom" ],
+	curCSS,
+
+	getComputedStyle,
+	currentStyle;
+
+jQuery.fn.css = function( name, value ) {
+	// Setting 'undefined' is a no-op
+	if ( arguments.length === 2 && value === undefined ) {
+		return this;
+	}
+
+	return jQuery.access( this, name, value, true, function( elem, name, value ) {
+		return value !== undefined ?
+			jQuery.style( elem, name, value ) :
+			jQuery.css( elem, name );
+	});
+};
+
+jQuery.extend({
+	// Add in style property hooks for overriding the default
+	// behavior of getting and setting a style property
+	cssHooks: {
+		opacity: {
+			get: function( elem, computed ) {
+				if ( computed ) {
+					// We should always get a number back from opacity
+					var ret = curCSS( elem, "opacity", "opacity" );
+					return ret === "" ? "1" : ret;
+
+				} else {
+					return elem.style.opacity;
+				}
+			}
+		}
+	},
+
+	// Exclude the following css properties to add px
+	cssNumber: {
+		"fillOpacity": true,
+		"fontWeight": true,
+		"lineHeight": true,
+		"opacity": true,
+		"orphans": true,
+		"widows": true,
+		"zIndex": true,
+		"zoom": true
+	},
+
+	// Add in properties whose names you wish to fix before
+	// setting or getting the value
+	cssProps: {
+		// normalize float css property
+		"float": jQuery.support.cssFloat ? "cssFloat" : "styleFloat"
+	},
+
+	// Get and set the style property on a DOM Node
+	style: function( elem, name, value, extra ) {
+		// Don't set styles on text and comment nodes
+		if ( !elem || elem.nodeType === 3 || elem.nodeType === 8 || !elem.style ) {
+			return;
+		}
+
+		// Make sure that we're working with the right name
+		var ret, type, origName = jQuery.camelCase( name ),
+			style = elem.style, hooks = jQuery.cssHooks[ origName ];
+
+		name = jQuery.cssProps[ origName ] || origName;
+
+		// Check if we're setting a value
+		if ( value !== undefined ) {
+			type = typeof value;
+
+			// convert relative number strings (+= or -=) to relative numbers. #7345
+			if ( type === "string" && (ret = rrelNum.exec( value )) ) {
+				value = ( +( ret[1] + 1) * +ret[2] ) + parseFloat( jQuery.css( elem, name ) );
+				// Fixes bug #9237
+				type = "number";
+			}
+
+			// Make sure that NaN and null values aren't set. See: #7116
+			if ( value == null || type === "number" && isNaN( value ) ) {
+				return;
+			}
+
+			// If a number was passed in, add 'px' to the (except for certain CSS properties)
+			if ( type === "number" && !jQuery.cssNumber[ origName ] ) {
+				value += "px";
+			}
+
+			// If a hook was provided, use that value, otherwise just set the specified value
+			if ( !hooks || !("set" in hooks) || (value = hooks.set( elem, value )) !== undefined ) {
+				// Wrapped to prevent IE from throwing errors when 'invalid' values are provided
+				// Fixes bug #5509
+				try {
+					style[ name ] = value;
+				} catch(e) {}
+			}
+
+		} else {
+			// If a hook was provided get the non-computed value from there
+			if ( hooks && "get" in hooks && (ret = hooks.get( elem, false, extra )) !== undefined ) {
+				return ret;
+			}
+
+			// Otherwise just get the value from the style object
+			return style[ name ];
+		}
+	},
+
+	css: function( elem, name, extra ) {
+		var ret, hooks;
+
+		// Make sure that we're working with the right name
+		name = jQuery.camelCase( name );
+		hooks = jQuery.cssHooks[ name ];
+		name = jQuery.cssProps[ name ] || name;
+
+		// cssFloat needs a special treatment
+		if ( name === "cssFloat" ) {
+			name = "float";
+		}
+
+		// If a hook was provided get the computed value from there
+		if ( hooks && "get" in hooks && (ret = hooks.get( elem, true, extra )) !== undefined ) {
+			return ret;
+
+		// Otherwise, if a way to get the computed value exists, use that
+		} else if ( curCSS ) {
+			return curCSS( elem, name );
+		}
+	},
+
+	// A method for quickly swapping in/out CSS properties to get correct calculations
+	swap: function( elem, options, callback ) {
+		var old = {};
+
+		// Remember the old values, and insert the new ones
+		for ( var name in options ) {
+			old[ name ] = elem.style[ name ];
+			elem.style[ name ] = options[ name ];
+		}
+
+		callback.call( elem );
+
+		// Revert the old values
+		for ( name in options ) {
+			elem.style[ name ] = old[ name ];
+		}
+	}
+});
+
+// DEPRECATED, Use jQuery.css() instead
+jQuery.curCSS = jQuery.css;
+
+jQuery.each(["height", "width"], function( i, name ) {
+	jQuery.cssHooks[ name ] = {
+		get: function( elem, computed, extra ) {
+			var val;
+
+			if ( computed ) {
+				if ( elem.offsetWidth !== 0 ) {
+					return getWH( elem, name, extra );
+				} else {
+					jQuery.swap( elem, cssShow, function() {
+						val = getWH( elem, name, extra );
+					});
+				}
+
+				return val;
+			}
+		},
+
+		set: function( elem, value ) {
+			if ( rnumpx.test( value ) ) {
+				// ignore negative width and height values #1599
+				value = parseFloat( value );
+
+				if ( value >= 0 ) {
+					return value + "px";
+				}
+
+			} else {
+				return value;
+			}
+		}
+	};
+});
+
+if ( !jQuery.support.opacity ) {
+	jQuery.cssHooks.opacity = {
+		get: function( elem, computed ) {
+			// IE uses filters for opacity
+			return ropacity.test( (computed && elem.currentStyle ? elem.currentStyle.filter : elem.style.filter) || "" ) ?
+				( parseFloat( RegExp.$1 ) / 100 ) + "" :
+				computed ? "1" : "";
+		},
+
+		set: function( elem, value ) {
+			var style = elem.style,
+				currentStyle = elem.currentStyle,
+				opacity = jQuery.isNumeric( value ) ? "alpha(opacity=" + value * 100 + ")" : "",
+				filter = currentStyle && currentStyle.filter || style.filter || "";
+
+			// IE has trouble with opacity if it does not have layout
+			// Force it by setting the zoom level
+			style.zoom = 1;
+
+			// if setting opacity to 1, and no other filters exist - attempt to remove filter attribute #6652
+			if ( value >= 1 && jQuery.trim( filter.replace( ralpha, "" ) ) === "" ) {
+
+				// Setting style.filter to null, "" & " " still leave "filter:" in the cssText
+				// if "filter:" is present at all, clearType is disabled, we want to avoid this
+				// style.removeAttribute is IE Only, but so apparently is this code path...
+				style.removeAttribute( "filter" );
+
+				// if there there is no filter style applied in a css rule, we are done
+				if ( currentStyle && !currentStyle.filter ) {
+					return;
+				}
+			}
+
+			// otherwise, set new filter values
+			style.filter = ralpha.test( filter ) ?
+				filter.replace( ralpha, opacity ) :
+				filter + " " + opacity;
+		}
+	};
+}
+
+jQuery(function() {
+	// This hook cannot be added until DOM ready because the support test
+	// for it is not run until after DOM ready
+	if ( !jQuery.support.reliableMarginRight ) {
+		jQuery.cssHooks.marginRight = {
+			get: function( elem, computed ) {
+				// WebKit Bug 13343 - getComputedStyle returns wrong value for margin-right
+				// Work around by temporarily setting element display to inline-block
+				var ret;
+				jQuery.swap( elem, { "display": "inline-block" }, function() {
+					if ( computed 
