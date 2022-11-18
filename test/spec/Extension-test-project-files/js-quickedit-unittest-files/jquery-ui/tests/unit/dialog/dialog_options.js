@@ -320,4 +320,130 @@ test("position, right bottom on window w/array", function() {
 	el.remove();
 });
 
-test("position, offset 
+test("position, offset from top left w/array", function() {
+	var el = $('<div></div>').dialog({ position: [10, 10] }),
+		dialog = el.dialog('widget'),
+		offset = dialog.offset();
+	deepEqual(offset.left, 10 + $(window).scrollLeft());
+	deepEqual(offset.top, 10 + $(window).scrollTop());
+	el.remove();
+});
+
+test("position, right bottom at right bottom via ui.position args", function() {
+	var el = $('<div></div>').dialog({
+			position: {
+				my: "right bottom",
+				at: "right bottom"
+			}
+		}),
+		dialog = el.dialog('widget'),
+		offset = dialog.offset();
+
+	deepEqual(offset.left, $(window).width() - dialog.outerWidth() + $(window).scrollLeft());
+	deepEqual(offset.top, $(window).height() - dialog.outerHeight() + $(window).scrollTop());
+	el.remove();
+});
+
+test("position, at another element", function() {
+	var parent = $('<div></div>').css({
+			position: 'absolute',
+			top: 400,
+			left: 600,
+			height: 10,
+			width: 10
+		}).appendTo('body'),
+
+		el = $('<div></div>').dialog({
+			position: {
+				my: "left top",
+				at: "left top",
+				of: parent
+			}
+		}),
+
+		dialog = el.dialog('widget'),
+		offset = dialog.offset();
+
+	deepEqual(offset.left, 600);
+	deepEqual(offset.top, 400);
+
+	el.dialog('option', 'position', {
+			my: "left top",
+			at: "right bottom",
+			of: parent
+	});
+
+	offset = dialog.offset();
+
+	deepEqual(offset.left, 610);
+	deepEqual(offset.top, 410);
+
+	el.remove();
+	parent.remove();
+});
+
+test("resizable", function() {
+	expect(4);
+
+	el = $('<div></div>').dialog();
+		shouldresize("[default]");
+		el.dialog('option', 'resizable', false);
+		shouldnotresize('disabled after init');
+	el.remove();
+
+	el = $('<div></div>').dialog({ resizable: false });
+		shouldnotresize("disabled in init options");
+		el.dialog('option', 'resizable', true);
+		shouldresize('enabled after init');
+	el.remove();
+});
+
+test("title", function() {
+	expect(9);
+
+	function titleText() {
+		return dlg().find(".ui-dialog-title").html();
+	}
+
+	el = $('<div></div>').dialog();
+		// some browsers return a non-breaking space and some return "&nbsp;"
+		// so we get the text to normalize to the actual non-breaking space
+		equal(dlg().find(".ui-dialog-title").text(), " ", "[default]");
+		equal(el.dialog("option", "title"), "", "option not changed");
+	el.remove();
+
+	el = $('<div title="foo">').dialog();
+		equal(titleText(), "foo", "title in element attribute");
+		equal(el.dialog("option", "title"), "foo", "option updated from attribute");
+	el.remove();
+
+	el = $('<div></div>').dialog({ title: 'foo' });
+		equal(titleText(), "foo", "title in init options");
+		equal(el.dialog("option", "title"), "foo", "opiton set from options hash");
+	el.remove();
+
+	el = $('<div title="foo">').dialog({ title: 'bar' });
+		equal(titleText(), "bar", "title in init options should override title in element attribute");
+		equal(el.dialog("option", "title"), "bar", "opiton set from options hash");
+	el.remove();
+
+	el = $('<div></div>').dialog().dialog('option', 'title', 'foo');
+		equal(titleText(), 'foo', 'title after init');
+	el.remove();
+});
+
+test("width", function() {
+	expect(3);
+
+	el = $('<div></div>').dialog();
+		equal(dlg().width(), 300, "default width");
+	el.remove();
+
+	el = $('<div></div>').dialog({width: 437 });
+		equal(dlg().width(), 437, "explicit width");
+		el.dialog('option', 'width', 438);
+		equal(dlg().width(), 438, 'explicit width after init');
+	el.remove();
+});
+
+})(jQuery);
