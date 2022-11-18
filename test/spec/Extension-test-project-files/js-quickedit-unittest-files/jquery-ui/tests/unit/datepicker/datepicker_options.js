@@ -817,4 +817,102 @@ test('parseDate', function() {
 		'Parse date \'jour\' d \'de\' MM (\'\'DD\'\'), yy with settings');
 
 	zh = $.datepicker.regional['zh-CN'];
-	equalsDate($.datepicker.pars
+	equalsDate($.datepicker.parseDate('yy M d', '2011 十一 22', zh),
+		new Date(2011, 11 - 1, 22), 'Parse date yy M d with zh-CN');
+});
+
+test('parseDateErrors', function() {
+	init('#inp');
+	var fr, settings;
+	function expectError(expr, value, error) {
+		try {
+			expr();
+			ok(false, 'Parsed error ' + value);
+		}
+		catch (e) {
+			equal(e, error, 'Parsed error ' + value);
+		}
+	}
+	expectError(function() { $.datepicker.parseDate(null, 'Sat 2 01'); },
+		'Sat 2 01', 'Invalid arguments');
+	expectError(function() { $.datepicker.parseDate('d m y', null); },
+		'null', 'Invalid arguments');
+	expectError(function() { $.datepicker.parseDate('d m y', 'Sat 2 01'); },
+		'Sat 2 01 - d m y', 'Missing number at position 0');
+	expectError(function() { $.datepicker.parseDate('dd mm yy', 'Sat 2 01'); },
+		'Sat 2 01 - dd mm yy', 'Missing number at position 0');
+	expectError(function() { $.datepicker.parseDate('d m y', '3 Feb 01'); },
+		'3 Feb 01 - d m y', 'Missing number at position 2');
+	expectError(function() { $.datepicker.parseDate('dd mm yy', '3 Feb 01'); },
+		'3 Feb 01 - dd mm yy', 'Missing number at position 2');
+	expectError(function() { $.datepicker.parseDate('d m y', '3 2 AD01'); },
+		'3 2 AD01 - d m y', 'Missing number at position 4');
+	expectError(function() { $.datepicker.parseDate('d m yy', '3 2 AD01'); },
+		'3 2 AD01 - dd mm yy', 'Missing number at position 4');
+	expectError(function() { $.datepicker.parseDate('y-o', '01-D01'); },
+		'2001-D01 - y-o', 'Missing number at position 3');
+	expectError(function() { $.datepicker.parseDate('yy-oo', '2001-D01'); },
+		'2001-D01 - yy-oo', 'Missing number at position 5');
+	expectError(function() { $.datepicker.parseDate('D d M y', 'D7 3 Feb 01'); },
+		'D7 3 Feb 01 - D d M y', 'Unknown name at position 0');
+	expectError(function() { $.datepicker.parseDate('D d M y', 'Sat 3 M2 01'); },
+		'Sat 3 M2 01 - D d M y', 'Unknown name at position 6');
+	expectError(function() { $.datepicker.parseDate('DD, MM d, yy', 'Saturday- Feb 3, 2001'); },
+		'Saturday- Feb 3, 2001 - DD, MM d, yy', 'Unexpected literal at position 8');
+	expectError(function() { $.datepicker.parseDate('\'day\' d \'of\' MM (\'\'DD\'\'), yy',
+		'day 3 of February ("Saturday"), 2001'); },
+		'day 3 of Mon2 ("Day7"), 2001', 'Unexpected literal at position 19');
+	expectError(function() { $.datepicker.parseDate('d m y', '29 2 01'); },
+		'29 2 01 - d m y', 'Invalid date');
+	fr = $.datepicker.regional.fr;
+	settings = {dayNamesShort: fr.dayNamesShort, dayNames: fr.dayNames,
+		monthNamesShort: fr.monthNamesShort, monthNames: fr.monthNames};
+	expectError(function() { $.datepicker.parseDate('D d M y', 'Mon 9 Avr 01', settings); },
+		'Mon 9 Avr 01 - D d M y', 'Unknown name at position 0');
+	expectError(function() { $.datepicker.parseDate('D d M y', 'Lun. 9 Apr 01', settings); },
+		'Lun. 9 Apr 01 - D d M y', 'Unknown name at position 7');
+});
+
+test('formatDate', function() {
+	init('#inp');
+	var gmtDate, fr, settings;
+	equal($.datepicker.formatDate('d m y', new Date(2001, 2 - 1, 3)),
+		'3 2 01', 'Format date d m y');
+	equal($.datepicker.formatDate('dd mm yy', new Date(2001, 2 - 1, 3)),
+		'03 02 2001', 'Format date dd mm yy');
+	equal($.datepicker.formatDate('d m y', new Date(2001, 12 - 1, 13)),
+		'13 12 01', 'Format date d m y');
+	equal($.datepicker.formatDate('dd mm yy', new Date(2001, 12 - 1, 13)),
+		'13 12 2001', 'Format date dd mm yy');
+	equal($.datepicker.formatDate('yy-o', new Date(2001, 2 - 1, 3)),
+		'2001-34', 'Format date yy-o');
+	equal($.datepicker.formatDate('yy-oo', new Date(2001, 2 - 1, 3)),
+		'2001-034', 'Format date yy-oo');
+	equal($.datepicker.formatDate('D M y', new Date(2001, 2 - 1, 3)),
+		'Sat Feb 01', 'Format date D M y');
+	equal($.datepicker.formatDate('DD MM yy', new Date(2001, 2 - 1, 3)),
+		'Saturday February 2001', 'Format date DD MM yy');
+	equal($.datepicker.formatDate('DD, MM d, yy', new Date(2001, 2 - 1, 3)),
+		'Saturday, February 3, 2001', 'Format date DD, MM d, yy');
+	equal($.datepicker.formatDate('\'day\' d \'of\' MM (\'\'DD\'\'), yy',
+		new Date(2001, 2 - 1, 3)), 'day 3 of February (\'Saturday\'), 2001',
+		'Format date \'day\' d \'of\' MM (\'\'DD\'\'), yy');
+	gmtDate = new Date(2001, 2 - 1, 3);
+	gmtDate.setMinutes(gmtDate.getMinutes() - gmtDate.getTimezoneOffset());
+	equal($.datepicker.formatDate('@', gmtDate), '981158400000', 'Format date @');
+	equal($.datepicker.formatDate('!', gmtDate), '631167552000000000', 'Format date !');
+	fr = $.datepicker.regional.fr;
+	settings = {dayNamesShort: fr.dayNamesShort, dayNames: fr.dayNames,
+		monthNamesShort: fr.monthNamesShort, monthNames: fr.monthNames};
+	equal($.datepicker.formatDate('D M y', new Date(2001, 4 - 1, 9), settings),
+		'Lun. Avril 01', 'Format date D M y with settings');
+	equal($.datepicker.formatDate('DD MM yy', new Date(2001, 4 - 1, 9), settings),
+		'Lundi Avril 2001', 'Format date DD MM yy with settings');
+	equal($.datepicker.formatDate('DD, MM d, yy', new Date(2001, 4 - 1, 9), settings),
+		'Lundi, Avril 9, 2001', 'Format date DD, MM d, yy with settings');
+	equal($.datepicker.formatDate('\'jour\' d \'de\' MM (\'\'DD\'\'), yy',
+		new Date(2001, 4 - 1, 9), settings), 'jour 9 de Avril (\'Lundi\'), 2001',
+		'Format date \'jour\' d \'de\' MM (\'\'DD\'\'), yy with settings');
+});
+
+})(jQuery);
