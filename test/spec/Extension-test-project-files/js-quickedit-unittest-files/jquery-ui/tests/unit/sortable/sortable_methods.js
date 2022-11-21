@@ -98,3 +98,11 @@ test("disable", function() {
 	el.sortable("option", "disabled", true);
 	equal(el.sortable("option", "disabled"), true, "disabled option setter");
 	ok(el.sortable("widget").is(":not(.ui-state-disabled)"), "sortable element does not get ui-state-disabled since it's an interaction");
+	sort($("li", el)[0], 0, 40, 0, '.sortable("option", "disabled", true)');
+
+	var expected = $('<div></div>').sortable(),
+		actual = expected.sortable('disable');
+	equal(actual, expected, 'disable is chainable');
+});
+
+})(jQuery);
