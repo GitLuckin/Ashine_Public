@@ -14,4 +14,10 @@ jQuery(function($){
 		dayNamesShort: ['អា', 'ច', 'អ', 'ពុ', 'ព្រហ', 'សុ', 'សៅ'],
 		dayNamesMin: ['អា', 'ច', 'អ', 'ពុ', 'ព្រហ', 'សុ', 'សៅ'],
 		weekHeader: 'សប្ដាហ៍',
-		dateFormat: 
+		dateFormat: 'dd-mm-yy',
+		firstDay: 1,
+		isRTL: false,
+		showMonthAfterYear: false,
+		yearSuffix: ''};
+	$.datepicker.setDefaults($.datepicker.regional['km']);
+});
