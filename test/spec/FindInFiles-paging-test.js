@@ -354,4 +354,109 @@ define(function (require, exports, module) {
                     firstPageEnabled: true,
                     lastPageEnabled: false,
                     prevPageEnabled: true,
-                    nextPageEnab
+                    nextPageEnabled: false
+                }
+            ];
+
+            function expectPageDisplay(options) {
+                // Check the title
+                let match = $("#find-in-files-results .title").text().match("\\b" + options.totalResults + "\\b");
+                expect(match).toBeTruthy();
+                match = $("#find-in-files-results .title").text().match("\\b" + options.totalFiles + "\\b");
+                expect(match).toBeTruthy();
+                var paginationInfo = $("#find-in-files-results .pagination-col").text();
+                match = paginationInfo.match("\\b" + options.overallFirstIndex + "\\b");
+                expect(match).toBeTruthy();
+                match = paginationInfo.match("\\b" + options.overallLastIndex + "\\b");
+                expect(match).toBeTruthy();
+
+                // Check for presence of file and first/last item rows within each file
+                options.matchRanges.forEach(function (range) {
+                    let $fileRow = $("#find-in-files-results tr.file-section[data-file-index='" + range.file + "']");
+                    expect($fileRow.length).toBe(1);
+                    let fileName = $fileRow.find(".dialog-filename").text();
+                    expect(fileName).toEqual(range.filename);
+
+                    let $firstMatchRow = $("#find-in-files-results tr[data-file-index='" + range.file + "'][data-item-index='" + range.first + "']");
+                    expect($firstMatchRow.length).toBe(1);
+                    match = $firstMatchRow.find(".line-number").text().match("\\b" + range.firstLine + "\\b");
+                    expect(match).toBeTruthy();
+                    match = $firstMatchRow.find(".line-text").text().match(range.pattern);
+                    expect(match).toBeTruthy();
+
+                    let $lastMatchRow = $("#find-in-files-results tr[data-file-index='" + range.file + "'][data-item-index='" + range.last + "']");
+                    expect($lastMatchRow.length).toBe(1);
+                    match = $lastMatchRow.find(".line-number").text().match("\\b" + range.lastLine + "\\b");
+                    expect(match).toBeTruthy();
+                    match = $lastMatchRow.find(".line-text").text().match(range.pattern);
+                    expect(match).toBeTruthy();
+                });
+
+                // Check enablement of buttons
+                let disabled = $("#find-in-files-results .first-page").hasClass("disabled");
+                expect(disabled).toBe(!options.firstPageEnabled);
+                disabled = $("#find-in-files-results .last-page").hasClass("disabled");
+                expect(disabled).toBe(!options.lastPageEnabled);
+                disabled = $("#find-in-files-results .prev-page").hasClass("disabled");
+                expect(disabled).toBe(!options.prevPageEnabled);
+                disabled = $("#find-in-files-results .next-page").hasClass("disabled");
+                expect(disabled).toBe(!options.nextPageEnabled);
+            }
+
+            it("should page forward, then jump back to first page, displaying correct contents at each step", function () {
+                openProject(SpecRunnerUtils.getTestPath("/spec/FindReplace-test-files-manyhits"));
+                openSearchBar();
+
+                // This search will find 500 hits in 2 files. Since there are 100 hits per page, there should
+                // be five pages, and the third page should have 50 results from the first file and 50 results
+                // from the second file.
+                executeSearch("find this");
+
+                runs(function () {
+                    $("#find-in-files-results .next-page").click();
+                    waitms(2000);
+                });
+                runs(function () {
+                    expectPageDisplay(expectedPages[1]);
+                });
+                runs(function () {
+                    $("#find-in-files-results .next-page").click();
+                    waitms(2000);
+                });
+                runs(function () {
+                    expectPageDisplay(expectedPages[2]);
+                });
+                runs(function () {
+                    $("#find-in-files-results .first-page").click();
+                    waitms(2000);
+                });
+                runs(function () {
+                    expectPageDisplay(expectedPages[0]);
+                });
+            });
+
+            it("should jump to last page, then page backward, displaying correct contents at each step", function () {
+                openProject(SpecRunnerUtils.getTestPath("/spec/FindReplace-test-files-manyhits"));
+
+                executeSearch("find this");
+
+                runs(function () {
+                    $("#find-in-files-results .last-page").click();
+                    waitms(2000);
+                });
+                runs(function () {
+                    expectPageDisplay(expectedPages[4]);
+                });
+                runs(function () {
+                    $("#find-in-files-results .prev-page").click();
+                    waitms(2000);
+                });
+                runs(function () {
+                    expectPageDisplay(expectedPages[3]);
+                });
+                openProject(defaultSourcePath);
+                waitms(2000);
+            });
+        });
+    });
+});
