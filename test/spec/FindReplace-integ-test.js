@@ -301,4 +301,432 @@ define(function (require, exports, module) {
 
                 // wraparound
                 twCommandManager.execute(Commands.CMD_FIND_NEXT);
-          
+                expectSelection(fooExpectedMatches[0]);
+                expectMatchIndex(0, 4);
+                expect(myEditor.centerOnCursor.calls.count()).toEql(6);
+            });
+
+            it("should find all case-insensitive matches with mixed-case text", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+                // The previous search term "foo" was pre-filled, so the editor was centered there already
+                expect(myEditor.centerOnCursor.calls.count()).toEql(1);
+
+                enterSearchText("Foo");
+                expectHighlightedMatches(fooExpectedMatches);
+                expectSelection(fooExpectedMatches[0]);
+                expectMatchIndex(0, 4);
+                expect(myEditor.centerOnCursor.calls.count()).toEql(2);
+
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(fooExpectedMatches[1]);
+                expectMatchIndex(1, 4);
+                expect(myEditor.centerOnCursor.calls.count()).toEql(3);
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(fooExpectedMatches[2]);
+                expectMatchIndex(2, 4);
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(fooExpectedMatches[3]);
+                expectMatchIndex(3, 4);
+                expectHighlightedMatches(fooExpectedMatches);  // no change in highlights
+
+                // wraparound
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(fooExpectedMatches[0]);
+                expectMatchIndex(0, 4);
+                expect(myEditor.centerOnCursor.calls.count()).toEql(6);
+            });
+
+            it("should find all case-sensitive matches with mixed-case text", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                toggleCaseSensitive(true);
+                enterSearchText("Foo");
+                expectHighlightedMatches(capitalFooSelections);
+                expectSelection(capitalFooSelections[0]);
+                expectMatchIndex(0, 3);
+
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(capitalFooSelections[1]);
+                expectMatchIndex(1, 3);
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(capitalFooSelections[2]);
+                expectMatchIndex(2, 3);
+                // note the lowercase "foo()" is NOT matched
+
+                // wraparound
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(capitalFooSelections[0]);
+                expectMatchIndex(0, 3);
+            });
+
+            it("should have a scroll track marker for every match", function () {
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                enterSearchText("foo");
+                expectHighlightedMatches(fooExpectedMatches);
+
+                var marks = testWindow.brackets.test.ScrollTrackMarkers._getTickmarks();
+                expect(marks.length).toEql(fooExpectedMatches.length);
+
+                marks.forEach(function (mark, index) {
+                    expect(mark.line).toEql(fooExpectedMatches[index].start.line);
+                });
+            });
+
+            it("toggling case-sensitive option should update results immediately", function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                enterSearchText("Foo");
+                expectHighlightedMatches(fooExpectedMatches);
+                expectSelection(fooExpectedMatches[0]);
+                expectMatchIndex(0, 4);
+
+                toggleCaseSensitive(true);
+                expectHighlightedMatches(capitalFooSelections);
+                expectSelection(capitalFooSelections[0]);
+                expectMatchIndex(0, 3);
+
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(capitalFooSelections[1]);
+                expectMatchIndex(1, 3);
+            });
+
+
+            it("should Find Next after search bar closed, including wraparound", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+                // The previous search term "Foo" was pre-filled, so the editor was centered there already
+                expect(myEditor.centerOnCursor.calls.count()).toEql(1);
+
+                enterSearchText("foo");
+                pressEscape();
+                expectHighlightedMatches([]);
+
+                await waitsForSearchBarClose();
+
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: 8}, end: {line: LINE_FIRST_REQUIRE, ch: 11}});
+                expect(myEditor.centerOnCursor.calls.count()).toEql(2);
+
+                // Simple linear Find Next
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: 31}, end: {line: LINE_FIRST_REQUIRE, ch: 34}});
+                expect(myEditor.centerOnCursor.calls.count()).toEql(3);
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection({start: {line: 6, ch: 17}, end: {line: 6, ch: 20}});
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection({start: {line: 8, ch: 8}, end: {line: 8, ch: 11}});
+
+                // Wrap around to first result
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: 8}, end: {line: LINE_FIRST_REQUIRE, ch: 11}});
+            });
+
+            it("should Find Previous after search bar closed, including wraparound", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                enterSearchText("foo");
+                pressEscape();
+
+                await waitsForSearchBarClose();
+
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: 8}, end: {line: LINE_FIRST_REQUIRE, ch: 11}});
+
+                // Wrap around to last result
+                twCommandManager.execute(Commands.CMD_FIND_PREVIOUS);
+                expectSelection({start: {line: 8, ch: 8}, end: {line: 8, ch: 11}});
+
+                // Simple linear Find Previous
+                twCommandManager.execute(Commands.CMD_FIND_PREVIOUS);
+                expectSelection({start: {line: 6, ch: 17}, end: {line: 6, ch: 20}});
+                twCommandManager.execute(Commands.CMD_FIND_PREVIOUS);
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: 31}, end: {line: LINE_FIRST_REQUIRE, ch: 34}});
+                twCommandManager.execute(Commands.CMD_FIND_PREVIOUS);
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: 8}, end: {line: LINE_FIRST_REQUIRE, ch: 11}});
+            });
+
+            it("should Find Next after search bar closed, relative to cursor position", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                enterSearchText("foo");
+                pressEscape();
+                expectHighlightedMatches([]);
+
+                await waitsForSearchBarClose();
+
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: 8}, end: {line: LINE_FIRST_REQUIRE, ch: 11}});
+
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: 31}, end: {line: LINE_FIRST_REQUIRE, ch: 34}});
+
+                // skip forward
+                myEditor.setCursorPos(7, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection({start: {line: 8, ch: 8}, end: {line: 8, ch: 11}});
+
+                // skip backward
+                myEditor.setCursorPos(LINE_FIRST_REQUIRE, 14);
+
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: 31}, end: {line: LINE_FIRST_REQUIRE, ch: 34}});
+            });
+
+            it("should Find Next after search bar closed, remembering case sensitivity state", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                toggleCaseSensitive(true);
+                enterSearchText("Foo");
+                pressEscape();
+                expectHighlightedMatches([]);
+
+                await waitsForSearchBarClose();
+
+                expectFindNextSelections(capitalFooSelections);
+            });
+
+            it("should remember the last search query", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                enterSearchText("Foo");
+                pressEscape();
+
+                await waitsForSearchBarClose();
+
+                // Open search bar a second time
+                myEditor.setCursorPos(0, 0);
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                expectSearchBarOpen();
+                expect(getSearchField().val()).toEql("Foo");
+                expectHighlightedMatches(capitalFooSelections);
+                expectSelection(capitalFooSelections[0]);
+                expectMatchIndex(0, 3);
+                expect(myEditor.centerOnCursor.calls.count()).toEql(3);
+
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(capitalFooSelections[1]);
+                expectMatchIndex(1, 3);
+            });
+
+            it("should open search bar on Find Next with no previous search", async function () {
+                // Make sure we have no previous query
+                twCommandManager.execute(Commands.CMD_FIND);
+                enterSearchText("");
+                pressEscape();
+
+                await waitsForSearchBarClose();
+
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+
+                expectSearchBarOpen();
+                expect(SpecRunnerUtils.editorHasCursorPosition(myEditor, 0, 0)).toBeTrue();
+            });
+
+            it("should select-all without affecting search state if Find invoked while search bar open", async function () {  // #2478
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                enterSearchText("foo");  // position cursor first
+
+                // Search for something that doesn't exist; otherwise we can't tell whether search state is cleared or bar is reopened,
+                // since reopening the bar will just prepopulate it with selected text from first search's result
+                enterSearchText("foobar");
+
+                expect(SpecRunnerUtils.editorHasCursorPosition(myEditor, LINE_FIRST_REQUIRE, 11)).toBeTrue();
+                // cursor left at end of last good match ("foo")
+
+                // Invoke Find a 2nd time - this time while search bar is open
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                await waitsForSearchBarReopen();
+
+                expectSearchBarOpen();
+                expect(getSearchField().val()).toEql("foobar");
+                expect(getSearchField()[0].selectionStart).toBe(0);
+                expect(getSearchField()[0].selectionEnd).toBe(6);
+                expect(SpecRunnerUtils.editorHasCursorPosition(myEditor, LINE_FIRST_REQUIRE, 11)).toBeTrue();
+            });
+
+        });
+
+
+        describe("Incremental search", function () {
+            it("should re-search from original position when text changes", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                enterSearchText("baz");
+
+                var expectedSelections = [
+                    {start: {line: LINE_FIRST_REQUIRE + 2, ch: 8}, end: {line: LINE_FIRST_REQUIRE + 2, ch: 11}},
+                    {start: {line: LINE_FIRST_REQUIRE + 2, ch: 31}, end: {line: LINE_FIRST_REQUIRE + 2, ch: 34}}
+                ];
+                expectSelection(expectedSelections[0]);
+                expectMatchIndex(0, 2);
+                expectHighlightedMatches(expectedSelections);
+
+                enterSearchText("bar");
+
+                expectSelection(barExpectedMatches[0]);  // selection one line earlier than previous selection
+                expectMatchIndex(0, 2);
+                expectHighlightedMatches(barExpectedMatches);
+            });
+
+            it("should re-search from original position when text changes, even after Find Next", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                enterSearchText("foo");
+                expectSelection(fooExpectedMatches[0]);
+                expectMatchIndex(0, 4);
+
+                // get search highlight down below where the "bar" match will be
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(fooExpectedMatches[2]);
+                expectMatchIndex(2, 4);
+
+                enterSearchText("bar");
+                expectSelection(barExpectedMatches[0]);
+                expectMatchIndex(0, 2);
+            });
+
+            it("should use empty initial query for single cursor selection", async function () {
+                // Make sure we have no previous query
+                twCommandManager.execute(Commands.CMD_FIND);
+                enterSearchText("");
+                pressEscape();
+
+                await waitsForSearchBarClose();
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START});
+                twCommandManager.execute(Commands.CMD_FIND);
+                expect(getSearchField().val()).toEql("");
+            });
+
+            it("should use empty initial query for multiple cursor selection", async function () {
+                // Make sure we have no previous query
+                twCommandManager.execute(Commands.CMD_FIND);
+                enterSearchText("");
+                pressEscape();
+
+                await waitsForSearchBarClose();
+
+                myEditor.setSelections([{start: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START}, primary: true},
+                    {start: {line: 1, ch: 0}, end: {line: 1, ch: 0}}]);
+                twCommandManager.execute(Commands.CMD_FIND);
+                expect(getSearchField().val()).toEql("");
+            });
+
+            it("should get single selection as initial query", function () {
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START},
+                                      {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_PAREN});
+                twCommandManager.execute(Commands.CMD_FIND);
+                expect(getSearchField().val()).toEql("require");
+            });
+
+            it("should get primary selection as initial query", function () {
+                myEditor.setSelections([{start: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_PAREN}, primary: true},
+                                        {start: {line: 1, ch: 0}, end: {line: 1, ch: 1}}]);
+                twCommandManager.execute(Commands.CMD_FIND);
+                expect(getSearchField().val()).toEql("require");
+            });
+
+            it("should extend original selection when appending to prepopulated text", async function () {
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START}, {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_PAREN});
+
+                twCommandManager.execute(Commands.CMD_FIND);
+                expect(getSearchField().val()).toEql("require");
+
+                var requireExpectedMatches = [
+                    {start: {line: 1, ch: 17}, end: {line: 1, ch: 24}},
+                    {start: {line: LINE_FIRST_REQUIRE,     ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE,     ch: CH_REQUIRE_PAREN}},
+                    {start: {line: LINE_FIRST_REQUIRE + 1, ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE + 1, ch: CH_REQUIRE_PAREN}},
+                    {start: {line: LINE_FIRST_REQUIRE + 2, ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE + 2, ch: CH_REQUIRE_PAREN}}
+                ];
+                expectHighlightedMatches(requireExpectedMatches);
+                expectSelection(requireExpectedMatches[1]);  // cursor was below 1st match, so 2nd match is selected
+                expectMatchIndex(1, 4);
+
+                enterSearchText("require(");
+                requireExpectedMatches.shift();  // first result no longer matches
+                requireExpectedMatches[0].end.ch++;  // other results now include one more char
+                requireExpectedMatches[1].end.ch++;
+                requireExpectedMatches[2].end.ch++;
+                // in a new file, JS isn't color coded, so there's only one span each + 1 additional for current selection probably from ode mirror update
+                expectHighlightedMatches(requireExpectedMatches, 4);
+                expectSelection(requireExpectedMatches[0]);
+                expectMatchIndex(0, 3);
+            });
+
+            it("should collapse selection when appending to prepopulated text causes no result", async function () {
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START}, {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_PAREN});
+
+                twCommandManager.execute(Commands.CMD_FIND);
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_PAREN}});
+
+                enterSearchText("requireX");
+                expectHighlightedMatches([]);
+                expect(SpecRunnerUtils.editorHasCursorPosition(myEditor, LINE_FIRST_REQUIRE, CH_REQUIRE_PAREN)).toBeTrue();
+            });
+
+            it("should clear selection, return cursor to start after backspacing to empty query", async function () {
+                myEditor.setCursorPos(2, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                enterSearchText("require");
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_PAREN}});
+
+                enterSearchText("");
+                expect(SpecRunnerUtils.editorHasCursorPosition(myEditor, 2, 0)).toBeTrue();
+            });
+
+            it("should incremental search & highlight from Replace mode too", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_REPLACE);
+
+                enterSearchText("baz");
+                var expectedSelections = [
+                    {start: {line: LINE_FIRST_REQUIRE + 2, ch: 8}, end: {line: LINE_FIRST_REQUIRE + 2, ch: 11}},
+                    {start: {line: LINE_FIRST_REQUIRE + 2, ch: 31}, end: {line: LINE_FIRST_REQUIRE + 2, ch: 34}}
+                ];
+                expectSelection(expectedSelections[0]);
+                expectMatchIndex(0, 2);
+                expectHighlightedMatches(expectedSelections);
+
+                enterSearchText("baz\"");
+                expectedSelections = [
+                    {start: {line: LINE_FIRST_REQUIRE + 2, ch: 31}, end: {line: LINE_FIRST_REQUIRE + 2, ch: 35}}
+                ];
+                expectSelection(expectedSelections[0]);
+                expectMatchIndex(0, 1);
+                expectHighlightedMatches(expectedSelections);
+            });
+        });
+
+
+        describe("Terminating search", function () {
+            it("shouldn't change selection on Escape after typing text, no Find Nexts", async function () {
+                // Make sure
