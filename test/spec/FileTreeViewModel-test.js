@@ -334,4 +334,503 @@ define(function (require, exports, module) {
                                 children: {
                                     "afile.js": {},
                                     subdir: {
-                                        childre
+                                        children: null
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                expect(vm._treeData.getIn(["foo", "children", "subdir"])).toBe(subdirObject);
+            });
+        });
+
+        describe("renameItem", function () {
+            var vm = new FileTreeViewModel.FileTreeViewModel(),
+                changeFired;
+            vm.on(FileTreeViewModel.EVENT_CHANGE, function () {
+                changeFired = true;
+            });
+
+            beforeEach(function () {
+                changeFired = false;
+                vm._treeData = Immutable.fromJS({
+                    "subdir": {
+                        open: true,
+                        children: {
+                            subsubdir: {
+                                children: null
+                            },
+                            "childfile.js": {}
+                        }
+                    },
+                    "topfile.js": {}
+                });
+            });
+
+            it("should be able to change the name of a top level file", function () {
+                vm.renameItem("topfile.js", "newname.js");
+                expect(vm._treeData.get("topfile.js")).toBeUndefined();
+                expect(vm._treeData.get("newname.js")).toBeDefined();
+                expect(changeFired).toBe(true);
+            });
+
+            it("should be able to change the name of a top level directory", function () {
+                var originalDirectory = vm._treeData.get("subdir");
+                vm.renameItem("subdir/", "myNewSubDir");
+                expect(vm._treeData.get("subdir")).toBeUndefined();
+                expect(vm._treeData.get("myNewSubDir")).toBe(originalDirectory);
+                expect(changeFired).toBe(true);
+            });
+
+            it("should be able to change the name of a file in a subdirectory", function () {
+                vm.renameItem("subdir/childfile.js", "subdir/newname.js");
+                expect(vm._treeData.getIn(["subdir", "children", "childfile.js"])).toBeUndefined();
+                expect(vm._treeData.getIn(["subdir", "children", "newname.js"])).toBeDefined();
+                expect(changeFired).toBe(true);
+            });
+
+            it("should be able to change the name of a directory in a subdirectory", function () {
+                vm.renameItem("subdir/subsubdir", "subdir/newsubdir");
+                expect(vm._treeData.getIn(["subdir", "children", "subsubdir"])).toBeUndefined();
+                expect(vm._treeData.getIn(["subdir", "children", "newsubdir"])).toBeDefined();
+                expect(changeFired).toBe(true);
+            });
+        });
+
+        describe("moveItem", function () {
+            var vm = new FileTreeViewModel.FileTreeViewModel(),
+                changeFired;
+            vm.on(FileTreeViewModel.EVENT_CHANGE, function () {
+                changeFired = true;
+            });
+
+            beforeEach(function () {
+                changeFired = false;
+                vm._treeData = Immutable.fromJS({
+                    "subdir1": {
+                        open: true,
+                        children: {
+                            subsubdir: {
+                                children: {
+                                    "subchildfile.js": {}
+                                }
+                            },
+                            "childfile.js": {}
+                        }
+                    },
+                    "subdir2": {
+                        children: {}
+                    },
+                    "topfile.js": {}
+                });
+            });
+
+            it("should be able to move a top level file to a top level directory", function () {
+                vm.renameItem("topfile.js", "subdir1/topfile.js");
+                expect(vm._treeData.get("topfile.js")).toBeUndefined();
+                expect(vm._treeData.getIn(["subdir1", "children", "topfile.js"])).toBeDefined();
+                expect(changeFired).toBe(true);
+            });
+
+            it("should be able to move a top level directory to another top level directory", function () {
+                vm.renameItem("subdir1/", "subdir2/subdir1/");
+                expect(vm._treeData.get("subdir1")).toBeUndefined();
+                expect(vm._treeData.getIn(["subdir2", "children", "subdir1"])).toBeDefined();
+                expect(changeFired).toBe(true);
+            });
+
+            it("should be able to move a file in a top level directory to root", function () {
+                vm.renameItem("subdir1/childfile.js", "childfile.js");
+                expect(vm._treeData.getIn(["subdir1", "children", "childfile.js"])).toBeUndefined();
+                expect(vm._treeData.get("childfile.js")).toBeDefined();
+                expect(changeFired).toBe(true);
+            });
+
+            it("should be able to move a subdirectory to root", function () {
+                vm.renameItem("subdir1/subsubdir/", "subsubdir");
+                expect(vm._treeData.getIn(["subdir1", "children", "subsubdir"])).toBeUndefined();
+                expect(vm._treeData.get("subsubdir")).toBeDefined();
+                expect(changeFired).toBe(true);
+            });
+
+            it("should be able to move a subdirectory to top level directory", function () {
+                vm.renameItem("subdir1/subsubdir/", "subdir2/subsubdir/");
+                expect(vm._treeData.getIn(["subdir1", "children", "subsubdir"])).toBeUndefined();
+                expect(vm._treeData.getIn(["subdir2", "children", "subsubdir"])).toBeDefined();
+                expect(changeFired).toBe(true);
+            });
+
+            it("should be able to move a file in a subdirectory to root", function () {
+                vm.renameItem("subdir1/subsubdir/subchildfile.js", "subchildfile.js");
+                expect(vm._treeData.getIn(["subdir1", "children", "subsubdir", "children", "subchildfile.js"])).toBeUndefined();
+                expect(vm._treeData.get("subchildfile.js")).toBeDefined();
+                expect(changeFired).toBe(true);
+            });
+        });
+        describe("openPath", function () {
+            var vm = new FileTreeViewModel.FileTreeViewModel(),
+                changesFired;
+
+            vm.on(FileTreeViewModel.EVENT_CHANGE, function () {
+                changesFired++;
+            });
+
+            beforeEach(function () {
+                changesFired = 0;
+                vm._treeData = Immutable.fromJS({
+                    "subdir": {
+                        children: {
+                            "subsubdir": {
+                                children: {
+                                    "afile.js": {}
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+            it("should open a top level directory", function () {
+                vm.openPath("subdir/");
+                expect(vm._treeData.getIn(["subdir", "open"])).toBe(true);
+                expect(changesFired).toBe(1);
+            });
+
+            it("should open all of the directories leading up to a file", function () {
+                vm.openPath("subdir/subsubdir/afile.js");
+                expect(vm._treeData.getIn(["subdir", "open"])).toBe(true);
+                expect(vm._treeData.getIn(["subdir", "children", "open"])).toBeUndefined();
+                expect(vm._treeData.getIn(["subdir", "children", "subsubdir", "open"])).toBe(true);
+                expect(vm._treeData.getIn(["subdir", "children", "subsubdir", "children", "open"])).toBeUndefined();
+                expect(vm._treeData.getIn(["subdir", "children", "subsubdir", "children", "afile.js", "open"])).toBeUndefined();
+                expect(changesFired).toBe(1);
+            });
+
+            it("should not make any change if the path is already open", function () {
+                vm.setDirectoryOpen("subdir/", true);
+                changesFired = 0;
+                var currentTreeData = vm._treeData;
+                vm.openPath("subdir/");
+                expect(changesFired).toBe(0);
+                expect(vm._treeData).toBe(currentTreeData);
+            });
+
+            it("should do nothing for a non-existent path", function () {
+                vm.openPath("nope/");
+                expect(changesFired).toBe(0);
+            });
+        });
+
+        describe("getOpenNodes", function () {
+            var vm;
+
+            beforeEach(function () {
+                vm = new FileTreeViewModel.FileTreeViewModel();
+            });
+
+            it("should return an empty list when there are no open nodes", function () {
+                vm._treeData = Immutable.fromJS({
+                    file: {},
+                    subdir: {
+                        children: null
+                    }
+                });
+                expect(vm.getOpenNodes("/foo/bar/")).toEqual([]);
+            });
+
+            it("should return open directories grouped by level", function () {
+                vm._treeData = Immutable.fromJS({
+                    subdir1: {
+                        open: true,
+                        children: {
+                            subsubdir: {
+                                children: {},
+                                open: true
+                            }
+                        }
+                    },
+                    subdir2: {
+                        children: null
+                    },
+                    subdir3: {
+                        open: true,
+                        children: {}
+                    }
+                });
+                expect(vm.getOpenNodes("/foo/bar/")).toEqual([
+                    [
+                        "/foo/bar/subdir1/",
+                        "/foo/bar/subdir3/"
+                    ],
+                    [
+                        "/foo/bar/subdir1/subsubdir/"
+                    ]
+                ]);
+            });
+
+            it("should not return an open child node of a closed parent", function () {
+                vm._treeData = Immutable.fromJS({
+                    subdir1: {
+                        children: {
+                            subsubdir: {
+                                children: {},
+                                open: true
+                            }
+                        }
+                    }
+                });
+                expect(vm.getOpenNodes("/foo/bar/")).toEqual([]);
+            });
+        });
+
+
+        describe("getChildNodes", function () {
+            var vm;
+
+            beforeEach(function () {
+                vm = new FileTreeViewModel.FileTreeViewModel();
+            });
+
+            it("should return an empty list when there are no child nodes", function () {
+                vm._treeData = Immutable.fromJS({
+                    file: {},
+                    subdir: {
+                    }
+                });
+                expect(vm.getChildDirectories("/foo/bar/")).toEqual([]);
+            });
+
+            it("should return all child directories", function () {
+                vm._treeData = Immutable.fromJS({
+                    subdir1: {
+                        open: true,
+                        children: {
+                            subsubdir: {
+                                children: {},
+                                open: true
+                            }
+                        }
+                    },
+                    subdir2: {
+                        children: {}
+                    },
+                    subdir3: {
+                        open: true,
+                        children: null
+                    },
+                    subdir4: {
+                        open: true,
+                        children: {}
+                    },
+                    filea: {},
+                    fileb: {}
+                });
+
+                expect(vm.getChildDirectories("")).toEqual([
+                    "subdir1/",
+                    "subdir2/",
+                    "subdir3/",
+                    "subdir4/"
+                ]);
+            });
+        });
+
+        describe("moveMarker", function () {
+            var vm = new FileTreeViewModel.FileTreeViewModel(),
+                changesFired;
+
+            vm.on(FileTreeViewModel.EVENT_CHANGE, function () {
+                changesFired++;
+            });
+
+            beforeEach(function () {
+                changesFired = 0;
+                vm._treeData = Immutable.fromJS({
+                    subdir1: {
+                        open: true,
+                        children: {
+                            "afile.js": {}
+                        }
+                    },
+                    "afile.js": {},
+                    subdir2: {
+                        children: null
+                    }
+                });
+            });
+
+            it("should add a marker", function () {
+                vm.moveMarker("selected", null, "subdir1");
+                expect(vm._treeData.getIn(["subdir1", "selected"])).toBe(true);
+                expect(changesFired).toBe(1);
+            });
+
+            it("should move a marker from one place to another", function () {
+                vm.moveMarker("context", null, "subdir1");
+                vm.moveMarker("context", "subdir1", "subdir1/afile.js");
+                expect(changesFired).toBe(2);
+                expect(vm._treeData.getIn(["subdir1", "context"])).toBeUndefined();
+                expect(vm._treeData.getIn(["subdir1", "children", "afile.js", "context"])).toBe(true);
+            });
+
+            it("should not have an error for an unknown location", function () {
+                vm.moveMarker("selected", null, "huh?");
+                expect(changesFired).toBe(0);
+            });
+
+            it("should not put a marker on the root", function () {
+                vm.moveMarker("selected", null, "");
+                expect(vm._treeData.get("selected")).toBeUndefined();
+            });
+
+            it("should do nothing if the marker is moving to the same location", function () {
+                vm.moveMarker("selected", null, "subdir1/afile.js");
+                changesFired = 0;
+                var originalTreeData = vm._treeData;
+                vm.moveMarker("selected", "subdir1/afile.js", "subdir1/afile.js");
+                expect(changesFired).toBe(0);
+                expect(vm._treeData).toBe(originalTreeData);
+            });
+
+            it("should make sure that the marker is actually present at the new location", function () {
+                vm.moveMarker("selected", "subdir1/afile.js", "subdir1/afile.js");
+                expect(changesFired).toBe(1);
+                expect(vm._treeData.getIn(["subdir1", "children", "afile.js", "selected"])).toBe(true);
+            });
+
+            it("should update selectionViewInfo for selections", function () {
+                vm.moveMarker("selected", null, "subdir1/afile.js");
+                expect(vm._selectionViewInfo.get("hasSelection")).toBe(true);
+                vm.moveMarker("selected", "subdir1/afile.js", null);
+                expect(vm._selectionViewInfo.get("hasSelection")).toBe(false);
+            });
+
+            it("should update selectionViewInfo for context", function () {
+                vm.moveMarker("context", null, "subdir1/afile.js");
+                expect(vm._selectionViewInfo.get("hasContext")).toBe(true);
+                vm.moveMarker("context", "subdir1/afile.js", null);
+                expect(vm._selectionViewInfo.get("hasContext")).toBe(false);
+            });
+
+            it("should signal a change when just selectionViewInfo changes", function () {
+                vm.moveMarker("context", null, "subdir1/afile.js");
+                vm.deleteAtPath("subdir1/afile.js");
+                changesFired = 0;
+                vm.moveMarker("context", "subdir1/afile.js", null);
+                expect(vm._selectionViewInfo.get("hasContext")).toBe(false);
+                expect(changesFired).toBe(1);
+            });
+        });
+
+        describe("createPlaceholder", function () {
+            var vm = new FileTreeViewModel.FileTreeViewModel(),
+                changesFired;
+
+            vm.on(FileTreeViewModel.EVENT_CHANGE, function () {
+                changesFired++;
+            });
+
+            beforeEach(function () {
+                changesFired = 0;
+                vm._treeData = Immutable.fromJS({
+                    subdir1: {
+                        children: {
+                        }
+                    }
+                });
+            });
+
+            it("can create a file placeholder", function () {
+                vm.createPlaceholder("", "afile.js");
+                expect(vm._treeData.get("afile.js").toJS()).toEqual({
+                    creating: true
+                });
+            });
+
+            it("can create a placeholder in a subdirectory", function () {
+                vm.createPlaceholder("subdir1", "Untitled");
+                expect(vm._treeData.getIn(["subdir1", "children", "Untitled"]).toJS()).toEqual({
+                    creating: true
+                });
+                expect(vm._treeData.getIn(["subdir1", "open"])).toBe(true);
+            });
+
+            it("can create a folder", function () {
+                vm.createPlaceholder("", "Untitled", true);
+                expect(vm._treeData.get("Untitled").toJS()).toEqual({
+                    creating: true,
+                    children: {}
+                });
+            });
+        });
+
+        describe("processChanges", function () {
+            var vm = new FileTreeViewModel.FileTreeViewModel(),
+                originalTreeData,
+                changesFired;
+
+            vm.on(FileTreeViewModel.EVENT_CHANGE, function () {
+                changesFired++;
+            });
+
+            beforeEach(function () {
+                changesFired = 0;
+                vm._treeData = Immutable.fromJS({
+                    "topfile.js": {},
+                    subdir: {
+                        open: true,
+                        children: {
+                            innerdir: {
+                                children: {
+                                    "deepfile.js": {}
+                                }
+                            },
+                            "subchild.js": {}
+                        }
+                    }
+                });
+                originalTreeData = vm._treeData;
+            });
+
+            it("should update an entry when a file changes", function () {
+                vm.processChanges({
+                    changed: [
+                        "topfile.js"
+                    ]
+                });
+                expect(changesFired).toBe(1);
+                expect(vm._treeData).not.toBe(originalTreeData);
+                expect(vm._treeData.getIn(["topfile.js", "_timestamp"])).toBeGreaterThan(0);
+            });
+
+            it("can update multiple file entries", function () {
+                vm.processChanges({
+                    changed: [
+                        "topfile.js",
+                        "subdir/subchild.js"
+                    ]
+                });
+                expect(changesFired).toBe(1);
+                expect(vm._treeData.getIn(["topfile.js", "_timestamp"])).toBeGreaterThan(0);
+                expect(vm._treeData.getIn(["subdir", "children", "subchild.js", "_timestamp"])).toBeGreaterThan(0);
+            });
+
+            it("should add an entry when there's a new entry", function () {
+                vm.processChanges({
+                    added: [
+                        "newfile.js",
+                        "subdir/innerdir/anotherdeepone.js"
+                    ]
+                });
+                expect(changesFired).toBe(1);
+                expect(vm._treeData).not.toBe(originalTreeData);
+                expect(vm._treeData.get("newfile.js").toJS()).toEqual({});
+                expect(vm._treeData.getIn(["subdir", "children", "innerdir", "children", "anotherdeepone.js"]).toJS()).toEqual({});
+            });
+
+            it("should add new directories as well", function () {
+                vm.processChanges({
+                    added: [
+                        "topdir/",
+        
