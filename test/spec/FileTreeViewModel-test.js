@@ -833,4 +833,99 @@ define(function (require, exports, module) {
                 vm.processChanges({
                     added: [
                         "topdir/",
-        
+                        "subdir/anotherdir/"
+                    ]
+                });
+
+                expect(changesFired).toBe(1);
+                expect(vm._treeData).not.toBe(originalTreeData);
+                expect(vm._treeData.getIn(["topdir", "children"])).toEqual(null);
+                expect(vm._treeData.getIn(["subdir", "children", "anotherdir", "children"])).toEqual(null);
+            });
+
+            it("should remove an entry that's been deleted", function () {
+                vm.processChanges({
+                    removed: [
+                        "subdir/subchild.js",
+                        "topfile.js"
+                    ]
+                });
+                expect(changesFired).toBe(1);
+                expect(vm._treeData).not.toBe(originalTreeData);
+                expect(vm._treeData.get("topfile.js")).toBeUndefined();
+            });
+
+            it("shouldn't make changes for a new file in a directory that hasn't been loaded", function () {
+                vm._treeData = vm._treeData.set("unloaded", Immutable.Map({
+                    children: null
+                }));
+                vm.processChanges({
+                    added: [
+                        "unloaded/file.txt"
+                    ]
+                });
+                expect(changesFired).toBe(0);
+                expect(vm._treeData.get("unloaded").toJS()).toEqual({
+                    children: null
+                });
+            });
+        });
+
+        describe("ensureDirectoryExists", function () {
+            var vm,
+                changesFired;
+
+            beforeEach(function () {
+                vm = new FileTreeViewModel.FileTreeViewModel();
+                vm._treeData = Immutable.fromJS({
+                    subdir: {
+                        children: null
+                    }
+                });
+                changesFired = 0;
+
+                vm.on(FileTreeViewModel.EVENT_CHANGE, function () {
+                    changesFired++;
+                });
+            });
+
+            it("should do nothing for a directory that already exists", function () {
+                vm.ensureDirectoryExists("subdir/");
+                expect(changesFired).toBe(0);
+            });
+
+            it("should create a top-level directory", function () {
+                vm.ensureDirectoryExists("newdir/");
+                expect(changesFired).toBe(1);
+                expect(vm._treeData.get("newdir").toJS()).toEqual({
+                    children: null
+                });
+            });
+
+            it("should do nothing within a subdirectory that doesn't exist", function () {
+                vm.ensureDirectoryExists("newdir/bar/");
+                expect(changesFired).toBe(0);
+                expect(vm._treeData.get("newdir")).toBeUndefined();
+            });
+
+            it("should create a directory within a directory", function () {
+                vm._treeData = Immutable.fromJS({
+                    subdir: {
+                        children: {}
+                    }
+                });
+                vm.ensureDirectoryExists("subdir/newdir/");
+                expect(changesFired).toBe(1);
+                expect(vm._getObject("subdir/newdir/").toJS()).toEqual({
+                    children: null
+                });
+            });
+
+            it("should do nothing in a directory that is not loaded", function () {
+                vm.ensureDirectoryExists("subdir/newdir/");
+                expect(changesFired).toBe(0);
+                expect(vm._getObject("subdir/newdir/")).toBeNull();
+            });
+        });
+    });
+});
