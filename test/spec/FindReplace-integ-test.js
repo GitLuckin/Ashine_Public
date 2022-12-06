@@ -729,4 +729,456 @@ define(function (require, exports, module) {
 
         describe("Terminating search", function () {
             it("shouldn't change selection on Escape after typing text, no Find Nexts", async function () {
-                // Make sure
+                // Make sure we have no previous query
+                twCommandManager.execute(Commands.CMD_FIND);
+                enterSearchText("");
+                pressEscape();
+
+                await waitsForSearchBarClose();
+
+                myEditor.setCursorPos(LINE_FIRST_REQUIRE, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+                expect(SpecRunnerUtils.editorHasCursorPosition(myEditor, LINE_FIRST_REQUIRE, 0)).toBeTrue();
+
+                enterSearchText("require");
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_PAREN}});
+
+                pressEscape();
+
+                await waitsForSearchBarClose();
+
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_PAREN}});
+            });
+
+            it("shouldn't change selection on Escape after typing text & Find Next", async function () {
+                myEditor.setCursorPos(LINE_FIRST_REQUIRE, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+                expectSelection({start: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_PAREN}});
+
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection({start: {line: LINE_FIRST_REQUIRE + 1, ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE + 1, ch: CH_REQUIRE_PAREN}});
+
+                pressEscape();
+
+                await waitsForSearchBarClose();
+
+                expectSelection({start: {line: LINE_FIRST_REQUIRE + 1, ch: CH_REQUIRE_START}, end: {line: LINE_FIRST_REQUIRE + 1, ch: CH_REQUIRE_PAREN}});
+            });
+
+            it("should no-op on Find Next with blank search", async function () {
+                // Make sure we have no previous query
+                twCommandManager.execute(Commands.CMD_FIND);
+                enterSearchText("");
+                pressEscape();
+
+                await waitsForSearchBarClose();
+
+                myEditor.setCursorPos(LINE_FIRST_REQUIRE, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+                expect(SpecRunnerUtils.editorHasCursorPosition(myEditor, LINE_FIRST_REQUIRE, 0)).toBeTrue();
+
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expect(SpecRunnerUtils.editorHasCursorPosition(myEditor, LINE_FIRST_REQUIRE, 0)).toBeTrue();
+
+            });
+        });
+
+
+        describe("RegExp Search", function () {
+            it("should find based on regexp", async function () {
+                var expectedSelections = [
+                    {start: {line: LINE_FIRST_REQUIRE + 1, ch: 8}, end: {line: LINE_FIRST_REQUIRE + 1, ch: 11}},
+                    {start: {line: LINE_FIRST_REQUIRE + 1, ch: 31}, end: {line: LINE_FIRST_REQUIRE + 1, ch: 34}},
+                    {start: {line: LINE_FIRST_REQUIRE + 2, ch: 8}, end: {line: LINE_FIRST_REQUIRE + 2, ch: 11}},
+                    {start: {line: LINE_FIRST_REQUIRE + 2, ch: 31}, end: {line: LINE_FIRST_REQUIRE + 2, ch: 34}}
+                ];
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                toggleRegexp(true);
+                toggleCaseSensitive(true);
+                enterSearchText("Ba.");
+                expectHighlightedMatches(expectedSelections);
+                expectSelection(expectedSelections[0]);
+                expectMatchIndex(0, 4);
+
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(expectedSelections[1]);
+                expectMatchIndex(1, 4);
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(expectedSelections[2]);
+                expectMatchIndex(2, 4);
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(expectedSelections[3]);
+                expectMatchIndex(3, 4);
+
+                // wraparound
+                twCommandManager.execute(Commands.CMD_FIND_NEXT);
+                expectSelection(expectedSelections[0]);
+                expectMatchIndex(0, 4);
+            });
+
+
+            it("should Find Next after search bar closed, remembering last used regexp", async function () {
+                var expectedSelections = [
+                    {start: {line: LINE_FIRST_REQUIRE + 1, ch: 8}, end: {line: LINE_FIRST_REQUIRE + 1, ch: 11}},
+                    {start: {line: LINE_FIRST_REQUIRE + 1, ch: 31}, end: {line: LINE_FIRST_REQUIRE + 1, ch: 34}},
+                    {start: {line: LINE_FIRST_REQUIRE + 2, ch: 8}, end: {line: LINE_FIRST_REQUIRE + 2, ch: 11}},
+                    {start: {line: LINE_FIRST_REQUIRE + 2, ch: 31}, end: {line: LINE_FIRST_REQUIRE + 2, ch: 34}}
+                ];
+
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                toggleRegexp(true);
+                enterSearchText("Ba.");
+                pressEscape();
+                expectHighlightedMatches([]);
+
+                await waitsForSearchBarClose();
+
+                expectFindNextSelections(expectedSelections);
+
+                // explicitly clean up since we closed the search bar
+                twCommandManager.execute(Commands.CMD_FIND);
+                toggleRegexp(false);
+            });
+
+            it("toggling regexp option should update results immediately", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                enterSearchText("t .");
+                expectHighlightedMatches([]);
+                expect(SpecRunnerUtils.editorHasCursorPosition(myEditor, 0, 0)).toBeTrue();
+
+                toggleRegexp(true);
+                var expectedSelections = [
+                    {start: {line: 0, ch: 6}, end: {line: 0, ch: 9}},
+                    {start: {line: 0, ch: 14}, end: {line: 0, ch: 17}}
+                ];
+                expectHighlightedMatches(expectedSelections);
+                expectSelection(expectedSelections[0]);
+                expectMatchIndex(0, 2);
+            });
+
+            it("should support case-sensitive regexp", async function () {
+                var expectedSelections = [
+                    {start: {line: 8, ch: 8}, end: {line: 8, ch: 11}}
+                ];
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                toggleRegexp(true);
+                toggleCaseSensitive(true);
+                enterSearchText("f.o");
+                expectHighlightedMatches(expectedSelections);
+                expectSelection(expectedSelections[0]);
+                expectMatchIndex(0, 1);
+            });
+
+            it("should support case-insensitive regexp", async function () {
+                var expectedSelections = [
+                    {start: {line: LINE_FIRST_REQUIRE, ch: 8}, end: {line: LINE_FIRST_REQUIRE, ch: 11}},
+                    {start: {line: LINE_FIRST_REQUIRE, ch: 31}, end: {line: LINE_FIRST_REQUIRE, ch: 34}},
+                    {start: {line: 6, ch: 17}, end: {line: 6, ch: 20}},
+                    {start: {line: 8, ch: 8}, end: {line: 8, ch: 11}}
+                ];
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                toggleRegexp(true);
+                toggleCaseSensitive(false);
+                enterSearchText("f.o");
+                expectHighlightedMatches(expectedSelections);
+                expectSelection(expectedSelections[0]);
+                expectMatchIndex(0, 4);
+            });
+
+            it("shouldn't choke on invalid regexp", async function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                toggleRegexp(true);
+                enterSearchText("+");
+                expect(tw$(".modal-bar .error").length).toBe(1);
+                expectHighlightedMatches([]);
+                expect(SpecRunnerUtils.editorHasCursorPosition(myEditor, 0, 0)).toBeTrue();// no change
+            });
+
+            it("shouldn't choke on empty regexp", function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                toggleRegexp(true);
+                enterSearchText("");
+                expectHighlightedMatches([]);
+                expect(SpecRunnerUtils.editorHasCursorPosition(myEditor, 0, 0)).toBeTrue();// no change
+            });
+
+            it("shouldn't freeze on /.*/ regexp", function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                toggleRegexp(true);
+                enterSearchText(".*");
+                expectSelection({start: {line: 0, ch: 0}, end: {line: 0, ch: 18}});
+            });
+
+            it("shouldn't freeze on /.*/ regexp", function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                toggleRegexp(true);
+                enterSearchText(".*");
+                expectSelection({start: {line: 0, ch: 0}, end: {line: 0, ch: 18}});
+            });
+
+            it("shouldn't freeze on regexp with 0-length matches", function () {
+                myEditor.setCursorPos(0, 0);
+
+                twCommandManager.execute(Commands.CMD_FIND);
+
+                // CodeMirror coerces all 0-length matches to 0 char now
+                toggleRegexp(true);
+                enterSearchText("^");  // matches pos before start of every line, but 0-length match text
+                expectSelection({start: {line: 0, ch: 0}, end: {line: 0, ch: 0}});
+
+                enterSearchText("()"); // matches pos before every char, but 0-length match text
+                expectSelection({start: {line: 0, ch: 0}, end: {line: 0, ch: 0}});
+            });
+        });
+
+
+        describe("Search -> Replace", function () {
+            it("should find and replace one string", async function () {
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                enterSearchText("foo");
+
+                expectSelection(fooExpectedMatches[0]);
+                expectMatchIndex(0, 4);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+                expect(tw$("#replace-yes").is(":enabled")).toBe(true);
+
+                enterReplaceText("bar");
+
+                tw$("#replace-yes").click();
+                expectSelection(fooExpectedMatches[1]);
+                expectMatchIndex(0, 3);
+
+                myEditor.setSelection(fooExpectedMatches[0].start, fooExpectedMatches[0].end);
+                expect(/bar/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find and skip then replace string", async function () {
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                enterSearchText("foo");
+                enterReplaceText("bar");
+
+                expectSelection(fooExpectedMatches[0]);
+                expectMatchIndex(0, 4);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                // Skip first
+                expect(tw$("#find-next").is(":enabled")).toBe(true);
+                tw$("#find-next").click();
+
+                expectSelection(fooExpectedMatches[1]);
+                expectMatchIndex(1, 4);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                // Replace second
+                expect(tw$("#replace-yes").is(":enabled")).toBe(true);
+                tw$("#replace-yes").click();
+
+                expectSelection(fooExpectedMatches[2]);
+                expectMatchIndex(1, 3);
+
+                myEditor.setSelection(fooExpectedMatches[0].start, fooExpectedMatches[0].end);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection(fooExpectedMatches[1].start, fooExpectedMatches[1].end);
+                expect(/bar/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should not replace string if document is read only", async function () {
+                myEditor._codeMirror.options.readOnly = true;
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                enterSearchText("foo");
+
+                expectSelection(fooExpectedMatches[0]);
+                expectMatchIndex(0, 4);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+                expect(tw$("#replace-yes").is(":enabled")).toBe(true);
+
+                enterReplaceText("bar");
+
+                tw$("#replace-yes").click();
+                expectSelection(fooExpectedMatches[0]);
+                expectMatchIndex(0, 4);
+
+                myEditor.setSelection(fooExpectedMatches[0].start, fooExpectedMatches[0].end);
+                expect(/bar/i.test(myEditor.getSelectedText())).toBe(false);
+            });
+
+            it("should use replace keyboard shortcut for single Replace while search bar open", async function () {
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                enterSearchText("foo");
+                expectSelection(fooExpectedMatches[0]);
+                expectMatchIndex(0, 4);
+
+                enterReplaceText("bar");
+
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                expectSelection(fooExpectedMatches[1]);
+                expectMatchIndex(0, 3);
+
+                myEditor.setSelection(fooExpectedMatches[0].start, fooExpectedMatches[0].end);
+                expect(/bar/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find and replace a regexp with $n substitutions", async function () {
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)\\/(\\w+)");
+                enterReplaceText("$2:$1");
+
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-yes").is(":enabled")).toBe(true);
+                tw$("#replace-yes").click();
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/Foo:modules/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find a regexp and replace it with $0n (leading zero)", async function () {
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)\\/(\\w+)");
+                enterReplaceText("$02:$01");
+
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-yes").is(":enabled")).toBe(true);
+                tw$("#replace-yes").click();
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/Foo:modules/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find a regexp and replace it with $0 (literal)", async function () {
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)\\/(\\w+)");
+                enterReplaceText("$0_:$01");
+
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-yes").is(":enabled")).toBe(true);
+                tw$("#replace-yes").click();
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/\$0_:modules/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find a regexp and replace it with $n (empty subexpression)", async function () {
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)(.*)\\/(\\w+)");
+                enterReplaceText("$3$2:$1");
+
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-yes").is(":enabled")).toBe(true);
+                tw$("#replace-yes").click();
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/Foo:modules/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find a regexp and replace it with $nn (n has two digits)", async function () {
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("()()()()()()()()()()(modules)\\/()()()(\\w+)");
+                enterReplaceText("$15:$11");
+
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-yes").is(":enabled")).toBe(true);
+                tw$("#replace-yes").click();
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/Foo:modules/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find a regexp and replace it with $$n (not a subexpression, escaped dollar)", async function () {
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)\\/(\\w+)");
+                enterReplaceText("$$2_$$10:$2");
+
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-yes").is(":enabled")).toBe(true);
+                tw$("#replace-yes").click();
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/\$2_\$10:Foo/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find a regexp and replace it with $$$n (correct subexpression)", async function () {
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)\\/(\\w+)");
+                enterReplaceText("$2$$$1");
+
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-yes").is(":enabled")).toBe(true);
+                tw$("#replace-yes").click();
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/Foo\$modules/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find a regexp and replace it with $& (whole match)", async function () {
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)\\/(\\w+)");
+                enterReplaceText("_$&-$2$$&");
+
+                var expectedMatch 
