@@ -1181,4 +1181,367 @@ define(function (require, exports, module) {
                 enterSearchText("(modules)\\/(\\w+)");
                 enterReplaceText("_$&-$2$$&");
 
-                var expectedMatch 
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-yes").is(":enabled")).toBe(true);
+                tw$("#replace-yes").click();
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE, ch: 23}, {line: LINE_FIRST_REQUIRE, ch: 41});
+                expect(/_modules\/Foo-Foo\$&/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+        });
+
+
+        describe("Search -> Replace All in untitled document", function () {
+            function expectTextAtPositions(text, posArray) {
+                posArray.forEach(function (pos) {
+                    expect(myEditor.document.getRange(pos, {line: pos.line, ch: pos.ch + text.length})).toEql(text);
+                });
+            }
+            function dontExpectTextAtPositions(text, posArray) {
+                posArray.forEach(function (pos) {
+                    expect(myEditor.document.getRange(pos, {line: pos.line, ch: pos.ch + text.length})).not.toEql(text);
+                });
+            }
+
+            beforeEach(function () {
+                twFindInFiles._searchDone = false;
+                twFindInFiles._replaceDone = false;
+            });
+
+            it("should find and replace all using replace all button", async function () {
+                var searchText  = "require",
+                    replaceText = "brackets.getModule";
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                enterSearchText(searchText);
+                enterReplaceText(replaceText);
+
+                expectSelection({start: {line: 1, ch: 17}, end: {line: 1, ch: 17 + searchText.length}});
+                expect(myEditor.getSelectedText()).toBe(searchText);
+
+                expect(tw$("#replace-all").is(":enabled")).toBe(true);
+                tw$("#replace-all").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._replaceDone;
+                }, "replace finished");
+
+                // Note: LINE_FIRST_REQUIRE and CH_REQUIRE_START refer to first call to "require",
+                //       but not first instance of "require" in text
+                expectTextAtPositions(replaceText, [
+                    {line: 1, ch: 17},
+                    {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START},
+                    {line: LINE_FIRST_REQUIRE + 1, ch: CH_REQUIRE_START},
+                    {line: LINE_FIRST_REQUIRE + 2, ch: CH_REQUIRE_START}
+                ]);
+            });
+
+            it("should find and replace all using batch replace button", async function () {
+                var searchText  = "require",
+                    replaceText = "brackets.getModule";
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                enterSearchText(searchText);
+                enterReplaceText(replaceText);
+
+                expectSelection({start: {line: 1, ch: 17}, end: {line: 1, ch: 17 + searchText.length}});
+                expect(myEditor.getSelectedText()).toBe(searchText);
+
+                expect(tw$("#replace-batch").is(":enabled")).toBe(true);
+                tw$("#replace-batch").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._searchDone;
+                }, "search finished");
+
+                tw$(".replace-checked").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._replaceDone;
+                }, "replace finished");
+
+                // Note: LINE_FIRST_REQUIRE and CH_REQUIRE_START refer to first call to "require",
+                //       but not first instance of "require" in text
+                expectTextAtPositions(replaceText, [
+                    {line: 1, ch: 17},
+                    {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START},
+                    {line: LINE_FIRST_REQUIRE + 1, ch: CH_REQUIRE_START},
+                    {line: LINE_FIRST_REQUIRE + 2, ch: CH_REQUIRE_START}
+                ]);
+            });
+
+            it("should close panel if document modified", async function () {
+                var searchText  = "require",
+                    replaceText = "brackets.getModule";
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                enterSearchText(searchText);
+                enterReplaceText(replaceText);
+
+                expectSelection({start: {line: 1, ch: 17}, end: {line: 1, ch: 17 + searchText.length}});
+                expect(myEditor.getSelectedText()).toBe(searchText);
+
+                expect(tw$("#replace-batch").is(":enabled")).toBe(true);
+                tw$("#replace-batch").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._searchDone;
+                }, "search finished");
+
+                expect(tw$("#find-in-files-results").is(":visible")).toBe(true);
+                myEditor.document.replaceRange("", {line: 0, ch: 0}, {line: 1, ch: 0});
+                expect(tw$("#find-in-files-results").is(":visible")).toBe(false);
+            });
+
+            it("should not replace unchecked items", async function () {
+                var searchText  = "require",
+                    replaceText = "brackets.getModule";
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                enterSearchText(searchText);
+                enterReplaceText(replaceText);
+
+                expectSelection({start: {line: 1, ch: 17}, end: {line: 1, ch: 17 + searchText.length}});
+                expect(myEditor.getSelectedText()).toBe(searchText);
+
+                expect(tw$("#replace-batch").is(":enabled")).toBe(true);
+                tw$("#replace-batch").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._searchDone;
+                }, "search finished");
+
+                // verify that all items are checked by default
+                var $checked = tw$(".check-one:checked");
+                expect($checked.length).toBe(4);
+
+                // uncheck second and fourth
+                $checked.eq(1).click();
+                $checked.eq(3).click();
+                expect(tw$(".check-one:checked").length).toBe(2);
+
+                tw$(".replace-checked").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._replaceDone;
+                }, "replace finished");
+
+                myEditor.setSelection({line: 1, ch: 17}, {line: 1, ch: 17 + replaceText.length});
+                expect(myEditor.getSelectedText()).toBe(replaceText);
+
+                expectTextAtPositions(replaceText, [
+                    {line: 1, ch: 17},
+                    {line: LINE_FIRST_REQUIRE + 1, ch: CH_REQUIRE_START}
+                ]);
+                dontExpectTextAtPositions(replaceText, [
+                    {line: LINE_FIRST_REQUIRE, ch: CH_REQUIRE_START},
+                    {line: LINE_FIRST_REQUIRE + 2, ch: CH_REQUIRE_START}
+                ]);
+            });
+
+            it("should find all regexps and replace them with $n", async function () {
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)\\/(\\w+)");
+                enterReplaceText("$2:$1");
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-batch").is(":enabled")).toBe(true);
+                tw$("#replace-batch").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._searchDone;
+                }, "search finished");
+
+                tw$(".replace-checked").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._replaceDone;
+                }, "replace finished");
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/Foo:modules/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 1, ch: 23}, {line: LINE_FIRST_REQUIRE + 1, ch: 34});
+                expect(/Bar:modules/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 2, ch: 23}, {line: LINE_FIRST_REQUIRE + 2, ch: 34});
+                expect(/Baz:modules/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find all regexps and replace them with $n (empty subexpression)", async function () {
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)(.*)\\/(\\w+)");
+                enterReplaceText("$3$2:$1");
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-batch").is(":enabled")).toBe(true);
+                tw$("#replace-batch").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._searchDone;
+                }, "search finished");
+
+                tw$(".replace-checked").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._replaceDone;
+                }, "replace finished");
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/Foo:modules/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 1, ch: 23}, {line: LINE_FIRST_REQUIRE + 1, ch: 34});
+                expect(/Bar:modules/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 2, ch: 23}, {line: LINE_FIRST_REQUIRE + 2, ch: 34});
+                expect(/Baz:modules/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find all regexps and replace them with $nn (n has two digits)", async function () {
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("()()()()()()()()()()(modules)\\/()()()(\\w+)");
+                enterReplaceText("$15:$11");
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-batch").is(":enabled")).toBe(true);
+                tw$("#replace-batch").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._searchDone;
+                }, "search finished");
+
+                tw$(".replace-checked").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._replaceDone;
+                }, "replace finished");
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/Foo:modules/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 1, ch: 23}, {line: LINE_FIRST_REQUIRE + 1, ch: 34});
+                expect(/Bar:modules/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 2, ch: 23}, {line: LINE_FIRST_REQUIRE + 2, ch: 34});
+                expect(/Baz:modules/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find all regexps and replace them with $$n (not a subexpression, escaped dollar)", async function () {
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)\\/(\\w+)");
+                enterReplaceText("$$2_$$10:$2");
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-batch").is(":enabled")).toBe(true);
+                tw$("#replace-batch").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._searchDone;
+                }, "search finished");
+
+                tw$(".replace-checked").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._replaceDone;
+                }, "replace finished");
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/\$2_\$10:Foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 1, ch: 23}, {line: LINE_FIRST_REQUIRE + 1, ch: 34});
+                expect(/\$2_\$10:Bar/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 2, ch: 23}, {line: LINE_FIRST_REQUIRE + 2, ch: 34});
+                expect(/\$2_\$10:Baz/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find all regexps and replace them with $$$n (correct subexpression)", async function () {
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)\\/(\\w+)");
+                enterReplaceText("$2$$$1");
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-batch").is(":enabled")).toBe(true);
+                tw$("#replace-batch").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._searchDone;
+                }, "search finished");
+
+                tw$(".replace-checked").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._replaceDone;
+                }, "replace finished");
+
+                myEditor.setSelection(expectedMatch.start, expectedMatch.end);
+                expect(/Foo\$modules/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 1, ch: 23}, {line: LINE_FIRST_REQUIRE + 1, ch: 34});
+                expect(/Bar\$modules/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 2, ch: 23}, {line: LINE_FIRST_REQUIRE + 2, ch: 34});
+                expect(/Baz\$modules/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+
+            it("should find all regexps and replace them with $& (whole match)", async function () {
+                var expectedMatch = {start: {line: LINE_FIRST_REQUIRE, ch: 23}, end: {line: LINE_FIRST_REQUIRE, ch: 34}};
+
+                twCommandManager.execute(Commands.CMD_REPLACE);
+                toggleRegexp(true);
+                enterSearchText("(modules)\\/(\\w+)");
+                enterReplaceText("_$&-$2$$&");
+
+                expectSelection(expectedMatch);
+                expect(/foo/i.test(myEditor.getSelectedText())).toBe(true);
+
+                expect(tw$("#replace-batch").is(":enabled")).toBe(true);
+                tw$("#replace-batch").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._searchDone;
+                }, "search finished");
+
+                tw$(".replace-checked").click();
+
+                await awaitsFor(function () {
+                    return twFindInFiles._replaceDone;
+                }, "replace finished");
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE, ch: 23}, {line: LINE_FIRST_REQUIRE, ch: 41});
+                expect(/_modules\/Foo-Foo\$&/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 1, ch: 23}, {line: LINE_FIRST_REQUIRE + 1, ch: 41});
+                expect(/_modules\/Bar-Bar\$&/i.test(myEditor.getSelectedText())).toBe(true);
+
+                myEditor.setSelection({line: LINE_FIRST_REQUIRE + 2, ch: 23}, {line: LINE_FIRST_REQUIRE + 2, ch: 41});
+                expect(/_modules\/Baz-Baz\$&/i.test(myEditor.getSelectedText())).toBe(true);
+            });
+        });
+    });
+});
