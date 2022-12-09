@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<!-- saved from url=(0047)http://www.w3.org/TR/2012/REC-widgets-20121127/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<title>Packaged Web Apps (Widgets) - Packaging and XML Configuration (Second Edition)</title>
+<style type="text/css">
+/*<![CDATA[*/
+
+  body {
+	font-size: 1em;
+	counter-reset: assertion;
+}
+span {
+	border: 1px dotted #C3C;
+}
+dfn.external {
+	font-weight: normal;
+	font-style: italic;
+}
+pre.idl {
+	border:solid thin;
+	background:#eee;
+	color:#000;
+	padding:0.5em
+}
+pre.idl :link, pre.idl :visited {
+	color:inherit;
+	background:transparent
+}
+dfn {
+	font-style:normal;
+	font-weight:bolder;
+}
+em.ct, em.ct-samp {
+	text-transform:uppercase;
+	font-style:normal;
+	font-weight:normal;
+}
+.issue {
+	padding:1em;
+	border: 1px solid red;
+	background:#FFC;
+}
+.example {
+	border-left: double;
+	background-color: #fafafa;
+}
+.note {
+	margin-left: 2em;
+	border: 2px solid #CFF6D9;
+	padding: .5em;
+	padding-top: 0px;
+	padding-bottom: 1em;
+	color: #444;
+	background-color: #E2FFF0;
+	font-size: 0.8em;
+}
+dd > dl {
+	margin:0px;
+	padding:0px
+}
+code {
+	font-size: 1.1em;
+	text-decoration: none;
+	color: #002108;
+}
+a:link code, a:visited code, a > code {
+	color:green;
+	text-decoration: none;
+	border-bottom: 0;
+}
+.dir_listing li {
+	list-style-type:none;
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+}
+span span {
+	background-color: yellow;
+}
+li.folder {
+	list-style-image:url(images/expanded_folder.png)
+}
+.authorguide {
+	border: 1px solid #67BBB5;
+	background:#E8EBFC;
+	padding: 1em;
+	font-size: .9em;
+	color: #003;
+}
+.authorguide strong {
+	padding: .2em;
+	color: #003;
+	border: none;
+	position:relative;
+	display: block;
+	width: 200px;
+	left: -1.5em;
+	top: -1.5em;
+	background: #C6D8E6;
+	text-align: center;
+}
+span.notetitle {
+	padding: .2em;
+	color:#066;
+	border: none;
+	position:relative;
+	display: block;
+	width: 40px;
+	left: -1.5em;
+	top: -.7em;
+	background: #F2FFF1;
+	padding-left: .2em;
+	text-align: center;
+}
+var {
+	font-family: "Lucida Console", Monaco, monospace;
+}
+li.folder li {
+	list-style-image: none;
+}
+.dir_listing .comment {
+	border: none;
+	font-family:"Courier New", Courier, monospace;
+	color: #669933;
+}
+.dir_listing img {
+	vertical-align: middle;
+}
+.redNote {
+	color: red;
+}
+dl.procedure dt {
+	font-weight: normal;
+}
+.editorialNote {
+	padding: 5px;
+	background-color: #F3B9B7;
+	border: 3px dashed #FFEEB8;
+	color: #444;
+	font-size:0.8em;
+}
+li>ol {
+	list-style-type:upper-alpha;
+}
+.toc li>ol {
+	list-style: none !important;
+}
+p[id]:after {
+	font-size: .8em;
+	content: " {" attr(id) "}";
+}
+.example p {
+	margin-top: 1em;
+}
+td, th {
+	border: 1px solid black;
+}
+
+/*
+ @media screen and (view-mode:minimized) {
+ body, .head {
+ margin: 0px !important;
+ padding: 10px !important;
+ background-position: 0px -20px !important;
+ text-shadow: #EEE 2px 2px 2px;
+}
+ .body, .copyright, .head dl, hr {
+ display: none;
+}
+ .head {
+ text-align: center;
+ padding-top: 10px;
+}
+ .head h1, .head p {
+ margin: 0px;
+ padding: 0px;
+ background-color: transparent;
+}
+ .head h2 {
+ text-align: center;
+ font-size: 1em;
+ background-color: transparent;
+ margin-left: 20px !important;
+}
+}
+*/
+
+/*]]>*/
+</style>
+<link href="./REC-widgets-20121127_files/W3C-REC" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div class="head">
+  <p><a href="http://www.w3.org/"><img alt="W3C" height="48" src="./REC-widgets-20121127_files/w3c_home" width="72"></a></p>
+  <!--end-logo-->
+  <h1 class="head">Packaged Web Apps (Widgets) -  Packaging and XML Configuration (Second Edition)</h1>
+  <h2 class="no-num no-toc" id="w3c-recommendation-15-november-2012">W3C Recommendation 27 November 2012</h2>
+  <dl>
+    <dt>This version:</dt>
+    <dd class="publish"><a href="./REC-widgets-20121127_files/REC-widgets-20121127.html">http://www.w3.org/TR/2012/REC-widgets-20121127/</a>
+    </dd><dt>Latest version:</dt>
+    <dd><a href="http://www.w3.org/TR/widgets/">http://www.w3.org/TR/widgets/</a></dd>
+    <dt>Previous versions:</dt>
+    <dd><a href="http://www.w3.org/TR/2012/PER-widgets-20120925/">http://www.w3.org/TR/2012/PER-widgets-20120925/</a></dd>
+    <dd><a href="http://www.w3.org/TR/2011/REC-widgets-20110927/">http://www.w3.org/TR/2011/REC-widgets-20110927/</a></dd>
+    <dt>Latest  editor's draft:</dt>
+    <dd><a href="http://w3c.github.com/packed-webapps/packaging/">http://w3c.github.com/packed-webapps/packaging/</a></dd>
+    <dt>Test suite:</dt>
+    <dd><a href="http://dev.w3.org/2006/waf/widgets/test-suite/">http://dev.w3.org/2006/waf/widgets/test-suite/</a></dd>
+    <dt>Implementation report:</dt>
+    <dd><a href="http://dev.w3.org/2006/waf/widgets/imp-report/">http://dev.w3.org/2006/waf/widgets/imp-report/</a></dd>
+    <dt>Editor:</dt>
+    <dd><a href="http://datadriven.com.au/">Marcos Cáceres</a>, W3C Invited Expert</dd>
+  </dl>
+  <p>Please refer to the <a href="http://dev.w3.org/2006/waf/widgets/errata.html"><strong>errata</strong></a> for this document, which  includes some normative corrections.</p>
+  <p>See also <a href="http://www.w3.org/2003/03/Translations/byTechnology?technology=widgets"> <strong>translations</strong></a>.</p>
+  <p>See also <a href="http://www.w3.org/2007/10/htmldiff?doc1=http%3A//www.w3.org/TR/widgets/&doc2=http%3A//www.w3.org/TR/2011/REC-widgets-20110927/">differences</a> between this and last published
+  draft and this document.</p>
+  <p class="copyright"><a href="http://www.w3.org/Consortium/Legal/ipr-notice#Copyright">Copyright</a> © 2012 <a href="http://www.w3.org/"><abbr title="World Wide Web Consortium">W3C</abbr></a><sup>®</sup> (<a href="http://www.csail.mit.edu/"><abbr title="Massachusetts Institute of Technology">MIT</abbr></a>, <a href="http://www.ercim.eu/"><abbr title="European Research Consortium for Informatics and Mathematics">ERCIM</abbr></a>, <a href="http://www.keio.ac.jp/">Keio</a>), All Rights Reserved. W3C <a href="http://www.w3.org/Consortium/Legal/ipr-notice#Legal_Disclaimer">liability</a>, <a href="http://www.w3.org/Consortium/Legal/ipr-notice#W3C_Trademarks">trademark</a> and <a href="http://www.w3.org/Consortium/Legal/copyright-documents">document use</a> rules apply.</p>
+</div>
+<hr>
+<div class="body">
+  <h2 class="no-num no-toc" id="abstract">Abstract</h2>
+  <p>This specification updates the <cite>Widget Packaging and XML Configuration</cite>, and addresses some <a href="http://dev.w3.org/2006/waf/widgets/errata.html">errata</a> found in the original recommendation. It also updates the name of the specification, to be more <em>in vogue</em> with industry trends towards the naming of this class of application.</p>
+  <p>This specification standardizes a packaging format and metadata for a  class of software
+    known commonly as <em>packaged apps</em> or <em>widgets</em>. Unlike traditional user interface widgets (e.g., buttons, input boxes, toolbars, etc.), widgets as specified in this document are full-fledged client-side applications that are authored
+    using technologies such as HTML and then packaged for distribution. Examples range from
+    simple clocks, stock tickers, news casters, games and weather forecasters, to complex
+    applications that pull data from multiple sources to be "mashed-up" and presented to a
+    user in some interesting and useful way.</p>
+  <p>The
+    specification relies on PKWare's Zip specification as the archive format, XML as a
+    configuration document format, and a series of steps that runtimes follow when
+    processing and verifying various aspects of a package. The packaging format acts as a
+    container for files used by a widget. The configuration document is an XML vocabulary
+    that declares metadata and configuration parameters for a widget. The steps for
+    processing a widget package describe the expected behavior and means of error handling
+    for runtimes while processing the packaging format, configuration document, and other
+    relevant files. </p>
+  <p>This specification is part of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widgets-family-of-specifications">Widgets family of specifications</a>,
+    which together standardize widgets as a whole.</p>
+  <h2 class="no-num no-toc" id="sotd">Status of this Document </h2>
+  <p><em>This section describes the status of this document at the time of its
+  publication. Other documents may supersede this document. A list of current W3C
+  publications and the latest revision of this technical report can be found in the
+  <a href="http://www.w3.org/TR/">W3C technical reports index</a> at
+  http://www.w3.org/TR/.</em>  </p>
+  <p>This is the 27 November 2012 Recommendation of the <cite>Widget Packaging and XML Configuration</cite> specification. This document is produced by the <a href="http://www.w3.org/2008/webapps/">Web
+    Applications WG</a>, part of the <a href="http://www.w3.org/2006/rwc/Activity">Rich Web
+      Client Activity</a> in the W3C <a href="http://www.w3.org/Interaction/">Interaction
+  Domain</a>.  </p>
+  <p>This document has been reviewed by W3C Members, by software developers, and by other W3C groups and interested parties, and is endorsed by the Director as a W3C Recommendation. It is a stable document and may be used as reference material or cited from another document. W3C's role in making the Recommendation is to draw attention to the specification and to promote its widespread deployment. This enhances the functionality and interoperability of the Web.</p>
+  <p>The public is encouraged to send comments to the WebApps Working Group's public mailing list <a href="mailto:public-webapps@w3.org">public-webapps@w3.org</a> (<a href="http://lists.w3.org/Archives/Public/public-webapps/">archive</a>).  </p>
+  <p>This document was produced by a group operating under the <a href="http://www.w3.org/Consortium/Patent-Policy-20040205/">5 February 2004 W3C Patent
+    Policy</a>. W3C maintains a <a href="http://www.w3.org/2004/01/pp-impl/42538/status" rel="disclosure">public list of any patent disclosures</a> made in connection with the
+    deliverables of the group; that page also includes instructions for disclosing a
+    patent. An individual who has actual knowledge of a patent which the individual
+    believes contains <a href="http://www.w3.org/Consortium/Patent-Policy-20040205/#def-essential">Essential
+      Claim(s)</a> must disclose the information in accordance with <a href="http://www.w3.org/Consortium/Patent-Policy-20040205/#sec-Disclosure">section 6 of the
+  W3C Patent Policy</a>.</p>
+  <h2 class="no-num no-toc" id="toc">Table of Contents</h2>
+  
+<!--begin-toc-->
+<ol class="toc">
+ <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#introduction"><span class="secno">1 </span>Introduction</a>
+  <ol class="toc">
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#design-goals-and-requirements"><span class="secno">1.1 </span>Design Goals and Requirements</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#how-this-document-is-organized"><span class="secno">1.2 </span>How This Document is Organized</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#typographic-conventions"><span class="secno">1.3 </span>Typographic Conventions</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-family-of-specifications"><span class="secno">1.4 </span>The Widget Family of Specifications</a></li></ol></li>
+ <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#conformance"><span class="secno">2 </span>Conformance</a></li>
+ <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#definitions"><span class="secno">3 </span>Definitions</a>
+  <ol class="toc">
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#character-definitions"><span class="secno">3.1 </span>Character Definitions</a></li></ol></li>
+ <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agents"><span class="secno">4 </span>User Agents</a>
+  <ol class="toc">
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#optional-aspects-of-the-zip-specification"><span class="secno">4.1 </span>Optional Aspects of the Zip Specification</a></li></ol></li>
+ <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive"><span class="secno">5 </span>Zip Archive</a>
+  <ol class="toc">
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#compression-methods"><span class="secno">5.1 </span>Compression Methods</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#version-of-zip-needed-to-extract-a-file-entry"><span class="secno">5.2 </span>Version of Zip Needed to Extract a File Entry</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-relative-paths"><span class="secno">5.3 </span>Zip Relative Paths</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#interoperability-considerations"><span class="secno">5.4 </span>Interoperability Considerations</a></li></ol></li>
+ <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-packages"><span class="secno">6 </span>Widget Packages</a>
+  <ol class="toc">
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package"><span class="secno">6.1 </span>Invalid Widget Package</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#files-and-folders"><span class="secno">6.2 </span>Files and Folders</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#reserved-file-and-folder-names"><span class="secno">6.3 </span>Reserved File and Folder Names</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#digital-signatures"><span class="secno">6.4 </span>Digital Signatures</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-files"><span class="secno">6.5 </span>Start Files</a>
+    <ol class="toc">
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#custom-start-file"><span class="secno">6.5.1 </span>Custom Start File</a></li>
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-start-files"><span class="secno">6.5.2 </span>Default Start Files</a></li></ol></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#icons"><span class="secno">6.6 </span>Icons</a>
+    <ol class="toc">
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#custom-icons"><span class="secno">6.6.1 </span>Custom Icons</a></li>
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-icons"><span class="secno">6.6.2 </span>Default Icons</a></li></ol></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type"><span class="secno">6.7 </span>Media Type</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-extension"><span class="secno">6.8 </span>File Extension</a></li></ol></li>
+ <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document"><span class="secno">7 </span>Configuration Document</a>
+  <ol class="toc">
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#example-configuration-document"><span class="secno">7.1 </span>Example Configuration Document</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#namespace"><span class="secno">7.2 </span>Namespace</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#proprietary-extensions"><span class="secno">7.3 </span>Proprietary Extensions</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#types-of-attributes"><span class="secno">7.4 </span>Types of Attributes</a></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#global-attributes"><span class="secno">7.5 </span>Global Attributes</a>
+    <ol class="toc">
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute"><span class="secno">7.5.1 </span>The <code>xml:lang</code> Attribute</a></li>
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute"><span class="secno">7.5.2 </span>The <code>dir</code> Attribute</a></li>
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#examples-of-usage"><span class="secno">7.5.3 </span>Examples of Usage</a></li></ol></li>
+   <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes"><span class="secno">7.6 </span>The <code>widget</code> Element and its Attributes</a>
+    <ol class="toc">
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-id-attribute"><span class="secno">7.6.1 </span>The <code>id</code> Attribute</a></li>
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-version-attribute"><span class="secno">7.6.2 </span>The <code>version</code> Attribute</a></li>
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-height-attribute"><span class="secno">7.6.3 </span>The <code>height</code> Attribute</a></li>
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-width-attribute"><span class="secno">7.6.4 </span>The <code>width</code> Attribute</a></li>
+     <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-viewmodes-attribute"><span class=

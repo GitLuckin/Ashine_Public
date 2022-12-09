@@ -309,4 +309,44 @@ define(function (require, exports, module) {
                                       {start: {line: 6, ch: 4}, end: {line: 6, ch: 6}}]);
                 FindReplace._findAllAndSelect(editor);
                 expect(editor.getSelections()).toEql(fixSels([
-       
+                    {start: {line: 1, ch: 17}, end: {line: 1, ch: 24}, primary: false, reversed: false},
+                    {start: {line: 2, ch: 14}, end: {line: 2, ch: 21}, primary: false, reversed: false},
+                    {start: {line: 3, ch: 14}, end: {line: 3, ch: 21}, primary: true, reversed: false},
+                    {start: {line: 4, ch: 14}, end: {line: 4, ch: 21}, primary: false, reversed: false}
+                ]));
+            });
+
+            it("should expand cursor to range, then find other instances", function () {
+                editor.setSelection({line: 3, ch: 18}, {line: 3, ch: 18});
+                FindReplace._findAllAndSelect(editor);
+                expect(editor.getSelections()).toEql(fixSels([
+                    {start: {line: 1, ch: 17}, end: {line: 1, ch: 24}, primary: false, reversed: false},
+                    {start: {line: 2, ch: 14}, end: {line: 2, ch: 21}, primary: false, reversed: false},
+                    {start: {line: 3, ch: 14}, end: {line: 3, ch: 21}, primary: true, reversed: false},
+                    {start: {line: 4, ch: 14}, end: {line: 4, ch: 21}, primary: false, reversed: false}
+                ]));
+            });
+
+            it("should find all case insensitively", function () {
+                editor.setSelection({line: 8, ch: 10}, {line: 8, ch: 10}); // inside "foo", should also find "Foo"s
+                FindReplace._findAllAndSelect(editor);
+                expect(editor.getSelections()).toEql(fixSels([
+                    {start: {line: 2, ch: 8}, end: {line: 2, ch: 11}, primary: false, reversed: false},
+                    {start: {line: 2, ch: 31}, end: {line: 2, ch: 34}, primary: false, reversed: false},
+                    {start: {line: 6, ch: 17}, end: {line: 6, ch: 20}, primary: false, reversed: false},
+                    {start: {line: 8, ch: 8}, end: {line: 8, ch: 11}, primary: true, reversed: false}
+                ]));
+            });
+
+            it("should not change the selection if the primary selection is a cursor inside a non-word", function () {
+                editor.setSelections([{start: {line: 1, ch: 4}, end: {line: 1, ch: 10}},
+                                      {start: {line: 8, ch: 0}, end: {line: 8, ch: 0}}]);
+                FindReplace._findAllAndSelect(editor);
+                expect(editor.getSelections()).toEql(fixSels([
+                    {start: {line: 1, ch: 4}, end: {line: 1, ch: 10}, primary: false, reversed: false},
+                    {start: {line: 8, ch: 0}, end: {line: 8, ch: 0}, primary: true, reversed: false}
+                ]));
+            });
+        });
+    });
+});
