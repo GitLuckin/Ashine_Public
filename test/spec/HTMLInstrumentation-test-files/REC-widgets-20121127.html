@@ -644,4 +644,168 @@ td, th {
     </li>
   </ul>
   <h2 id="zip-archive"><span class="secno">5 </span>Zip Archive</h2>
-  <p
+  <p> The <dfn id="zip-archive-0">Zip archive</dfn> file format,  defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification, is the <dfn id="packaging-format">packaging format</dfn> for <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package" title="widget package">widget packages</a>.</p>
+  <p>A <dfn id="file-entry">file entry</dfn> is the data held by a <dfn class="external" id="local-file-header">local file
+    header</dfn>, <dfn class="external" id="file-data">file data</dfn>, and (optional) <dfn class="external" id="data-descriptor">data descriptor</dfn>, as defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification,
+    for each physical file or folder contained in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip archive</a>.</p>
+  <p>A <dfn id="potential-zip-archive">potential Zip archive</dfn> is a data object claiming to be a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip archive</a>,
+    that has not been <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-verifying-a-zip-archive-0" title="rule for verifying a zip archive">verified</a> to be a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-zip-archive">valid Zip archive</a>.</p>
+  <p>A <dfn id="valid-zip-archive">valid Zip archive</dfn> is a  data object that the user agent has verified as conforming to the production of a <dfn class="external" id=".zip-file">.Zip file</dfn> as defined by
+    the <cite>Zip File Format Specification</cite> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> and <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-2-verify-the-zip-archive" title="step 2">meets the requirements of this specification</a> (See <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-2-verify-the-zip-archive">Step 2</a>).</p>
+  <p>The <dfn id="magic-numbers-for-a-zip-archive">magic numbers for a Zip
+    archive</dfn> is the byte sequence: <code>50 4B 03 04</code>.</p>
+  <h3 id="compression-methods"><span class="secno">5.1 </span>Compression Methods</h3>
+  <p>A <dfn id="compression-method">compression method</dfn> is the compression algorithm or storage method
+    that was used to encode the file data of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> when the zip archive was created by the author. The compression method
+    that  encoded the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-data">file data</a></var> of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> is
+    identified by the numeric value derived from the <dfn id="compression-method-field"><var>compression method
+    field</var></dfn> defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification.</p>
+  <p>The <dfn id="valid-compression-methods">valid compression methods</dfn>, as indicated by the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#compression-method-field">compression
+    method field</a></var>, for a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> are:</p>
+  <dl>
+    <dt><code>8</code></dt>
+    <dd>Data is compressed using <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#deflate">[Deflate]</a>.</dd>
+    <dt><code>0</code></dt>
+    <dd>Data is <dfn class="external" id="stored">Stored</dfn> (no compression), as defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification.</dd>
+  </dl>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> To ensure
+    interoperability, compress <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry" title="file entry">file entries</a> in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0" title="zip archive">Zip archives</a> with <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#deflate">[Deflate]</a> or <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#stored">Stored</a> (no compression); other compression methods can result in in the
+    Zip archive being treated as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>. Of the valid compression methods, <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#deflate">[Deflate]</a> is the preferred compression method.</p>
+  <h3 id="version-of-zip-needed-to-extract-a-file-entry"><span class="secno">5.2 </span>Version of Zip Needed to Extract a File Entry</h3>
+  <p>The <dfn class="external" id="version-needed-to-extract"><var>version needed to extract</var></dfn> is the 2-byte
+    sequence in the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#local-file-header">local file header</a></var> of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> that
+    indicates the minimum supported version of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification
+    needed to extract the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-data">file data</a>.</p>
+  <p>The <dfn id="valid-versions-needed-to-extract">valid versions needed to extract</dfn> values are as follows. Each value
+    is assigned one or more meanings by the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification:</p>
+  <dl>
+    <dt>1.0</dt>
+    <dd>
+      <p>Default value specified in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification.</p>
+    </dd>
+    <dt>2.0</dt>
+    <dd>
+      <p>The file data is compressed using <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#deflate">[Deflate]</a>, or the file data is a folder, or the file has been encrypted using traditional PKWARE encryption.</p>
+    </dd>
+  </dl>
+  <p class="note"><span class="notetitle">Note:</span> If the Zip archive has been
+    encrypted using traditional PKWARE encryption, then the user agent will treat the Zip
+    archive as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a> in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-2-verify-the-zip-archive">Step 2</a>.</p>
+  <h3 id="zip-relative-paths"><span class="secno">5.3 </span>Zip Relative Paths</h3>
+  <p>A <dfn id="zip-relative-path">Zip relative path</dfn> is the variable-length string derived from the <dfn class="external" id="file-name-field"><var>file name field</var></dfn> of the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#local-file-header">local file
+    header</a></var> of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a>.</p>
+  <p class="note"><span class="notetitle">Note:</span> A Zip relative path is said to
+    be relative as it stores the string that represents file and folder names relative to
+    where the Zip archive was created on a file system (e.g. <samp>images/bg.png</samp>),
+    as opposed to storing an absolute path (e.g. <samp>c:\images\bg.png</samp>). The
+    value of a Zip relative path will generally resemble the string value of a name of
+    the file or folder(s) on the device on which the Zip archive was created, but with
+    the exception of the path delimiter being a U+002F SOLIDUS "/" character. Note also
+    that a Zip relative path is not a URI reference; Zip relative paths need to be
+    converted to URI references before they can be used in context that make use of
+    URIs. </p>
+  <p>A <dfn id="valid-zip-relative-path">valid Zip relative path</dfn> is one that matches the production of <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-rel-path">Zip-rel-path</a></code> in the following <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#abnf">[ABNF]</a>:</p>
+  <pre><code><dfn id="zip-rel-path">Zip-rel-path</dfn>   = [locale-folder] *folder-name file-name /
+                 [locale-folder] 1*folder-name
+<dfn id="locale-folder">locale-folder</dfn>  = %x6C %x6F %x63 %x61 %x6C %x65 %x73
+                 "/" lang-tag "/"
+<dfn id="folder-name">folder-name</dfn>    = file-name "/"
+<dfn id="file-name">file-name</dfn>      = 1*allowed-char
+<dfn id="allowed-char">allowed-char</dfn>   = safe-char / zip-UTF8-char
+<dfn id="zip-utf8-char">zip-UTF8-char</dfn>  = UTF8-2 / UTF8-3 / UTF8-4
+<dfn id="safe-char">safe-char</dfn>      = ALPHA  / DIGIT / SP  / "$" / "%" / 
+                 "'"    / "-"   / "_" / "@" / "~" /
+                 "("    / ")"   / "&amp;" / "+" / "," /
+                 "="    / "["   / "]" / "."
+<dfn id="utf8-2">UTF8-2</dfn>         = %xC2-DF UTF8-tail
+<dfn id="utf8-3">UTF8-3</dfn>         = %xE0 %xA0-BF UTF8-tail / %xE1-EC 2( UTF8-tail ) /
+                 %xED %x80-9F UTF8-tail / %xEE-EF 2( UTF8-tail )
+<dfn id="utf8-4">UTF8-4</dfn>         = %xF0 %x90-BF 2( UTF8-tail ) / %xF1-F3 3( UTF8-tail ) /
+                 %xF4 %x80-8F 2( UTF8-tail )
+<dfn id="utf8-tail">UTF8-tail</dfn>      = %x80-BF
+<dfn id="lang-tag">lang-tag</dfn>       = primary-subtag *( "-" subtag )<br><dfn id="primary-subtag">primary-subtag</dfn> = 1*8low-alpha<br><dfn id="subtag">subtag </dfn>        = 1*8(alphanum)
+<dfn id="alphanum">alphanum</dfn>       = low-alpha  / DIGIT<br><dfn id="low-alpha">low-alpha </dfn>     = %x61-7a
+</code></pre>
+  <p><dfn class="external" id="alpha"><code>ALPHA</code></dfn>, <dfn class="external" id="digit"><code>DIGIT</code></dfn>, and <dfn class="external" id="sp"><code>SP</code></dfn> are defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#abnf">[ABNF]</a> specification (but essentially represent
+    alphanumerical characters and the U+0020 SPACE code point respectively).</p>
+  <h3 id="interoperability-considerations"><span class="secno">5.4 </span>Interoperability Considerations</h3>
+  <p><em>This section is non-normative.</em></p>
+  <p>Some issues can arise with regards to character encodings of file names, the length of zip relative paths, and the use of certain strings as file names. This sections is intended to help authors avoid potential interoperability issues. </p>
+  <div class="authorguide"><strong>Authoring Guideline</strong>
+    <h4 class="no-toc" id="paths-lengths"><span class="secno">5.4.1 </span>Paths Lengths</h4>
+    <p><em>This section is non-normative.</em></p>
+    <p>Authors need to be aware that having
+      excessively long path names (e.g. over 120 characters) can also result in
+      interoperability issues on some operating systems. This is because some operating systems have restrictions on how long a path length can be, so authors should try to keep the lengths of  paths at less than 250 bytes. In addition, Unicode code points may
+      require more than one byte to encode a character, which can result in a path whose
+      length is less than 250 characters but whose size is greater than 250 bytes! </p>
+    <h4 class="no-toc" id="character-sets"><span class="secno">5.4.2 </span>Character sets</h4>
+    <p><em>This section is non-normative.</em></p>
+    <p>Authors need to be aware that, at the time of publication, there are
+      interoperability issues with regards to using characters outside the <code>safe-chars</code> range for file or folder names in a Zip archive when using
+      Zipping tools bundled with operating systems. The interoperability issues have
+      arisen from non-conforming implementations of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification
+      across operating systems: very few, if any, correctly support encoding file names
+      in Unicode.</p>
+    <p>In the case where the Zip relative path is encoded using <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#utf-8">[UTF-8]</a>, the <a class="external" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-encoding-flag-(efs)">language encoding flag (EFS)</a> needs to be set.</p>
+    <p>If an author chooses to use the <code>utf8-chars</code>, they need to thoroughly
+      test their widgets on various platforms prior to distribution; otherwise it is
+      suggested that authors restrict file and folder names to the <code>safe-chars</code> (characters in the US-ASCII range).</p>
+    <h4 class="no-toc" id="file-names"><span class="secno">5.4.3 </span>File Names</h4>
+    <p><em>This section is non-normative.</em></p>
+    <p> Authors need to avoid using the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-forbidden-characters">Zip forbidden
+      characters</a> when naming the files used by a widget. These characters are reserved to
+      maintain interoperability across various file systems and with <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#uri">[URI]</a>s.</p>
+    <p>Authors need to avoid using the following words as either a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder"><code>folder</code></a> or
+      a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name"><code>file-name</code></a> in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-relative-path">Zip relative path</a> as they
+      are reserved by some operating systems (case-insensitive): CON, PRN, AUX, NUL,
+      COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4, LPT5,
+      LPT6, LPT7, LPT8, LPT9, CLOCKS$. For example, the following names are ok:
+      "CON-tact.txt", "printer.lpt1", "DCOM1.pdf". However, "com3.txt" "Lpt1", "CoM9.gif"
+      
+      would not be.</p>
+    <p>In addition,  authors need to avoid having a "." U+002E FULL STOP as the last character of a
+      file or folder name as some operating systems will remove the character when the
+      file is extracted from the Zip archive onto the device. Furthermore, avoid having
+      the space character (<a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#sp">SP</a>) at the start or end of a file name; and take
+      caution when using the "+" U+002B PLUS SIGN, as it might cause issues on some
+      operating systems.</p>
+  </div>
+  <h2 id="widget-packages"><span class="secno">6 </span>Widget Packages</h2>
+  <p>A <dfn id="widget-package">widget package</dfn> is  a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-zip-archive">valid Zip
+    archive</a> that contains the following:</p>
+  <ul>
+    <li>
+      <p>One or more <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file" title="start file">start files</a>,  located at  the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root of the widget package</a> and/or at the root of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0" title="locale folder">locale folders</a> or referenced by a <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element's <code title="content src"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-src-attribute-0">src</a></code> attribute.</p>
+    </li>
+    <li>
+      <p>One <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>,
+        located at the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root of the widget package</a>.</p>
+    </li>
+    <li>
+      <p>Zero or more <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-icon" title="default icon">icons</a>, either located at the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root of the widget package</a> and/or at the root of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0" title="locale folder">locale folders</a> or referenced by the <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code> element's <code title="icon src"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-src-attribute">src</a></code> attribute.</p>
+    </li>
+    <li>
+      <p>Zero or more <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#arbitrary">arbitrary</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file" title="file">files</a> located
+        either at the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root of the widget package</a> and/or in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#arbitrary">arbitrary</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder" title="folder">folders</a> or in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0" title="locale folder">locale folders</a>.</p>
+    </li>
+    <li>
+      <p>Zero or more <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#digital-signature" title="digital signature">digital signatures</a> located at
+        the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root of the widget package.</a></p>
+    </li>
+  </ul>
+  <p class="note"><span class="notetitle">Note:</span> See <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-1-acquire-a-potential-zip-archive">step 1</a> - Acquire
+    a Potential Zip Archive for instructions on how to process a widget package.</p>
+  <h3 id="invalid-widget-package"><span class="secno">6.1 </span>Invalid Widget Package</h3>
+  <p>During the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#steps-for-processing-a-widget-package-0">steps for
+    processing a widget package</a>, certain error conditions can result in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip archive</a> being treated as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>. An <dfn id="invalid-widget-package-0">invalid Widget package</dfn> is a condition whereby a Zip archive, or a file
+    within the Zip archive, is deemed to be corrupt beyond recovery or is non-conforming
+    to, or <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#unsupported">unsupported</a> by, this specification in such a way that it would
+    not be possible for the user agent to continue processing.</p>
+  <h3 id="files-and-folders"><span class="secno">6.2 </span>Files and Folders</h3>
+  <p>The <dfn id="root-of-the-widget-package">root of the widget package</dfn> is the top-most path level of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip archive</a>. The root of the widget package contains <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file" title="file">files</a> and <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder" title="folder">folders</a>, some of which are <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#reserved">reserved</a> (see <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#reserved-file-names-table">reserved file names table</a>).</p>
+  <p>A <dfn id="file">file</dfn> is the decompressed physical representation of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file
+    entry</a> (i.e., a file extracted into its physical form as it was prior to being
+    added to the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip archive</a>).</p>
+  <p>A <dfn id="folder">folder</dfn> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> whose <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name field</a></var> matches the production of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder-name"><code>folder-name</code></a> in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-zip-relative-path">valid Zip relative path</a> (the last character of the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name
+    field</a></var> is a U+002F SOLIDUS) and whose <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#version-needed-to-extract">version needed to extra
