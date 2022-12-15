@@ -1074,4 +1074,208 @@ td, th {
       type</a>.</p>
   </div>
   <h2 id="configuration-document"><span class="secno">7 </span>Configuration Document</h2>
-  <p>A <dfn id="configuration-document-0">configuration document</dfn> is an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> document that has a <code 
+  <p>A <dfn id="configuration-document-0">configuration document</dfn> is an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> document that has a <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element at its root that is in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-namespace">widget namespace</a>. A widget package has exactly
+    one configuration document located at the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root
+    of the widget package</a>.</p>
+  <p class="note"><span class="notetitle">Note:</span> Please see <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a> for
+    details of how the elements of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> are processed by
+    a user agent.</p>
+  <p>A <dfn id="valid-configuration-document-file-name">valid configuration document file name</dfn> is the string <code>config.xml</code>. </p>
+  <p id="ta-dxzVDWpaWg">A <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> treat any <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a> in an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#arbitrary">arbitrary</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder">folder</a> or <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0" title="locale folder">locale folders</a> that uses the
+    
+    file name <code>config.xml</code> as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#arbitrary">arbitrary</a> file.</p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> Be sure to always include
+    a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> at the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root of the widget package</a> and that the <code>config.xml</code> file name is in lowercase form. To ensure interoperability, encode the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> as <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#utf-8">[UTF-8]</a>.</p>
+  <h3 id="example-configuration-document"><span class="secno">7.1 </span>Example Configuration Document</h3>
+  <p>The following is an example of a typical <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>:</p>
+  <div class="example">
+    <pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;widget xmlns       = "http://www.w3.org/ns/widgets"
+        id          = "http://example.org/exampleWidget"
+        version     = "2.0 Beta"
+        height      = "200"
+        width       = "200"
+        viewmodes   = "fullscreen"&gt;
+ 
+  &lt;name short="Example 2.0"&gt;
+    The example Widget!
+  &lt;/name&gt;
+
+  &lt;feature name="http://example.com/camera"&gt;
+    &lt;param name="autofocus" value="true"/&gt;
+
+  &lt;/feature&gt;
+
+  &lt;preference name     = "apikey"
+              value    = "ea31ad3a23fd2f"
+              readonly = "true" /&gt;
+
+  &lt;description&gt;
+    A sample widget to demonstrate some of the possibilities.
+  &lt;/description&gt;
+
+  &lt;author href  = "http://foo-bar.example.org/"
+          email = "foo-bar@example.org"&gt;Foo Bar Corp&lt;/author&gt;
+
+  &lt;icon src="icons/example.png"/&gt;
+  &lt;icon src="icons/boo.png"/&gt;
+  &lt;content src="myWidget.html"/&gt;
+
+  &lt;license&gt;
+Example license (based on MIT License)
+Copyright (c) 2008 The Foo Bar Corp.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+INSULT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  &lt;/license&gt;
+&lt;/widget&gt;</code></pre>
+  </div>
+  <p class="note"><span class="notetitle">Note:</span> Implementers are encouraged to
+    expose relevant information provided by the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> to the
+    user. Having "visual metadata" encourages authors to make full use of the configuration
+    document format. See <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a> for instructions on how to process a
+    configuration document.</p>
+  <div class="authorguide">
+    <p><strong>Authoring Guidelines:</strong> The only mandatory element in a configuration document  is the <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element. All other elements and their respective attributes are optional. The following example shows the smallest possible configuration document that a  user agent will be able to process. The reason to include this sole element is to explicitly inform a user agent or conformance checker that this zip file  attempts to conform to this specification. </p>
+    <div class="example">
+      <pre><code>
+
+&lt;!-- example of the smallest possible conforming configuration document --&gt;
+&lt;widget xmlns="http://www.w3.org/ns/widgets"/&gt;</code></pre>
+    </div>
+  </div>
+  <h3 id="namespace"><span class="secno">7.2 </span>Namespace</h3>
+  <p>The <dfn id="widget-namespace">widget namespace</dfn> URI for a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> is <code>http://www.w3.org/ns/widgets</code> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xmlns">[XMLNS]</a>.</p>
+  <p>No provision is made for an explicit version number in this specification. If a future version of this specification requires explicit versioning of the document format, a different namespace will be used.</p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> Be sure to declare
+    the widget namespace as part of the <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element. If the namespace is absent, then the widget will be treated by the user agent as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>.</p>
+  <h3 id="proprietary-extensions"><span class="secno">7.3 </span>Proprietary Extensions</h3>
+  <p><em>This section is non-normative</em>.</p>
+  <p> Implementers or authors intending to extend the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> format with
+    their own <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> elements and attributes (or those defined in other
+    specifications) can do so by using a separate <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xmlns">[XMLNS]</a> namespace. This specification does not define a model for processing <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> elements outside the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-namespace">widget namespace</a> (they are simply <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore" title="ignore">ignored</a> during processing).</p>
+  <div class="example">
+    <p>Example of extending the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> format:</p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"
+   <strong>xmlns:ex="http://example.org/"</strong>&gt;
+       &lt;icon src="idle.png" <strong> ex:role="inactive"/&gt;
+
+       </strong>&lt;icon src="big.png" <strong>ex:role="big"</strong>/&gt;
+       <strong>&lt;ex:datasource&gt;{'a':'b','c':'d'}&lt;/ex:datasource&gt;</strong>
+
+       &lt;content src="widget.html"/&gt;
+&lt;/widget&gt;</code></pre>
+  </div>
+  <h3 id="types-of-attributes"><span class="secno">7.4 </span>Types of Attributes</h3>
+  <p>This section defines the different <dfn id="attribute-types">attribute types</dfn> used in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> and what constitutes valid values for those
+    attribute types. </p>
+  <p>An attribute is <dfn id="invalid">invalid</dfn> if its value does not conform to its said <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#attribute-types" title="attribute types">attribute type</a>; that is, if the value of the
+    attribute is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a> given the processing rules for that type of
+    attribute. </p>
+  <dl>
+    <dt><dfn id="boolean-attribute">Boolean attribute</dfn></dt>
+    <dd>
+      <p>A boolean attribute is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword-attribute">keyword attribute</a> that can only be used
+        with a valid boolean value. A <dfn id="valid-boolean-value">valid boolean value</dfn> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword">keyword</a> that
+        case-sensitively matches <code>true</code> or <code>false</code>. Unless specified
+        otherwise, the default behavior, which is used when the attribute is omitted or has
+        a value other than the two allowed values, is <code>false</code>. The way a user
+        agent interprets a boolean attribute is defined as part of an attribute's
+        definition (see, for example, the <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element's <code title="feature required"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-required-attribute">required</a></code> attribute). </p>
+    </dd>
+    <dt><dfn id="string-attribute">String attribute</dfn></dt>
+    <dd>
+      <p>The value of a string attribute is any string that conforms to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> as a valid string for an XML attribute. The purpose of this attribute type is to classify strings that are not affected by the <code title="dir"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute, such as the <code title="author email"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-email-attribute">email</a></code> attribute (i.e., these attributes will not treated as <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#displayable-string-attribute" title="Displayable-string attribute">displayable-strings</a> during <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a>). </p>
+    </dd>
+    <dt><dfn id="displayable-string-attribute">Displayable-string attribute</dfn></dt>
+    <dd>
+      <p>An attribute whose primary purpose is to convey human readable information, such as the <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element's <code title="name short"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-short-attribute">short</a></code> attribute and the widget element's <code title="widget version"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-version">version</a></code> attribute. </p>
+    </dd>
+    <dt><dfn id="keyword-attribute">Keyword attribute</dfn></dt>
+    <dd>
+      <p>A <dfn id="keyword">keyword</dfn> is a string that is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#reserved">reserved</a> for the purpose
+        of this specification. The value of a keyword attribute is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword">keyword</a> that is one of a finite set specified in the attribute's definition in the case
+        given in this specification. </p>
+    </dd>
+    <dt><dfn id="keyword-list-attribute">Keyword list attribute</dfn></dt>
+    <dd>
+      <p>An attribute defined as taking one or more <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword" title="keyword">keywords</a> as a value, which are separated by <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#space-characters">space characters</a>. </p>
+    </dd>
+    <dt><dfn id="media-type-attribute">Media type attribute</dfn></dt>
+    <dd>
+      <p>An attribute whose value is defined as containing a valid media type. A <dfn id="valid-media-type">valid media type</dfn> is string that matches the production for <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-mime-type">valid-MIME-type</a></code> in the following <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#abnf">[ABNF]</a>:</p>
+      <pre><code><dfn id="valid-mime-type">valid-MIME-type</dfn> = type "/" subtype *(";" parameter)</code></pre>
+      <p>The <dfn class="external" id="mime-type-part" title="mime type-part"><code>type</code></dfn>, <dfn class="external" id="mime-subtype-part" title="mime subtype-part"><code>subtype</code></dfn>, and <dfn class="external" id="mime-parameter" title="mime parameter"><code>parameter</code></dfn> tokens are defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#mime">[MIME]</a> specification.</p>
+    </dd>
+    <dt><dfn id="language-attribute">Language attribute</dfn></dt>
+    <dd>
+      <p>An attribute whose value is defined as containing a <dfn id="valid-language-tag">valid language tag</dfn> (see the <a href="http://www.iana.org/assignments/language-subtag-registry">IANA Language Subtag
+        Registry</a> for an authoritative list of possible values, see also the <a href="http://www.iso.org/iso/country_codes/iso_3166_code_lists/country_names_and_code_elements">Maintenance Agency for ISO 3166 country codes</a>). A valid language tag is a string that conforms to the production of a <code>Language-Tag</code>, as defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#bcp47">[BCP47]</a> specification.</p>
+    </dd>
+    <dt><dfn id="numeric-attribute">Numeric attribute</dfn></dt>
+    <dd>
+      <p>The value of a numeric attribute is a string containing a valid non-negative
+        integer. A <dfn id="valid-non-negative-integer">valid non-negative integer</dfn> is a string that consists of one
+        or more code points in the range U+0030 DIGIT ZERO (0) to U+0039 DIGIT NINE (9).
+        For example, the strings "002", "323", "23214", and so on. </p>
+    </dd>
+    <dt><dfn id="path-attribute">Path attribute</dfn></dt>
+    <dd>
+      <p>An attribute defined as containing a valid path. A <dfn id="valid-path">valid
+        path</dfn> is one that matches the production of a <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-rel-path">Zip-rel-path</a></code> or a <code>Zip-abs-path</code>. </p>
+    </dd>
+    <dd>
+      <p class="authorguide"><strong>Authoring Guidelines:</strong> A valid path is not a URI: a valid path represents a
+        hierarchical path to a file inside a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip archive</a>, which exactly matches the value of a <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name
+        field</a></var> of a <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#local-file-header">local file header</a></var> of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a>.      This means that valid paths need not be URL encoded.</p>
+    </dd>
+    <dt><dfn id="iri-attribute">IRI attribute</dfn></dt>
+    <dd>
+      <p>An attribute defined as containing a valid IRI. A <dfn id="valid-iri">valid IRI</dfn> is one
+        that matches the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iri">IRI</a></code> token of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iri">[IRI]</a> specification. </p>
+    </dd>
+    <dd>
+      <p class=" authorguide"><strong>Authoring Guidelines:</strong> Because of the risk of confusion between IRIs that would be equivalent if dereferenced, the use of %-escaped characters in feature names is strongly discouraged. </p>
+    </dd>
+    <dt><dfn id="version-attribute">Version attribute</dfn></dt>
+    <dd>
+      <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#displayable-string-attribute">displayable-string attribute</a> whose value is any arbitrary string value (possibly empty) within the constraints allowed for <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> attributes. This
+        specification does not mandate any specific format, semantics, or special
+        processing rule for the format of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#version-attribute">version attribute</a>. </p>
+    </dd>
+    <dd class="authorguide">
+      <p><strong>Authoring Guidelines:</strong> For the purpose of this specification, the
+        structure of version tags has no semantics; they are just treated as arbitrary
+        strings (e.g. '1.0' is not less than '2.0', but is simply different). However,
+        for the sake of consistency, one can choose to use the following <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#abnf">[ABNF]</a>:</p>
+      <pre><code><dfn id="rec-version-tag">rec-version-tag</dfn> = 1*DIGIT "."  1*DIGIT [ "." 1*DIGIT]<br>                  *[ 1*ALPHA / SP / 1*DIGIT ]</code></pre>
+      <dl class="example">
+        <dt>Example version tags:</dt>
+        <dd>
+          <ul>
+            <li><code>Version 1.0 Beta</code></li>
+            <li><code>1.0 RC1</code></li>
+            <li><code>1.0-Build/1580</code></li>
+            <li><code>Joey the dog [5.1.2100]</code></li>
+          </ul>
+        </dd>
+        <dt>Example of <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rec-version-tag">rec-version-tag:</a></code></dt>
+        <dd>
+          <ul>
+            <li><code>1.0</code></li>
+            <li><code>1.10.1</code> <code>beta1</code></li>
+            <li><code>1.02.12 RC1</code></li>
+          </ul>
+        </dd>
+      </dl>
+    </dd>
+  </dl>
+  <h3 id="global-attributes"><span class="secno">7.5 </span>Global Attributes</h3>
+  <p>This section describes the behavior and expected usage of other relevant attributes
+    that are part of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> specification and this specification. In this specification, these attributes are referred to as <dfn id="global-attributes-0">global attributes</dfn> because  they can be used on any element in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>. </p>
+  <p>Although <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#global-attributes-0">global attributes</a> can be used on any element in this specification, they sometimes have no effect on the element on which they are used. For example, applying <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute on an <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code> element will have no effect on the <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code> elements or any of its attributes. What effect specifying a global attribute has on an elements is determined by <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a> of this specification.</p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> Although it is optional for an author to use any global attributes, their usage is recommended when appropriate (e.g., when  declaring the language will help with legibility and when direction
