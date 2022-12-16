@@ -1278,4 +1278,121 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   <p>This section describes the behavior and expected usage of other relevant attributes
     that are part of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> specification and this specification. In this specification, these attributes are referred to as <dfn id="global-attributes-0">global attributes</dfn> because  they can be used on any element in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>. </p>
   <p>Although <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#global-attributes-0">global attributes</a> can be used on any element in this specification, they sometimes have no effect on the element on which they are used. For example, applying <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute on an <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code> element will have no effect on the <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code> elements or any of its attributes. What effect specifying a global attribute has on an elements is determined by <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a> of this specification.</p>
-  <p class="authorguide"><strong>Authoring Guidelines:</strong> Although it is optional for an author to use any global attributes, their usage is recommended when appropriate (e.g., when  declaring the language will help with legibility and when direction
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> Although it is optional for an author to use any global attributes, their usage is recommended when appropriate (e.g., when  declaring the language will help with legibility and when directional information will assist the user agent render text correctly). </p>
+  <h4 id="the-xml:lang-attribute"><span class="secno">7.5.1 </span>The <dfn><code>xml:lang</code></dfn> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-attribute">language  attribute</a> that specifies, through a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-tag">language
+    tag</a>, the language of the contents and attribute values of XML elements (see the <a href="http://www.iana.org/assignments/language-subtag-registry">IANA Language Subtag
+    Registry</a>). The <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> specification specifies the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute and its influence on  child nodes. </p>
+  <div class="authorguide">
+    <p><strong>Authoring Guidelines:</strong> Although <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#bcp47">[BCP47]</a> recommends that language tags be casefolded in a particular way for presentation, case has no meaning in a language tag. As a reminder to authors that   user-agents map all language tags to lowercase, all examples in this document use lowercase. See also <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder-based-localization-0">folder-based localization</a>, which also requires authors to use  language tags in lowercase form as the names of folders.</p>
+    <p>Avoid subtags from the <a href="http://www.iana.org/assignments/language-subtag-registry">IANA Language Subtag
+      Registry</a> marked as deprecated, grandfathered, or redundant. The intended
+      purpose of the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute is to declare the primary language
+      of an element, its attributes, and its descendant nodes; as such, it has no implication with regards to the directionality of the text in the user agent. To specify the directionality of text, see the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute. </p>
+  </div>
+  <h4 id="the-dir-attribute"><span class="secno">7.5.2 </span>The <dfn><code>dir</code></dfn> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword-attribute">keyword attribute</a> used  to specify   the directionality in which human-readable text is to be represented by a user agent (e.g., the text content of the <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element, the <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> element, and the <code title="license element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-license-element-and-its-attributes">license</a></code> element).   The directionality set by the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute applies to the text content and  any <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#displayable-string-attribute" title="displayable-string attribute">displayable string</a> attributes of  the element where it is used, and to  child elements in its content unless overridden with another instance of <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> (i.e., in this specification, the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute only affects the <code title="name short"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-short-attribute">short</a></code> attribute of the <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element and to the <code title="widget version"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-version">version</a></code> attribute of the <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element). </p>
+  <p>The possible value of a <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute is one of the <dfn id="valid-directional-indicators">valid directional  indicators</dfn>:</p>
+  <dl>
+    <dt><code><dfn id="ltr">ltr</dfn></code></dt>
+    <dd>
+      <p>Left-to-right text.  Request that the Unicode <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#bidi">[BIDI]</a> algorithm treat characters within an element  as embedded left-to-right.</p>
+    </dd>
+    <dt><code><dfn id="rtl">rtl</dfn></code></dt>
+    <dd>
+      <p>Right-to-left text.  Request that the Unicode <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#bidi">[BIDI]</a> algorithm treat characters within an element  as embedded right-to-left.</p>
+    </dd>
+    <dt><code><dfn id="lro">lro</dfn></code></dt>
+    <dd>
+      <p> Left-to-right override. Forces the Unicode <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#bidi">[BIDI]</a> algorithm to treat characters within an element as strong left-to-right characters.</p>
+    </dd>
+    <dt><code><dfn id="rlo">rlo</dfn></code></dt>
+    <dd>
+      <p>Right-to-left override. Forces the Unicode <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#bidi">[BIDI]</a> algorithm to treat characters within an element as strong right-to-left characters.</p>
+    </dd>
+  </dl>
+  <p class="note"><span class="notetitle">Note:</span>For security reasons, implementations intending to display <abbr title="Internationalized Resource Identifiers">IRIs</abbr> and <abbr title="Internationalized domain name">IDNA</abbr> addresses found in the configuration document are strongly encouraged to follow the security advice given in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#refsUTR">[UTR36]</a>. This could include, for example,  behaving as if the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute had no effect on any <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iri-attribute" title="IRI attribute">IRI attributes</a>, <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#path-attribute" title="path attribute">path attributes</a>, and the <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code> element's <code title="author email"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-email-attribute">email</a></code> attribute.</p>
+  <p>The base direction of a <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute is either set explicitly by the nearest parent element that uses the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute; or, in the absence of such an attribute, the base direction is inherited from the <dfn id="default-direction-of-the-document">default direction of the document</dfn>, which is left-to-right ("<code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ltr">ltr</a></code>"). </p>
+  <h4 id="examples-of-usage"><span class="secno">7.5.3 </span>Examples of Usage</h4>
+  <div class="example">
+    <p>The following  example demonstrates the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute being  applied globally to a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>. </p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets" dir="rtl" xml:lang="fa"&gt;
+&lt;name short="آب و هوا"&gt;‎
+آب و هوا برنامه&lt;/name&gt;
+   &lt;description&gt; 
+<span dir="rtl">این نرم افزار به شما اجازه می دهد تا برای دیدن آب و هوا در منطقه محلی تان.</span>
+   &lt;/description&gt;
+&lt;/widget&gt;</code></pre>
+    <p>The following example shows the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute applied to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localized-content">localized content</a>. </p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+
+   &lt;name short="Weather"&gt;
+    Weather Application
+   &lt;/name&gt;
+
+   &lt;name short="<span dir="rtl">آب و هوا</span>" xml:lang="fa" dir="rtl"&gt; 
+<span dir="rtl">    آب و هوا برنامه
+   </span>&lt;/name&gt;
+
+&lt;/widget&gt;</code></pre>
+    <p>The following example shows the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute used with mixed language content: </p>
+    <pre><code>
+&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+  &lt;name short="Weather"&gt;
+   Weather! a totally awesome application!
+  &lt;/name&gt;
+
+  &lt;name short="آب و هوا" xml:lang="fa" dir="rtl"&gt;
+  &lt;span dir="ltr" xml:lang="en"&gt;Weather!&lt;/span&gt; برنامه واقعا بزرگ
+  &lt;/name&gt;
+
+&lt;/widget&gt;</code></pre>
+  </div>
+  <h3 id="the-widget-element-and-its-attributes"><span class="secno">7.6 </span>The <dfn title="widget element"><code>widget</code></dfn> Element and its Attributes</h3>
+  <p>The <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element serves as a container for the
+    other elements of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>.</p>
+  <dl>
+    <dt>Context in which this element is used:</dt>
+    <dd> The <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element is the root element of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>. </dd>
+    <dt>Occurrences:</dt>
+    <dd> Exactly one, at the root element of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> document. </dd>
+    <dt>Expected children (in any order):</dt>
+    <dd><code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code>: zero or more (<a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#one-element-is-allowed-per-language">one element is
+      allowed per language</a>).</dd>
+    <dd><code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code>: zero or more (<a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#one-element-is-allowed-per-language">one
+      element is allowed per language</a>).</dd>
+    <dd><code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code>: zero or one.</dd>
+    <dd><code title="license element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-license-element-and-its-attributes">license</a></code>: zero or more (<a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#one-element-is-allowed-per-language">one element is
+      allowed per language</a>).</dd>
+    <dd><code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code>: zero or more.</dd>
+    <dd><code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code>: zero or one.</dd>
+    <dd><code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code>: zero or more.</dd>
+    <dd><code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code>: zero or more.</dd>
+    <dt>Localizable via xml:lang:</dt>
+    <dd> No. Inheritance of the value of this attribute by <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code>, <code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code>, <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code>, and <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> will have no effect during processing in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a>.</dd>
+    <dt>Attributes:</dt>
+    <dd> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#global-attributes-0" title="global attributes">Global attributes</a>, <code title="widget id"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-id-attribute">id</a></code>, <code title="widget version"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-version">version</a></code>, <code title="widget height"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-height">height</a></code>, <code title="widget width"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-width">width</a></code>, <code title="widget viewmodes"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-viewmodes-attribute">viewmodes</a></code>. </dd>
+  </dl>
+  <h4 id="the-id-attribute"><span class="secno">7.6.1 </span>The <code><dfn title="widget id">id</dfn></code> Attribute</h4>
+  <p>An <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iri-attribute">IRI attribute</a> that denotes an identifier for the widget. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="widget id"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-id-attribute">id</a></code> attribute with a <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element.</p>
+  <h4 id="the-version-attribute"><span class="secno">7.6.2 </span>The <code><dfn title="widget-element version">version</dfn></code> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#version-attribute">version attribute</a> that specifies the version of the widget. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="widget-element version"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-version-attribute">version</a></code> attribute with a <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element.</p>
+  <h4 id="the-height-attribute"><span class="secno">7.6.3 </span>The <code><dfn title="widget-element height">height</dfn></code> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-non-negative-integer" title="valid non-negative integer">numeric attribute</a> greater than <code>0</code> that indicates the preferred <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#viewport">viewport</a> height of the
+    instantiated <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#custom-start-file-0">custom start file</a> in <a href="http://www.w3.org/TR/2008/REC-CSS2-20080411/syndata.html#length-units">CSS pixels</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#css2">[CSS]</a>. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="widget-element height"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-height-attribute">height</a></code> attribute with a <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element.</p>
+  <h4 id="the-width-attribute"><span class="secno">7.6.4 </span>The <code><dfn title="widget-element width">width</dfn></code> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-non-negative-integer" title="valid non-negative integer">numeric attribute</a> greater than <code>0</code> that indicates the preferred <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#viewport">viewport</a> width of the
+    instantiated <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#custom-start-file-0">custom start file</a> in <a href="http://www.w3.org/TR/2008/REC-CSS2-20080411/syndata.html#length-units">CSS pixels</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#css2">[CSS]</a>. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="widget-element width"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-width-attribute">width</a></code> attribute with a <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element. </p>
+  <h4 id="the-viewmodes-attribute"><span class="secno">7.6.5 </span>The <code><dfn title="widget viewmodes">viewmodes</dfn></code> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword-list-attribute">keyword list attribute</a> that denotes  the author's
+    preferred view mode, followed by the next most preferred view mode and so forth. When the attribute is missing, or is left empty, it implies that the author expects the user agent to select an appropriate viewmode for the widget.</p>
+  <p>The concept of a <dfn class="external" id="viewport">viewport</dfn> is defined in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#css2">[CSS]</a>, but is essentially a window or other viewing area on the screen (see section <a href="http://www.w3.org/TR/2008/REC-CSS2-20080411/visuren.html#q2">9.1.1 The viewport</a> of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#css2">[CSS]</a>). The concept of a <dfn class="external" id="view-mode">view mode</dfn> is defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#view-modes">[View-Modes]</a> specification.</p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="widget viewmodes"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-viewmodes-attribute">viewmodes</a></code> attribute with a <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element.</p>
+  <h4 id="the-defaultlocale-attribute"><span class="secno">7.6.6 </span>The <code title="widget defaultlocale"><dfn title="widget defaultlocale">defaultlocale</dfn></code> attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-attribute">language  attribute</a> that specifies, through a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-tag">language
+    tag</a>, the author's preferred locale for the widget. Its intended use is to provide a fallback in case the user agent cannot match any of the widget's <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localized-content">localized content</a> to the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> list or in case the author has not provided any unlocalized content. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="widget id"><a href="http://www.w3.org/TR/2012/REC-widgets-20
