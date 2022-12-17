@@ -1606,4 +1606,148 @@ Distributed under the W3C Software License.
     use the <code title="icon src"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-src-attribute">src</a></code> attribute.</p>
   <h4 id="the-width-attribute-0"><span class="secno">7.11.2 </span>The <code><dfn title="icon width">width</dfn></code> Attribute</h4>
   <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-non-negative-integer" title="valid non-negative integer">numeric attribute</a> greater than <code>0</code> that represents,  in <a href="http://www.w3.org/TR/CSS21/syndata.html#length-units">CSS pixels</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#css2">[CSS]</a>, the author's preferred width for the icon. A user agent <em class="ct">may</em> ignore this value when changing the height icon to fit a rendering context or for accessibility reasons. </p>
-  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="icon width"><a 
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="icon width"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-width-attribute-0">width</a></code> attribute of an <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code> element.</p>
+  <h4 id="the-height-attribute-0"><span class="secno">7.11.3 </span>The <code><dfn title="icon height">height</dfn></code> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-non-negative-integer" title="valid non-negative integer">numeric attribute</a> greater than <code>0</code> that represents,  in <a href="http://www.w3.org/TR/CSS21/syndata.html#length-units">CSS pixels</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#css2">[CSS]</a>, the author's preferred height for the icon. A user agent <em class="ct">may</em> ignore this value when changing the height icon to fit a rendering context or for accessibility reasons. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="icon height"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-height-attribute-0">height</a></code> attribute of an <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code> element.</p>
+  <h4 id="example-of-usage-4"><span class="secno">7.11.4 </span>Example of Usage</h4>
+  <div class="example">
+    <p>This example shows the expected usage of the <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code> element. The example declares three icon elements, two of
+      which are raster and one of which is an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#svgtiny">[SVGTiny]</a> file. The raster
+      graphics would be used for display contexts smaller than 256x256 pixels. <a href="http://www.w3.org/TR/xpath/#dt-document-order">Document order</a> of the elements is
+      irrelevant.</p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+  <strong>&lt;icon src="icons/medium.png"/&gt;
+  &lt;icon src="icons/big.svg" width="256" height="256"/&gt;
+  &lt;icon src="icons/tiny.png"/&gt;</strong>
+&lt;/widget&gt;</code></pre>
+  </div>
+  <h3 id="the-content-element-and-its-attributes"><span class="secno">7.12 </span>The <dfn title="content element"><code>content</code></dfn> Element and its Attributes</h3>
+  <p>The <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element is used by an author to
+    declare which <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#custom-start-file-0">custom start file</a> the user agent is expected to use when it instantiates the widget.</p>
+  <dl>
+    <dt>Context in which this element is used:</dt>
+    <dd>As a child of the <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element.</dd>
+    <dt>Content model:</dt>
+    <dd>Empty.</dd>
+    <dt>Occurrences:</dt>
+    <dd>Zero or one.</dd>
+    <dt>Localizable via <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code>:</dt>
+    <dd>No. Relies on <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder-based-localization-0">folder-based localization</a>.</dd>
+    <dt>Attributes:</dt>
+    <dd><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#global-attributes-0" title="global attributes">Global attributes</a>, <code title="content src"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-src-attribute-0">src</a></code>, <code title="content type"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-type-attribute">type</a></code>, <code title="content encoding"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-encoding-attribute">encoding</a></code>.</dd>
+  </dl>
+  <h4 id="the-src-attribute-0"><span class="secno">7.12.1 </span>The <code><dfn title="content src">src</dfn></code> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#path-attribute">path attribute</a> that allows an author to point to a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a> within the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a>. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> When a <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element is used, it is required for authors to
+    use the <code title="content src"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-src-attribute-0">src</a></code> attribute.</p>
+  <h4 id="the-type-attribute"><span class="secno">7.12.2 </span>The <dfn title="content type"><code>type</code></dfn> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-attribute">media type attribute</a> that indicates the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> of
+    the file referenced by the <code>src</code> attribute. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors
+    to use the <code title="content type"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-type-attribute">type</a></code> attribute with a <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element. When the value is absent, the
+    user agent will assume the value <code>text/html</code>. </p>
+  <h4 id="the-encoding-attribute"><span class="secno">7.12.3 </span>The <dfn title="content encoding"><code>encoding</code></dfn> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword-attribute">keyword attribute</a> that denotes the character encoding of the file identified by
+    the <code title="content src"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-src-attribute-0">src</a></code> attribute. The  value is the "name"
+    
+    or "alias" of any "Character Set" listed in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iana-charsets">[IANA-Charsets]</a>. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="content encoding"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-encoding-attribute">encoding</a></code> attribute with a <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element. Where aliases are given by
+    the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iana-charsets">[IANA-Charsets]</a> registry, authors are encouraged to use the value of the
+    "preferred MIME name" (if any) from the registry.</p>
+  <p>The <dfn id="default-encoding">default encoding</dfn> is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#utf-8">[UTF-8]</a>, which has the name "<code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#utf-8">UTF-8</a></code>"  in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iana-charsets">[IANA-Charsets]</a> registry. </p>
+  <p>Aside from the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-encoding">default encoding</a>, it is <em class="ct">optional</em> for a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user
+    agent</a> to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported" title="supported">support</a> other character encodings. </p>
+  <h4 id="example-of-usage-5"><span class="secno">7.12.4 </span>Example of Usage</h4>
+  <div class="example">
+    <p>This example shows the expected usage of the <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element:</p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+  <strong>&lt;content src="myWidget.html"/&gt;</strong>
+
+&lt;/widget&gt;</code></pre>
+  </div>
+  <div class="example">
+    <p>This example shows the <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element being
+      used with a <code>encoding</code> attribute to override the default value of the <code>encoding</code> attribute (<code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#utf-8">UTF-8</a></code>) with the GB2312 character set, which the author has
+      used to encode simplified Chinese characters:</p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+  &lt;name xml:lang="zh-cn"&gt;古老瓷地图&lt;/name&gt;
+  &lt;name&gt;Ancient Chinese Maps&lt;/name&gt;
+  <strong>&lt;content src="china-maps.html" encoding="GB2312"/&gt;</strong>
+&lt;/widget&gt;</code></pre>
+  </div>
+  <div class="example">
+    <p>This example shows the <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element being
+      used with a <code title="content type"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-type-attribute">type</a></code> attribute to instantiate a widget
+      created with a proprietary <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a>:</p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+  &lt;name&gt;Location-Based Games Finder&lt;/name&gt;
+  <strong>&lt;content src="lbg-maps.swf" type="application/x-shockwave-flash"/&gt;</strong>
+  &lt;feature name="http://example.org/api.geolocation"
+           required="false"/&gt;
+&lt;/widget&gt;</code></pre>
+  </div>
+  <h3 id="the-feature-element-and-its-attributes"><span class="secno">7.13 </span>The <dfn title="feature element"><code>feature</code></dfn> Element and its Attributes</h3>
+  <p>A <dfn id="feature">feature</dfn> is a URI identifiable runtime component (e.g. an Application Programming
+    Interface or video decoder). The act of a an author requesting the availability of a feature through a <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element is referred to as a <dfn id="feature-request">feature request</dfn>. The <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element serves as a standardized means to request the
+    binding of an IRI identifiable runtime component to a widget for use at runtime.
+    Using a <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element denotes that, at runtime,
+    a widget can attempt to access the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a> identified by the <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element's <code title="feature name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute">name</a></code> attribute. How a user agent makes use of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature" title="feature">features</a> depends
+    on the user agent's security policy, hence activation and authorization requirements
+    for features are beyond the scope of this specification. A feature has  zero or more <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#parameter" title="parameter">parameters</a> associated with it.</p>
+  <!--- p>When a <code title="feature element">feature</code> element is nested inside another feature element, it
+  denotes a <dfn>fallback relationship</dfn>: if the feature identified by the outermost
+  element is unavailable, then the user agent will check for the availability of the
+  feature identified by the child's element's <code title="feature name">name</code> attribute.</p -->
+  <dl>
+    <dt>Context in which this element is used:</dt>
+    <dd>As a child of the <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element.</dd>
+    <dt>Content model:</dt>
+    <dd>Zero or more <code title="param element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-param-element-and-its-attributes">param</a></code> elements.</dd>
+    <dt>Occurrences:</dt>
+    <dd>Zero or more.</dd>
+    <dt>Localizable via <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code>:</dt>
+    <dd>No.</dd>
+    <dt>Attributes:</dt>
+    <dd><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#global-attributes-0" title="global attributes">Global attributes</a>, <code title="feature name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute">name</a></code>, <code title="feature required"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-required-attribute">required</a></code>. </dd>
+  </dl>
+  <h4 id="the-name-attribute"><span class="secno">7.13.1 </span>The <dfn title="feature name"><code title="feature name">name</code></dfn> Attribute</h4>
+  <p>An <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iri-attribute">IRI attribute</a> that identifies a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a> that is needed by the widget at runtime (such as an <abbr title="application programming interface">API</abbr>). </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> When the <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element is declared, it is required for authors to use the <code title="feature name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute">name</a></code> attribute.</p>
+  <h4 id="the-required-attribute"><span class="secno">7.13.2 </span>The <code><dfn title="feature required">required</dfn></code> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#boolean-attribute">boolean attribute</a> that indicates whether or not this <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a> has to be available to the widget at runtime. </p>
+  <p>When set to <code>true</code>, the <code title="feature required"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-required-attribute">required</a></code> attribute denotes that a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a> is absolutely needed by the widget to function correctly, and
+    without the availability of this <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a> the widget serves no useful
+    purpose or won't execute properly. </p>
+  <p>When set to <code>false</code>, the <code title="feature required"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-required-attribute">required</a></code> attribute denotes that a
+    widget can function correctly without the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a> being <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> or otherwise made available by the user agent. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="feature required"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-required-attribute">required</a></code> attribute with an <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element. However, authors need to be aware that a user agent will behave as if the <code title="feature required"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-required-attribute">required</a></code> attribute had been set to <code>true</code> when the <code title="feature required"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-required-attribute">required</a></code> attribute is absent, meaning that the named <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a> needs to be available  at
+    runtime or the widget will be treated as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>. </p>
+  <h4 id="example-of-usage-6"><span class="secno">7.13.3 </span>Example of Usage</h4>
+  <div class="example">
+    <p>This example demonstrates a widget that would like to use a fictional geo-location <abbr title="application programming interface">API</abbr> feature, but would still
+      be able to function if the feature cannot be made available to the widget by the user
+      agent.</p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+   <strong>&lt;feature name     = "http://example.org/api/geolocation"
+            required = "false"/&gt; </strong>
+&lt;/widget&gt;</code></pre>
+  </div>
+  <h3 id="the-param-element-and-its-attributes"><span class="secno">7.14 </span>The <dfn title="param element"><code>param</code></dfn> Element and its Attributes</h3>
+  <p>The <code title="param element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-param-element-and-its-attributes">param</a></code> element defines a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#parameter">parameter</a> for a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a>. A <dfn id="parameter">parameter</dfn> is a name-value pair that is <span class="associate">associated</span> with the corresponding <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a> for which the parameter is declared for. A author establishes the relationship between a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#parameter">parameter</a> and feature  by having a <code title="param element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-param-element-and-its-attributes">param</a></code> element as a
+    direct child of a <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element in <a href="http://www.w3.org/TR/xpath/#dt-document-order">document order</a>.</p>
+  <dl>
+    <dt>Context in which this element is used:</dt>
+    <dd>As a child of the <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element.</dd>
+    <dt>Content model:</dt>
+    <dd>Empty.</dd>
+    <dt>Occurrences:</dt>
+    <dd>Zero or more.</dd>
+    <dt>Localizable via <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code>:</dt>
+    <dd>No.</dd>
+    <dt>Attributes:</dt>
+    <dd><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#global-attributes-0" title="global attributes">Global attributes</a>, <code title="param name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute-0">name</a></code>, <code title="param value"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-value-attribute">value</a></code>. </dd>
+  </dl>
+  <h4 id="the-name-attribute-0"><span class="secno">7.14.1 </span>The <code><dfn title="param name">name</dfn></code> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#string-attribute">string attribute</a> that denotes the name of this <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#parameter">parameter</a>. </p>
+  <p class="authorguide"><strong>Authoring Guideline:</strong>When a 
