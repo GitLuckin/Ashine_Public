@@ -1750,4 +1750,147 @@ Distributed under the W3C Software License.
   </dl>
   <h4 id="the-name-attribute-0"><span class="secno">7.14.1 </span>The <code><dfn title="param name">name</dfn></code> Attribute</h4>
   <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#string-attribute">string attribute</a> that denotes the name of this <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#parameter">parameter</a>. </p>
-  <p class="authorguide"><strong>Authoring Guideline:</strong>When a 
+  <p class="authorguide"><strong>Authoring Guideline:</strong>When a <code title="param element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-param-element-and-its-attributes">param</a></code> element is declared, it is required for authors to
+    use the <code title="param name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute-0">name</a></code> attribute. </p>
+  <h4 id="the-value-attribute"><span class="secno">7.14.2 </span>The <code><dfn title="param value">value</dfn></code> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#string-attribute">string attribute</a> that denotes the value of this <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#parameter">parameter</a>. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> When a <code title="param element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-param-element-and-its-attributes">param</a></code> element is used, it is required for authors to
+    use the <code title="param value"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-value-attribute">value</a></code> attribute.</p>
+  <h4 id="example-of-usage-7"><span class="secno">7.14.3 </span>Example of Usage</h4>
+  <div class="example">
+    <p>This example demonstrates a widget that makes use of a fictional geo-location
+      feature where by its accuracy is set to "<code>low</code>" via a <code title="param element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-param-element-and-its-attributes">param</a></code> element.</p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+   &lt;feature name="http://example.org/api/geolocation"&gt;
+      <strong>&lt;param name="accuracy" value="low"/&gt; </strong>
+   &lt;/feature&gt;
+&lt;/widget&gt;</code></pre>
+  </div>
+  <h3 id="the-preference-element-and-its-attributes"><span class="secno">7.15 </span>The <code><dfn title="preference element">preference</dfn></code> Element and its Attributes</h3>
+  <p>The <code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code> element allows authors to
+    declare one or more preferences: a <dfn id="preference">preference</dfn> is a persistently stored
+    name-value pair that is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#associate" title="associate">associated</a> with the widget the
+    first time the widget is initiated.</p>
+  <p class="note"><span class="notetitle">Note:</span> A user agent that <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported" title="supported">supports</a> the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widgets-apis">[Widgets-APIs]</a> specification will expose any declared <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#preference">preference</a> at runtime  in the manner described
+    in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widgets-apis">[Widgets-APIs]</a> specification.</p>
+  <dl>
+    <dt>Context in which this element is used:</dt>
+    <dd>As a child of the <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element.</dd>
+    <dt>Occurrences:</dt>
+    <dd>Zero or more.</dd>
+    <dt>Expected children:</dt>
+    <dd>none.</dd>
+    <dt>Localizable via <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code>:</dt>
+    <dd>No.</dd>
+    <dt>Attributes:</dt>
+    <dd><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#global-attributes-0" title="global attributes">Global attributes</a>, <code title="preference name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute-1">name</a></code>, <code title="preference value"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-value-attribute-0">value</a></code>, <code title="preference readonly"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-readonly-attribute">readonly</a></code>.</dd>
+  </dl>
+  <h4 id="the-name-attribute-1"><span class="secno">7.15.1 </span>The <code><dfn title="preference name">name</dfn></code> Attribute</h4>
+  <p>A string that denotes the name of this <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#preference">preference</a>. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> When a <code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code> element is used, it is required for authors to
+    use the <code title="preference name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute-1">name</a></code> attribute.</p>
+  <h4 id="the-value-attribute-0"><span class="secno">7.15.2 </span>The <code><dfn title="preference value">value</dfn></code> Attribute</h4>
+  <p>A string that denotes the value of this <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#preference">preference</a>. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="preference value"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-value-attribute-0">value</a></code> attribute with a <code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code> element.</p>
+  <h4 id="the-readonly-attribute"><span class="secno">7.15.3 </span>The <code><dfn title="preference readonly">readonly</dfn></code> Attribute</h4>
+  <p>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#boolean-attribute">boolean attribute</a> indicating whether this preference can, or cannot, be
+    overwritten at runtime (e.g., via an author script). When set to <code>true</code>, it means that the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#preference">preference</a> cannot be overwritten. When set to <code>false</code>, it means that the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#preference">preference</a> can be overwritten. </p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> It is optional for authors to use the <code title="readonly">readonly</code> attribute with a <code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code> element. If the <code title="readonly">readonly</code> attribute is absent, the user agent will act as if the readonly attribute had been set to <code>false</code> (meaning that the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#preference">preference</a> can be overwritten at runtime).</p>
+  <h4 id="example-of-usage-8"><span class="secno">7.15.4 </span>Example of Usage</h4>
+  <div class="example">
+    <p>This example shows a widget where two preferences are set. The second <code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code> is set as "read only" via the <code>readonly</code> attribute, which means the values of that preference cannot be changed at
+      runtime.</p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+   <strong>&lt;preference name     = "skin"
+               value    = "alien"/&gt;
+
+   &lt;!-- The preference below will be protected
+        from modification and deletion at runtime --&gt;
+
+   &lt;preference name     = "api-key"
+               value    = "f6d3a312f9d742"
+               readonly = "true"/&gt;</strong>
+&lt;/widget&gt;</code></pre>
+  </div>
+  <h3 id="the-span-element-and-its-attributes"><span class="secno">7.16 </span>The <dfn title="span element"><code>span</code></dfn> Element and its Attributes</h3>
+  <p>The <code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code> element is a wrapper for text content; on its own it serves no useful function. </p>
+  <p>It is expected that authors will use the <code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code> element  with the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#global-attributes-0">global attributes</a>. When combined with the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute,  the <code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code> element can indicate the textual directionality  of text content. In other words, it allows authors to set the base direction for the Unicode bidirectional algorithm <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#bidi">[BIDI]</a>. When combined with the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute, the <code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code> element allows the author to indicate the particular language used for a subset of text content within  another element. </p>
+  <dl>
+    <dt>Context in which this element is used:</dt>
+    <dd>As a child of the <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code>, <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code>, <code title="license element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-license-element-and-its-attributes">license</a></code>, and/or <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> element. </dd>
+    <dt>Occurrences:</dt>
+    <dd>Zero or more.</dd>
+    <dt>Expected children:</dt>
+    <dd>Any.</dd>
+    <dt>Localizable via <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code>:</dt>
+    <dd>
+      <p>No, meaning that declaring <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> on a <code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code> element within a parent element (e.g., a <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element) will not affect the behavior of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#element-based-localization-0">element-based localization</a> (see Example of Usage below to see how this works). </p>
+    </dd>
+    <dd>
+      <p class="authorguide"><strong>Authoring Guidelines:</strong> Authors are encouraged to use <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> to indicate the language information for text content contained within a <code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code> element. See Example of Usage for more information. </p>
+    </dd>
+    <dt>Attributes:</dt>
+    <dd><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#global-attributes-0" title="global attributes">Global attributes</a>.</dd>
+  </dl>
+  <h4 id="example-of-usage-9"><span class="secno">7.16.1 </span>Example of Usage</h4>
+  <p><em>This section is informative.</em></p>
+  <div class="example">
+    <p>This example shows the <code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code> elements being used to indicate directionality of text as well as language information. Note that the <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element's <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute is set to an empty string to allow it to be used as <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-content">default content</a> in the process of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#element-based-localization-0">element-based localization</a>: </p>
+    <pre><code>&lt;widget
+ xmlns="http://www.w3.org/ns/widgets"
+ xml:lang="he" dir="rtl"&gt;
+ &lt;name xml:lang="" dir="ltr"&gt;
+  &lt;span xml:lang="en"&gt;GPS Weather!&lt;/span&gt;
+ &lt;/name&gt;
+ &lt;description&gt;
+  יישומון ה-
+  &lt;span dir="ltr" xml:lang="en"&gt;GPS Weather!&lt;/span&gt; מאפשר
+ לך לבדוק את מזג הא
+וויר בכל נקודת GPS ברחבי העולם.
+ &lt;/description&gt;
+
+&lt;description xml:lang="" dir="ltr"&gt;
+   &lt;span xml:lang="en"&gt;The GPS Weather! widget lets you check
+   the weather at any point around the world with GPS.&lt;/span&gt;
+&lt;/description&gt;
+&lt;/widget&gt;</code></pre>
+  </div>
+  <h2 id="internationalization-and-localization"><span class="secno">8 </span>Internationalization and localization</h2>
+  <p><dfn id="internationalization">Internationalization</dfn>, or i18n, is the design and development of a
+    product, application or document content that enables  localization for target
+    audiences that vary in culture, region, or language. <dfn id="localization">Localization</dfn> refers to
+    the adaptation of a product, application or document content to meet the language,
+    cultural and other requirements of a specific target market (a "locale").</p>
+  <p class="note"><span class="notetitle">Note:</span> See also the <cite><a href="http://www.w3.org/TR/2004/NOTE-ws-i18n-scenarios-20040730/#locale">Web Services
+    Internationalization Usage Scenarios</a></cite> and the <cite><a href="http://www.unicode.org/reports/tr35/#Locale">Unicode Locale Data Markup
+    Language</a></cite> for an informative discussion on the term locale.</p>
+  <p><dfn id="localized-content">Localized content</dfn> is content an author has explicitly <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localization" title="localization">localized</a>: that is, a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a> that contains
+    content localized using <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder-based-localization-0">folder-based localization</a> or a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration
+    document</a> that contains content localized via <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#element-based-localization-0">element-based
+    localization</a>.</p>
+  <p><dfn id="default-content">Default content</dfn> is content included in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget
+    package</a> or in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> that has not been
+    explicitly localized or content explicitly indicated by the author to be used as default content via the <code>defaultlocale</code> attribute of the <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element. In the case of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a>, this means content outside the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#container-for-localized-content">container for localized content</a>. In the case of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>,
+    this means any element without an explicitly declared or inherited <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute.</p>
+  <p>A <dfn id="localized-file">localized file</dfn> is any <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a> that has been placed inside a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0">locale folder</a> (i.e., <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localized-content">localized content</a> that makes use of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder-based-localization-0">folder-based localization</a>).  A widget
+    package contains zero or more localized files. All files and
+    folders, except for the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#digital-signature" title="digital signature">digital signatures</a> and
+    the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>, can be localized via <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder-based-localization-0">folder-based localization</a>.</p>
+  <p class="example">For example, a locale folder "<code>locales/ja/</code>" (Japanese) might contain
+    an HTML document translated into Japanese.</p>
+  <p class="authorguide"><strong>Authoring Guidelines:</strong> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0" title="locale folder">Locale folders</a> need to be placed in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#container-for-localized-content">container for
+    localized content</a> (a locale folder not in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#container-for-localized-content">container for localized
+    content</a> will be treated as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#arbitrary">arbitrary</a> folder).  In addition, authors making use of localization features provided by this specification should  translate, localize, or alter <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localized-content">localized content</a> for a the given locale, and test their widgets thoroughly.</p>
+  <h3 id="bidirectional-text"><span class="secno">8.1 </span>Bidirectional  text</h3>
+  <p>In conjunction to mandating that user agents support <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#unicode">[Unicode]</a>, this specification provides the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute and <code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code> element as a markup-based means of influencing the directionality for bidirectional Unicode text <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#bidi">[BIDI]</a>. See the  definitions of the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute and <code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code> element for usage examples. </p>
+  <h3 id="localization-model"><span class="secno">8.2 </span>Localization Model</h3>
+  <p>This specification provides two means that authors can use to explicitly localize
+    the content of a widget:</p>
+  <ol>
+    <li>
+      <p>By placing localized file content in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0" title="locale folder">locale
+        folders</a>, a process referred to as <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder-based-localization-0">folder-based localization</a>.</p>
+    </li>
+    <li>
+      <p>By explicitly marking XML elements in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> as
+        localized, a process referred to as <a href="h
