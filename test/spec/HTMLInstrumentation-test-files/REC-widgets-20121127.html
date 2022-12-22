@@ -2355,4 +2355,253 @@ Distributed under the W3C Software License.
     non-negative integer greater than 0. In such a case, 0 could be treated 
     as if it were <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code>. </p>
   <h4 id="rule-for-verifying-a-zip-archive"><span class="secno">9.1.1 </span>Rule for Verifying a Zip Archive</h4>
-  <p>The <dfn id="rule-for-verifying-a-zip-archive-0">rule for verifying a 
+  <p>The <dfn id="rule-for-verifying-a-zip-archive-0">rule for verifying a zip archive</dfn> is described in this
+    section. The algorithm returns either true or an error.</p>
+  <p>This specification does not provide the technical
+    details of how to actually perform the checks, for which implementers need to refer to the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification.</p>
+  <ol>
+    <li>
+      <p>If the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip archive</a> is <dfn class="external" id="split-into-multiple-files">split into multiple
+        files</dfn> or spans <dfn class="external" id="multiple-volumes">multiple volumes</dfn>, as defined in
+        the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification, then return an error and terminate this algorithm.</p>
+    </li>
+    <li>
+      <p>If the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip archive</a> is encrypted, as defined in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[Zip]</a>, return an error
+        and terminate this algorithm.</p>
+    </li>
+    <li>Otherwise, return true. </li>
+  </ol>
+  <h4 id="rule-for-extracting-file-data-from-a-file-entry"><span class="secno">9.1.2 </span>Rule for Extracting File Data from a File Entry</h4>
+  <p>The <dfn id="rule-for-extracting-file-data-from-a-file-entry-0">rule for extracting file data from a file entry</dfn> is as follows:</p>
+  <ol>
+    <li>
+      <p>Let <var>path</var> be the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-relative-path">zip relative path</a> that identifies the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> being sought. </p>
+    </li>
+    <li>
+      <p>Let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a></var> be the file entry identified by the <var>path</var>. </p>
+    </li>
+    <li>
+      <p>Let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a></var> be the result of decompressing (or extracting) the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-data">file data</a></var> from <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a></var> using <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[Zip]</a>.</p>
+    </li>
+    <li>
+      <p>Return <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a></var>.</p>
+    </li>
+  </ol>
+  <p class="note"><span class="notetitle">Note:</span> For efficiency, a user agent can
+    extract specific <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file" title="file">files</a> as they are needed for processing
+    rather than extracting all the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file" title="file">files</a> at once. As a security
+    precaution, implementations are discouraged from extracting <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry" title="file entry">file entries</a> from un-trusted widgets directly onto the file system.
+    Instead, implementations could use, for example, a virtual file system or mapping to
+    access files inside a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a>.</p>
+  <h4 id="rule-for-finding-a-file-within-a-widget-package"><span class="secno">9.1.3 </span>Rule for Finding a File Within a Widget Package</h4>
+  <p>The <dfn id="rule-for-finding-a-file-within-a-widget-package-0">rule for finding a file within a widget package</dfn> is given in the
+    following algorithm. The algorithm returns either a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#processable-file">processable file</a>, <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code>, or an error. </p>
+  <p>For
+    the sake of comparison and matching, it is <em class="ct">recommended</em> that a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> treat all <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-relative-path" title="zip relative path">Zip relative paths</a> as <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#utf-8">[UTF-8]</a>. </p>
+  <p class="note"><span class="notetitle">Note:</span> This specification does not define
+    how links in documents other than the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> are to be
+    dereferenced. For handling links in other documents, such as (X)HTML, CSS, SVG, etc.,
+    please refer to the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widgets-uri">[Widgets-URI]</a> specification.</p>
+  <ol>
+    <li>
+      <p>Let <var>path</var> be the  path to the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file
+        entry</a> being sought by the user agent.</p>
+    </li>
+    <li>
+      <p>If <var>path</var> is not a valid path, return an error and terminate this algorithm. </p>
+    </li>
+    <li>
+      <p>If the <var>path</var> starts with a U+002F SOLIDUS (e.g.,
+        "<code>/style/master.css</code>"),  then remove the first U+002F SOLIDUS from <var>path.</var></p>
+    </li>
+    <li>
+      <p>Let <var>path-components</var> be the result of splitting <var>path</var> at
+        each occurrence of a U+002F SOLIDUS character, removing that U+002F SOLIDUS
+        character in the process.</p>
+    </li>
+    <li>
+      <p> if the first item in <var>path-components</var> case-sensitively matches the string
+        "<code>locales</code>", then:</p>
+      <ol>
+        <li>
+          <p>If the <var>path-components</var> does not contain a second item, then return <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code>.</p>
+        </li>
+        <li>
+          <p>If the second item in <var>path-components</var> is not a valid <code>language-range</code>, then return <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code> and terminate this
+            algorithm.</p>
+        </li>
+        <li>
+          <p>Otherwise, continue.</p>
+        </li>
+      </ol>
+    </li>
+    <li>
+      <p>For each <var>lang-range</var> in the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var>:</p>
+      <ol>
+        <li>
+          <p>Let <var>path</var> be the concatenation of the string
+            "<code>locales/</code>", the <var>lang-range</var>, a U+002F SOLIDUS character,
+            and the <var>path</var> (e.g., <code>locales/en-us/cats.png</code>, where
+            "<code>en-us</code>" is the <var>lang-range</var> and "<code>cats.png</code>"
+            
+            is the <var>path</var>).</p>
+        </li>
+        <li>
+          <p>If <var>path</var> case-sensitively matches the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name field</a></var> of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> within the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a></var> that is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder">folder</a>,  then return an error and terminate this
+            algorithm.</p>
+        </li>
+        <li>
+          <p>If <var>path</var> case-sensitively matches the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name field</a></var> of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> within the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a></var> that is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a>, let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a></var> be the result of applying
+            the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-extracting-file-data-from-a-file-entry-0">rule for extracting file data from a file entry</a> to <var>path</var>.</p>
+        </li>
+        <li>
+          <p>If <var title="">file</var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#processable-file">processable file</a>, then return <var title="">file</var> and terminate this algorithm.</p>
+        </li>
+        <li>
+          <p>If the <var>path</var> points to a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> that is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#processable-file">processable file</a>, then return an error and terminate this
+            algorithm.</p>
+        </li>
+      </ol>
+    </li>
+    <li>
+      <p>If every <var>lang-range</var> in the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> have been
+        searched, then search for a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> whose <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name
+        field</a></var> matches <var>path</var> from the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root of the widget
+        package</a>:</p>
+      <ol>
+        <li>
+          <p>If <var>path</var> points to a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> within the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a></var> that is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder">folder</a>,  then return an error and terminate this
+            algorithm.</p>
+        </li>
+        <li>
+          <p>If <var>path</var> points to a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> within the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a></var> that is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a>, let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a></var> be the result of applying
+            the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-extracting-file-data-from-a-file-entry-0">rule for extracting file data from a file entry</a> to <var>path</var>.</p>
+        </li>
+        <li>
+          <p>If <var title="">file</var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#processable-file">processable file</a>, then return <var title="">file</var> and terminate this algorithm.</p>
+        </li>
+        <li>
+          <p>If the <var>path</var> points to a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a> that is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#processable-file">processable file</a>, then return an error and terminate this
+            algorithm.</p>
+        </li>
+      </ol>
+    </li>
+    <li>
+      <p>Otherwise, return <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code>.</p>
+    </li>
+  </ol>
+  <h4 id="rule-for-determining-directionality"><span class="secno">9.1.4 </span>Rule for Determining Directionality</h4>
+  <p>The <dfn id="rule-for-determining-directionality-0">rule for determining directionality</dfn> is given in the following
+    algorithm. The algorithm always returns one of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-directional-indicators">valid directional indicators</a> as a string. </p>
+  <ol>
+    <li>
+      <p>Let <var>element</var> be the element to be processed.</p>
+    </li>
+    <li>
+      <p>If <var>element</var> is the root element of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>:</p>
+      <ol>
+        <li>
+          <p>If  it does not contain a <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute, return "<code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ltr">ltr</a></code>" and terminate this algorithm. </p>
+        </li>
+        <li>
+          <p>If it does contain a <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute, let <var>value</var> be value of the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></var> attribute of <var>element</var>. </p>
+        </li>
+        <li>
+          <p>Remove any leading or trailing <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#space-characters">space characters</a> from <var>value</var>. </p>
+        </li>
+        <li>If <var>value</var> of the attribute  case-sensitively matches one of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-directional-indicators">valid directional  indicators</a>, return the value of the attribute and terminate this algorithm. if the value does not case-sensitively match one of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-directional-indicators">valid directional  indicators</a>, return  "<code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ltr">ltr</a></code>" and terminate this algorithm. </li>
+      </ol>
+    </li>
+    <li>
+      <p>If <var>element</var> does not contain a <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute, recursively apply <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-determining-directionality-0">rule for determining directionality</a> to the direct parent element of <var>element</var> and return the result. </p>
+    </li>
+    <li>
+      <p>If <var>element</var> contains a <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute, let <var>direction</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for getting a single attribute value</a> to the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></var> attribute of <var>element</var>:</p>
+      <ol>
+        <li>
+          <p> If <var>direction</var> case-sensitively matches one of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-directional-indicators">valid directional  indicators</a>, return <var>direction</var> and terminate this algorithm. </p>
+        </li>
+        <li>
+          <p>If <var>direction</var> did not case-sensitively match  one of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-directional-indicators">valid directional  indicators</a>, apply the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-determining-directionality-0">rule for determining directionality</a> to the direct parent element of <var>element</var> and return the result. </p>
+        </li>
+      </ol>
+    </li>
+  </ol>
+  <h4 id="rule-for-getting-a-single-attribute-value"><span class="secno">9.1.5 </span>Rule for Getting a Single Attribute Value</h4>
+  <p>The <dfn id="rule-for-getting-a-single-attribute-value-0">rule for getting a single attribute value</dfn> is given in the following
+    algorithm. The algorithm always returns either a string or a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localizable-string">localizable string</a>, which can be empty. </p>
+  <ol>
+    <li>
+      <p>Let <var>attribute</var> be the attribute to be processed.</p>
+    </li>
+    <li>
+      <p>Let <var>value</var> be the value of the attribute to be processed.</p>
+    </li>
+    <li>
+      <p>In <var>value</var>, replace any sequences of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#space-characters">space characters</a> (in
+        any order) with a single U+0020 SPACE character.</p>
+    </li>
+    <li>
+      <p>Remove any leading or trailing U+0020 SPACE characters from <var>value</var>.</p>
+    </li>
+    <li>
+      <p>If the attribute is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#displayable-string-attribute">displayable-string attribute</a>, then let <var>result</var> be a string that contains the value of <var>value</var>. </p>
+    </li>
+    <li>
+      <p>Otherwise, if and only if the attribute is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#displayable-string-attribute">displayable-string attribute</a>:</p>
+      <ol>
+        <li>
+          <p>Let <var>result</var> be a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localizable-string">localizable string</a> that contains the value of <var>value</var>.</p>
+        </li>
+        <li>
+          <p>Let <var>element</var> be the element that owns <var>attribute</var>. </p>
+        </li>
+        <li>
+          <p>Let <var>direction</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-determining-directionality-0">rule for determining directionality</a> to <var>element</var>.</p>
+        </li>
+        <li>
+          <p>Associate <var>direction</var> with <var>result</var>.</p>
+        </li>
+        <li>
+          <p> Let <var>lang</var> be the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-tag">language tag</a> derived from having processed the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute on either <var>element</var>, or in <var>element</var>'s  ancestor chain as per <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a>. If <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></var> was not used anywhere in the ancestor chain, then let <var>lang</var> be an empty string. </p>
+        </li>
+        <li>
+          <p>Associate <var>lang</var> with <var>result</var>.</p>
+        </li>
+      </ol>
+    </li>
+    <li>Return <var>result</var>. </li>
+  </ol>
+  <h4 id="rule-for-getting-a-list-of-keywords-from-an-attribute"><span class="secno">9.1.6 </span>Rule for Getting a List of Keywords From an Attribute</h4>
+  <p>The <dfn id="rule-for-getting-a-list-of-keywords-from-an-attribute-0">rule for getting a list of keywords from an attribute</dfn> is given by the
+    following algorithm. The algorithm takes a string as input, and returns a list of  strings  which can be empty.</p>
+  <ol>
+    <li>
+      <p>Let <var>result</var> be the value of the attribute to be processed.</p>
+    </li>
+    <li>
+      <p>In <var>result</var>, replace any sequences of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#space-characters">space characters</a> (in
+        any order) with a single U+0020 SPACE character.</p>
+    </li>
+    <li>
+      <p>In <var>result</var>, remove any leading or trailing U+0020 SPACE character.</p>
+    </li>
+    <li>
+      <p>In <var>result</var>, split the string at each occurrence of a U+0020 character,
+        removing that U+0020 character in the process.</p>
+    </li>
+    <li>Return <var>result.</var></li>
+  </ol>
+  <h4 id="rule-for-verifying-a-file-entry"><span class="secno">9.1.7 </span>Rule for Verifying a File Entry</h4>
+  <p>The <dfn id="rule-for-verifying-a-file-entry-0">rule for verifying a file entry</dfn> is given in the following algorithm.
+    The algorithm always returns a boolean value.</p>
+  <p>For the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry">file entry</a>, check the following data in the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#local-file-header">local file
+    header</a></var>.</p>
+  <ol>
+    <li>
+      <p>If the value of the <dfn id="crc-32">CRC-32</dfn> field (defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification) fails a CRC-32 check, return <code>false</code> and terminate this
+        algorithm.</p>
+    </li>
+    <li>
+      <p>The <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name field</a></var> is an empty string, return <code>false</code> and
+   
