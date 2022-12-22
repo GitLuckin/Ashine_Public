@@ -2099,4 +2099,260 @@ Distributed under the W3C Software License.
     <ul class="dir_listing">
       <li class="widget_icon"> <img alt="widget file: " height="16" src="./REC-widgets-20121127_files/widget.png" width="16"> weekdays.wgt
         <ul>
-          <li clas
+          <li class="doc_icon"><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16"> index.html <span class="comment">/*English*/</span></li>
+          <li class="doc_icon"><img alt="configuration document: " height="16" src="./REC-widgets-20121127_files/config.png" width="16"> config.xml</li>
+          <li class="doc_icon"> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> scripts
+            <ul>
+              <li><img alt="script: " height="16" src="./REC-widgets-20121127_files/script.png" width="16"> dayfinder.js</li>
+            </ul>
+          </li>
+          <li class="config_icon"> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> locales
+            <ul>
+              <li> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> fr/
+                <ul>
+                  <li class="doc_icon"><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16"> index.html <span class="comment">/*French*/</span></li>
+                </ul>
+              </li>
+              <li> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> es/
+                <ul>
+                  <li><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16"> index.html <span class="comment">/*Spanish*/</span></li>
+                </ul>
+              </li>
+              <li> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> pt/
+                <ul>
+                  <li><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16"> index.html <span class="comment">/*Portuguese*/</span></li>
+                </ul>
+                <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> fi/
+                <ul>
+                  <li><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16"> index.html <span class="comment">/*Finnish*/</span></li>
+                </ul>
+              </li>
+              <li> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> it/
+                <ul>
+                  <li><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16"> index.html <span class="comment">/*Italian*/</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+  <h4 id="complex-example"><span class="secno">8.5.2 </span>Complex Example</h4>
+  <div class="example">
+    <p>The following is an example of a localized widget with multiple localized <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#icon" title="icon">icons</a>, <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file" title="start file">start files</a> and <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0" title="configuration document">configuration documents</a>. Some relevant
+      things to note from the example:</p>
+    <ul>
+      <li>The Spanish version (<code>locales/es/</code>) has its own localized
+        icon.</li>
+      <li>The Spanish (<code>locales/es</code>) and English (<code>locales/en/</code>)
+        versions of the widget use the un-localized script in <code>/scripts/engine.js</code> folder.</li>
+      <li>On the other hand, the English-Australia (<code>en-au</code>) version uses a
+        localized script (<code>en-au/scripts/engine.js</code>).</li>
+    </ul>
+    <div class="code_sniplet c1">
+      <p><img alt="config: " height="16" src="./REC-widgets-20121127_files/config.png" width="16">/config.xml</p>
+      <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+  &lt;name xml:lang="ko"&gt;웃기는 고양이&lt;/name&gt;
+  &lt;content src="cats.html"/&gt;
+&lt;/widget&gt; </code></pre>
+      <hr>
+      <p><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16">/locales/en-au/cats.html</p>
+      <pre><code>&lt;!doctype html&gt;
+&lt;title&gt;G'day! LOL Cats!&lt;/title&gt;
+&lt;script src="scripts/engine.js"&gt;
+...</code></pre>
+      <hr>
+      <p><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16">/locales/es/cats.html</p>
+      <pre><code>&lt;!doctype html&gt;
+&lt;title&gt;Gatos Graciosos!&lt;/title&gt;
+&lt;script src="scripts/engine.js"&gt;
+...</code></pre>
+    </div>
+    <ul class="dir_listing">
+      <li class="widget_icon"> <img alt="widget file: " height="16" src="./REC-widgets-20121127_files/widget.png" width="16"> LOLcats.wgt
+        <ul>
+          <li class="doc_icon"><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16"> cats.html <span class="comment">/*written in Korean*/</span></li>
+          <li class="config_icon"><img alt="configuration document: " height="16" src="./REC-widgets-20121127_files/config.png" width="16"> config.xml</li>
+          <li class="doc_icon"><img alt="icon: " height="16" src="./REC-widgets-20121127_files/image.png" width="16"> icon.png <span class="comment" title="">/*default icon*/</span></li>
+          <li class="doc_icon"><img alt="Digital Signature: " height="16" src="./REC-widgets-20121127_files/signature.png" width="16"> signature.xml <span class="comment">/*not
+            localizable*/</span></li>
+          <li class="folder"> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> scripts/
+            <ul>
+              <li><img alt="script: " height="16" src="./REC-widgets-20121127_files/script.png" width="16"> engine.js <span class="comment">/*default functionality*/</span></li>
+            </ul>
+          </li>
+          <li class="folder"> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> locales/ <span class="comment" title="">/*container for localized content*/</span>
+            <ul>
+              <li class="folder"> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> en-au/
+                <ul>
+                  <li><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16"> cats.html</li>
+                  <li class="folder"> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> scripts/
+                    <ul>
+                      <li><img alt="script: " height="16" src="./REC-widgets-20121127_files/script.png" width="16"> engine.js <span class="comment">/*custom localized
+                        functionality*/</span></li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li class="folder"> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> en/
+                <ul>
+                  <li><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16"> cats.html <span class="comment">/*international english
+                    version*/</span></li>
+                </ul>
+              </li>
+              <li> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> es/
+                <ul>
+                  <li><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16"> cats.html <span class="comment">/*Spanish version*/</span></li>
+                  <li><img alt="icon: " height="16" src="./REC-widgets-20121127_files/image.png" width="16"> icon.png <span class="comment">/*localized icon*/</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+  <h4 id="fallback-behavior-example"><span class="secno">8.5.3 </span>Fallback Behavior Example</h4>
+  <div class="example">
+    <p>This specification allows authors to place files and folders they don't wish to
+      localize at the root of the widget package. At runtime, if the user agent fails to
+      find a file in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0">locale folder</a>, it will always search at the root of the
+      widget package for that missing file. The purpose of this 'fallback' model is to
+      reduce the number of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file" title="file">files</a> that need to be created in order
+      to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localization" title="localization">localize</a> a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a>.</p>
+    <p>The example below demonstrates how a user agent attempts to locate a file that is
+      absent in a localized scenario. Assume the user agent's locale is '<code>en-gb</code>' and the zip relative path being sought is "<code>images/mast.png</code>":</p>
+    <ol>
+      <li>
+        <p>Firstly, the user agent will search for a folder that matches the user agent's
+          locale as closely as possible for the desired file. In this case, the user
+          agent would attempt to locate the relative path <code>'images/mast.png</code>' in '<code>/locales/en-gb/</code>', but would fail. </p>
+      </li>
+      <li>
+        <p>Secondly, if the file is absent, the user agent will search for the absent file in any
+          other sub-folder that is in the language range of the current locale folder. So the next place the user agent would look is in the
+          '<code>en/</code>' folder, where it would match the zip relative path '<code>images/mast.png</code>'.</p>
+      </li>
+      <li>
+        <p>Lastly, if the above fails, the user agent will search for the absent file at the root
+          of the widget package. So, if the user agent's locale did not find the zip relative path in one of the locale folders, then '<code>images/mast.png</code>' file at the root of the widget would be matched and this <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-content">default content</a> would be used.</p>
+      </li>
+    </ol>
+    <p>Now consider the for various Chinese variants: '<code>zh-hans-cn</code>',
+      '<code>zh-hans</code>', and '<code>zh</code>' below. In this case, to find the
+      '<code>flag.png</code>' file for Mainland Chinese in simplified script
+      '<code>zh-hans-cn</code>', the user agent would first look in
+      '<code>zh-hans-cn</code>', followed by '<code>zh-hans</code>', then in
+      '<code>zh</code>' where the file is located.</p>
+    <p>To find the '<code>mast.png</code>' file, the user agent would look in
+      '<code>zh-hans-cn</code>', followed by '<code>zh-hans</code>', followed
+      '<code>zh</code>', and finally at the root of the widget package where the absent
+      file is actually located.</p>
+    <div class="code_sniplet c1">
+      <p><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16">/index.html</p>
+      <pre><code>&lt;!doctype html&gt;
+&lt;title&gt;Patriotic Boat&lt;/title&gt;
+&lt;script src="scripts/engine.js"&gt;
+&lt;/script&gt;
+&lt;body&gt;
+  &lt;img src="flag.png"&gt;
+  &lt;img src="mast.png"&gt;</code></pre>
+    </div>
+    <ul class="dir_listing">
+      <li class="widget_icon"> <img alt="widget file: " height="16" src="./REC-widgets-20121127_files/widget.png" width="16"> boat.wgt
+        <ul>
+          <li class="doc_icon"><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16"> index.html</li>
+          <li class="doc_icon"><span class="config_icon"><img alt="configuration document: " height="16" src="./REC-widgets-20121127_files/config.png" width="16"> config.xml</span></li>
+          <li class="config_icon"><img alt="icon: " height="16" src="./REC-widgets-20121127_files/image.png" width="16"> flag.png</li>
+          <li class="folder"><a class="folder" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder"><img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"></a>images/
+            <ul>
+              <li><img alt="icon: " height="16" src="./REC-widgets-20121127_files/image.png" width="16"> mast.png</li>
+            </ul>
+          </li>
+          <li class="folder"> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> scripts/
+            <ul>
+              <li><img alt="script: " height="16" src="./REC-widgets-20121127_files/script.png" width="16"> engine.js</li>
+            </ul>
+          </li>
+          <li class="folder"> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> locales/
+            <ul>
+              <li class="folder"> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> en-gb/
+                <ul>
+                  <li class="folder"><img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> images
+                    <ul>
+                      <li><img alt="icon: " height="16" src="./REC-widgets-20121127_files/image.png" width="16"> flag.png</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li class="folder"> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> en/
+                <ul>
+                  <li><img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> images
+                    <ul>
+                      <li><img alt="icon: " height="16" src="./REC-widgets-20121127_files/image.png" width="16"> mast.png</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li><img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> zh-hans-cn/</li>
+              <li><img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> zh-hans/</li>
+              <li> <img alt="folder: " height="16" src="./REC-widgets-20121127_files/folder.png" width="16"> zh/
+                <ul>
+                  <li><img alt="icon: " height="16" src="./REC-widgets-20121127_files/image.png" width="16"> flag.png</li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+  <h2 id="steps-for-processing-a-widget-package"><span class="secno">9 </span>Steps for Processing a Widget Package</h2>
+  <p>The <dfn id="steps-for-processing-a-widget-package-0">steps for processing a widget package</dfn> involves nine steps that a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> follows in sequential order, responding
+    accordingly if any of the steps result in an error or if the specification asks for the
+    user agent to skip a step. The procedures for what to do when an error is encountered
+    are described as part of each step; however, there are times when it will not be
+    possible for the user agent to recover from an error and it will be forced to treat the
+    widget as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>.</p>
+  <p>In the event that a user agent encounters an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a> during the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#steps-for-processing-a-widget-package-0">steps for processing a widget package</a>, a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> abort all processing of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#steps-for-processing-a-widget-package-0">steps for processing a
+    widget package</a>.</p>
+  <p class="note"><span class="notetitle">Note:</span>A user agent can optimize <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#steps-for-processing-a-widget-package-0">steps for processing a widget package</a> and associated <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#processing-rules-0">processing rules</a> , or  perform the steps in a different order,
+    but the end result needs to be indistinguishable from the result that
+    would be obtained by following the specification.</p>
+  <h3 id="processing-rules"><span class="secno">9.1 </span>Processing Rules</h3>
+  <p>This section defines various <dfn id="processing-rules-0">processing rules</dfn>, which are algorithms used  during the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#steps-for-processing-a-widget-package-0">steps for processing a widget package</a>. </p>
+  <p>These algorithm makes use of a few special concepts defined below:</p>
+  <dl>
+    <dt><dfn id="text-node">Text node</dfn></dt>
+    <dd>
+      <p>Any <code>Text</code> node, including <code>CDATASection</code> nodes (any <code>Node</code> with node type <code>TEXT_NODE</code> or <code>CDATA_SECTION_NODE</code>) as defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#dom3core">[DOMCore]</a> specification. For example, the worlds "hello world!" in the following <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element: <code>&lt;name&gt;hello world!&lt;/name&gt;</code>.</p>
+    </dd>
+    <dt><dfn id="localizable-string">Localizable string</dfn> </dt>
+    <dd>
+      <p>A data structure containing a sequence of one or more strings, each having some
+        associated directional information and language information (if any). The purpose of an localizable string is to assist user agent in
+        correctly applying the Unicode <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#bidi">[BIDI]</a> algorithm when displaying text. </p>
+    </dd>
+    <dd class="example">
+      <p>For
+        example, the string "Internationalization <span dir="rtl">نشاط التدويل!</span> Activity." The string contains both Arabic and English that mixes left-to-right text, right-to-left
+        text, and a directionality-neutral punctuation mark that could not be correctly displayed 
+        without directional information. </p>
+    </dd>
+    <dt><code><dfn id="null">null</dfn></code></dt>
+    <dd>
+      <p>A special symbol to indicate that a value has no data. For example, "let <var>x</var> be <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code>" or "if <var>y</var> is empty, then return <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code>".</p>
+    </dd>
+  </dl>
+  <p class="note"><span class="notetitle">Note:</span> Note: Although languages such as ECMA Script and Java support <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code> as a 
+    native value type, there are some programming languages that have no 
+    notion of <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code> or where null is problematic (e.g. C++). Implementations 
+    in these languages need to substitute a language-specific value or symbol 
+    which is functionally equivalent to <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code>, or if no equivalent exists, to 
+    have no value at all. For example, the value 0 may represent <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code> for 
+    the height of a widget, since the height of a widget is defined as a 
+    non-negative integer greater than 0. In such a case, 0 could be treated 
+    as if it were <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code>. </p>
+  <h4 id="rule-for-verifying-a-zip-archive"><span class="secno">9.1.1 </span>Rule for Verifying a Zip Archive</h4>
+  <p>The <dfn id="rule-for-verifying-a-zip-archive-0">rule for verifying a 
