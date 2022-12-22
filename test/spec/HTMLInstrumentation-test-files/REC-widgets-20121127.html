@@ -1893,4 +1893,210 @@ Distributed under the W3C Software License.
     </li>
     <li>
       <p>By explicitly marking XML elements in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> as
-        localized, a process referred to as <a href="h
+        localized, a process referred to as <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#element-based-localization-0">element-based localization</a>.</p>
+    </li>
+  </ol>
+  <p>Both forms of localization are described below. Folder-based and element-based
+    localization rely on the user agent to match the language ranges held by the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user
+    agent locales</a></var> to the appropriate locale folders and/or localized XML elements in
+    the widget's <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>.</p>
+  <h3 id="folder-based-localization"><span class="secno">8.3 </span>Folder-based localization</h3>
+  <p>This specification defines the concept of <dfn id="folder-based-localization-0">folder-based localization</dfn>,
+    which is the process whereby an author places <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file" title="file">files</a> inside <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder" title="folder">folders</a> that are named in a manner that conforms to a <code>language-range</code> ABNF rule of this specification. That
+    is, by naming folders in lower-case using values derived from the <a href="http://www.iana.org/assignments/language-subtag-registry">IANA Language Subtag
+    Registry</a> such as "<code>en-us</code>", "<code>en-gb</code>", and so on, but
+    avoiding subtags marked as <dfn class="external" id="deprecated">deprecated</dfn>, <dfn class="external" id="grandfathered">grandfathered</dfn>, or <dfn class="external" id="redundant">redundant</dfn> in the <a href="http://www.iana.org/assignments/language-subtag-registry">IANA Language Subtag
+    Registry</a>. These <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0" title="locale folder">locale folders</a> are then placed
+    inside the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#container-for-localized-content">container for localized content</a>.</p>
+  <p class="authorguide"><strong>Authoring Guidelines</strong> Although BCP 47 recommends a particular case-folding convention, the use of upper or lowercase letters has no meaning in a language tag. Because folders inside a widget package are treated by the user-agent in a case-sensitive manner, the names of the folders inside a 'locale' folder must be all lowercase. All language tags are mapped to lowercase for matching purposes (although they can appear in any form in the configuration file or elsewhere).</p>
+  <p>The <dfn id="container-for-localized-content">container for localized content</dfn> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#reserved">reserved</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder">folder</a> at the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root of the widget package</a> whose <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder-name">folder-name</a></code> case-sensitively matches the string '<code>locales</code>'. A
+    container for localized content contains zero or more <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0" title="locale folder">locale folders</a>.</p>
+  <p>A <dfn id="locale-folder-0">locale folder</dfn> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder">folder</a> whose <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name field</a></var> matches the production of <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder">locale-folder</a></code> and is a direct descendant of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#container-for-localized-content">container for localized content</a> (e.g., "<code>/locales/en-us</code>",
+    "<code>/locales/fr</code>", etc). A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0">locale folder</a> contains zero or more <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#arbitrary">arbitrary</a> folders and/or files.</p>
+  <div class="authorguide">
+    <p><strong>Authoring Guidelines</strong> Authors need to avoid region, script or
+      other subtags except where they add useful distinguishing information to a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0">locale folder</a>. In addition, avoid including empty <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0" title="locale folder">locale folders</a> in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a> (unless there
+      is a good reason to include them).</p>
+    <div class="example">
+      <p>An example of a widget that uses folder-based localization:</p>
+      <pre><code>widget.wgt
+ locales/zh-hans-cn/a.gif
+ locales/zh-hans-cn/f.gif
+ locales/zh-hans/a.gif
+ locales/zh-hans/b.gif
+ locales/zh/a.gif
+ locales/zh/b.gif
+ locales/zh/c.gif
+ a.gif
+ b.gif
+ c.gif
+ d.gif
+ index.html
+ config.xml</code></pre>
+    </div>
+    <p>Authors can further facilitate the localization process by grouping <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file" title="file">files</a> into <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder">folder</a> hierarchies made up of matching subtags,
+      as is shown in the example.</p>
+    <p>Assuming the widget's locale is "zh-hans-cn", a reference to:</p>
+    <ul>
+      <li>a.gif would resolve to locales/zh-hans-cn/a.gif</li>
+      <li> b.gif would resolve to locales/zh-hans/b.gif</li>
+      <li> c.gif would resolve to locales/zh/c.gif</li>
+      <li> d.gif would resolve to d.gif, as it is not associated with any
+        locales and is hence available to all locales.</li>
+    </ul>
+    <p>This works at all sub-levels, so long as the parent subtag matches the child
+      subtags. So, for example, the "<code>cn</code>" region can make use of the localized
+      files in the "zh-hans" folder level, the "zh" folder level, and the unlocalized files
+      at the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root of the widget package</a>. The user agent always prioritizes
+      files in sub-folders over files in locale folders closer to the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root of the
+      widget package</a>. Conversely, if the widget's locale were "<code>en-us</code>",
+      references to a.gif, b.gif, c.gif and d.gif would all resolve to the files in the
+      root of the widget package.</p>
+    <p>Note also that the user agent treats any <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a> or <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder">folder</a> outside the container for localized content as <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-content">default content</a>.</p>
+  </div>
+  <h3 id="element-based-localization"><span class="secno">8.4 </span>Element-Based Localization</h3>
+  <p>This specification defines the concept of <dfn id="element-based-localization-0">element-based localization</dfn>,
+    which allows authors to use the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute to explicitly indicate
+    that an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> element in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> has been <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localization" title="localization">localized</a>.</p>
+  <div class="example">
+    <p>The following is an example of element-based localization:</p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+   &lt;name short="Weather"&gt;
+   The Ultimate Weather Widget
+   &lt;/name&gt;
+
+   &lt;name short="Boletim" xml:lang="pt"&gt;
+    Boletim Metereológico
+   &lt;/name&gt;
+&lt;/widget&gt;</code></pre>
+  </div>
+  <p>Some of the elements in the widgets namespace are defined to be <dfn id="localizable-via-xml:lang">localizable via xml:lang</dfn> as part of the element's definition (with either "yes" or "no"). See, for example, the <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element. When "yes", it means  that an author can utilize xml:lang to achieve <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#element-based-localization-0">element-based localization</a> either directly or indirectly through the inheritance of the value of <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code>. How element-based localization is handled is specified in detail in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a>. </p>
+  <p class="note"><span class="notetitle">Note:</span> The xml:lang attribute can be used on any element in order to indicate which language is used in the content and attribute values of that element. As specified in the XML Specification, its value is inherited, such that if an element has an xml:lang attribute, all of its descendants are considered to be in that language as well, unless they specify their own <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute. Note that an element can indicate that it is in no specific language by setting <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> to the empty string, irrespective of whether any of its ancestors has an xml:lang attribute.</p>
+  <div class="example">
+    <p>For example, if an author uses the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute on the <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element, then all child elements inherit
+      the value xml:lang. This means that the first <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element below behaves as <code>xml:lang="en"</code> had been explicitly used.
+      However, in the second <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element, the
+      declaration of <code>xml:lang="pt"</code> overrides <code>xml:lang="en"</code> inherited from the <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element. Finally, the last name element overrides xml:lang with an empty string, so that element will be treated by the user agent as <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-content">default content</a>.</p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"
+ xml:lang="en"&gt;
+
+   &lt;name short="I'm in english, though not explicitly marked as such!"&gt;
+    <strong>Behaves as if xml:lang="en"</strong>
+   &lt;/name&gt;
+
+   &lt;name xml:lang="pt"&gt;
+    <strong>The declaration of xml:lang="pt" overrides
+    xml:lang="en" inherited from the widget element. </strong>
+   &lt;/name&gt;
+   
+   &lt;name xml:lang=""&gt;
+    <strong>The user agent will treat this as unlocalized content.</strong> 
+   &lt;/name&gt;
+
+&lt;/widget&gt;</code></pre>
+  </div>
+  <p>If an element is marked as being localizable via <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> with "yes",
+    the specification  indicates that only <dfn id="one-element-is-allowed-per-language">one element is allowed per language</dfn>:</p>
+  <p>One element is allowed per language means that only one element of a type is
+    allowed to be used per language (e.g., although many <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> elements can be present in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>, only one <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element will be selected by the user agent for the English language). During
+    processing (<a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a>), the user agent will only
+    match the first element, in <a href="http://www.w3.org/TR/xpath/#dt-document-order">document order</a>, that matches a
+    language range in the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> and <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> any
+    subsequent repetitions of the element that contain a matching <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> value (even if that element's content is different).</p>
+  <div class="example">
+    <p>For example, assume the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> only contains the
+      following language range: "<code>en-us</code>" (English as used in the United
+      States). As only one instance of the <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> element is allowed per language, in the
+      following code the user agent would match the first <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> element but would <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the
+      second and third <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> elements.</p>
+    <pre><code>
+&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+
+   &lt;description xml:lang="en"&gt;
+      <strong>This element would be used.</strong>
+   &lt;/description&gt;
+
+   &lt;description xml:lang="en"&gt;
+      <strong>This element would be ignored because there is already
+      a description element that uses xml:lang="en".</strong>
+   &lt;/description&gt;
+
+   &lt;description&gt;
+      <strong>This element is unlocalized, and would be used if the user agent's
+      locale does not match any localized description elements.</strong>
+   &lt;/description&gt;
+
+	 &lt;description xml:lang=""&gt;
+<strong>		This element would be ignored because there is already an unlocalized 
+      description element! Using xml:lang="" makes this element behave as if
+      it is unlocalized.</strong>
+	 &lt;/description&gt;
+
+&lt;/widget&gt;</code></pre>
+    <p>However, if the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> only contained "<code>*</code>",
+      or did not match any of the localized <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> elements, then the user agent would match
+      the third <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> element above.</p>
+  </div>
+  <p>In the case whereby the author does not use an <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute,
+    and no element of a particular type with <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> matches the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var>, the user agent will use the
+    first element that is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-content">default content</a>, in <a href="http://www.w3.org/TR/xpath/#dt-document-order">document order</a>, that matches the
+    element type being sought.</p>
+  <div class="example">
+    <p>For example, now assume that the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> only contains the
+      following language range: "<code>jp</code>" (Japanese). As only one instance of the <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> element is allowed per
+      language, in the following code the user will agent <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the first
+      two <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> elements, but would match
+      the third (unlocalized) <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> element.</p>
+    <pre><code>
+&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+
+   &lt;description xml:lang="en"&gt;
+       <strong>This element would be ignored.</strong>
+   &lt;/description&gt;
+
+   &lt;description xml:lang="en"&gt;
+      <strong>This element would be ignored.</strong>
+   &lt;/description&gt;
+
+   &lt;description&gt;
+      <strong>In this case, this unlocalized element would be used.</strong>
+   &lt;/description&gt;
+
+&lt;/widget&gt;</code>
+  </pre>
+  </div>
+  <h3 id="localization-examples"><span class="secno">8.5 </span>Localization Examples</h3>
+  <p><em>This section is non-normative.</em></p>
+  <p>This section presents three examples of how widgets can be localized. Each example
+    is intended to showcase how the localization algorithm is intended to work.</p>
+  <h4 id="simple-example"><span class="secno">8.5.1 </span>Simple Example</h4>
+  <div class="example">
+    <p class="no-toc no-num">This example shows a widget that displays the days of the
+      week based on the language ranges held by the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var>. If the
+      user agent is unable to match a language range to any <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#locale-folder-0">locale folder</a>, the
+      widget displays <code>/index.html</code> at the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#root-of-the-widget-package">root of the widget
+      package</a>.</p>
+    <div class="code_sniplet c1">
+      <p><img alt="config: " height="16" src="./REC-widgets-20121127_files/config.png" width="16">config.xml</p>
+      <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+&lt;name&gt;What day is it?&lt;/name&gt;
+&lt;description&gt;
+ This widget highlights the current day
+ of the week.
+&lt;/description&gt;
+&lt;/widget&gt; </code></pre>
+      <hr>
+      <p><img alt="file: " height="16" src="./REC-widgets-20121127_files/text.png" width="16">locale/es/index.html</p>
+      <pre><code>&lt;!doctype html&gt;
+&lt;title&gt;¿Qué día es?&lt;/title&gt;
+&lt;script src="scripts/dayfinder.js"&gt;&lt;/script&gt;
+&lt;body&gt;
+&lt;p&gt;Hoy es: lunes, martes, miércoles,
+   jueves, viernes, sábado,
+   domingo
+</code></pre>
+    </div>
+    <ul class="dir_listing">
+      <li class="widget_icon"> <img alt="widget file: " height="16" src="./REC-widgets-20121127_files/widget.png" width="16"> weekdays.wgt
+        <ul>
+          <li clas
