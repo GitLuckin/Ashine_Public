@@ -2604,4 +2604,344 @@ Distributed under the W3C Software License.
     </li>
     <li>
       <p>The <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name field</a></var> is an empty string, return <code>false</code> and
-   
+        terminate this algorithm.</p>
+    </li>
+    <li>
+      <p>The <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name field</a></var> contains <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-forbidden-characters">Zip forbidden characters</a>,
+        return <code>false</code> and terminate this algorithm.</p>
+    </li>
+    <li>
+      <p>The <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name field</a></var> is a sequence exclusively composed of (one or
+        more) <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#space-characters">space characters</a> or a mixed sequence of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#space-characters">space
+        characters</a> and U+002E FULL STOP (".") (e.g.
+        " . .   "), return <code>false</code> and terminate this
+        algorithm.</p>
+    </li>
+    <li>
+      <p>The <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name-field">file name field</a></var> is an invalid <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-relative-path">Zip relative
+        path</a>, return <code>false</code> and terminate this algorithm.</p>
+    </li>
+    <li>return <code>true</code>.</li>
+  </ol>
+  <h4 id="rule-for-getting-text-content"><span class="secno">9.1.8 </span>Rule for Getting Text Content</h4>
+  <p>The <dfn id="rule-for-getting-text-content-0">rule for getting text content</dfn> is given in the following algorithm.
+    The algorithm always returns a list of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localizable-string">localizable string</a>s, which can be empty.</p>
+  <ol>
+    <li>
+      <p>Let <var>input</var> be the <code>Element</code> to be processed.</p>
+    </li>
+    <li>
+      <p>Let <var>bidi-text</var> be an empty list of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localizable-string" title="localizable string">localizable strings</a>.</p>
+    </li>
+    <li>
+      <p>If <var>input</var> has no child nodes, return an <var>bidi-text</var> and terminate this algorithm.</p>
+    </li>
+    <li>
+      <p>Let <var>lang-strings</var> be an empty list (it will hold localizable strings). </p>
+    </li>
+    <li>
+      <p>Let <var>lang</var> be the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-tag">language tag</a> derived from having processed the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute on either <var>input</var>, or in <var>input</var>'s  ancestor chain as per <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a>. If <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></var> was not used anywhere in the ancestor chain, then let <var>lang</var> be an empty string.</p>
+    </li>
+    <li>
+      <p>Let <var>direction</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-determining-directionality-0">rule for determining directionality</a> to <var>input</var>. </p>
+    </li>
+    <li>
+      <p>Associate <var>lang</var> and <var>direction</var> with <var>bidi-text</var>. </p>
+    </li>
+    <li>
+      <p>For each <var>child node</var> of <var>input</var>: </p>
+      <ol>
+        <li>
+          <p>If <var> child node</var> is not an <code>Element</code> or <code>TextNode</code>, move onto the next child element and ignore the following sub-steps. </p>
+        </li>
+        <li>
+          <p>If the <var> child node</var> is an <code>Element</code>, let <var>lstring</var> be the result of recursively applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-text-content-0">rule for getting text content</a> using this <var>current child element</var> as the argument. </p>
+        </li>
+        <li>
+          <p>If the <var> child node</var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#text-node" title="text node">text node</a>, then: </p>
+          <ol>
+            <li>
+              <p> Create a new localizable string called <var>lstring</var>, using the text content of the <var>current child node</var> as the text value, <var>direction</var> as the direction, and <var>lang</var> as the language. </p>
+            </li>
+          </ol>
+        </li>
+        <li> Append <var>lstring</var> to the <var>lang-string</var> list. </li>
+      </ol>
+    </li>
+    <li>
+      <p>Take all the text nodes, in order, from the returned <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localizable-string">localizable string</a> and associate them with <var>bidi-text</var>. </p>
+    </li>
+    <li>return <var>bidi-text</var>.</li>
+  </ol>
+  <div class="example">
+    <p>For example, the following configuration document: </p>
+    <pre>&lt;?xml version="1.0" encoding="UTF-8"?&gt;<br>&lt;widget xmlns="http://www.w3.org/ns/widgets" dir="rtl" xml:lang="fr"&gt;
+&lt;name dir="rlo"&gt;
+   &lt;span xml:lang="jp"&gt;Hello &lt;span dir="rtl"&gt;&lt;span dir="rlo"/&gt;backwards&lt;/span&gt;&lt;/span&gt;
+&lt;/name&gt;
+&lt;/widget&gt;</pre>
+    <p>When the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-text-content-0">rule for getting text content</a> is applied could be logically represented as pseudo code: </p>
+    <pre><code>
+{dir: rlo,
+ lang: fr,
+ textNodes:
+	[{data: "Hello ",
+     direction: "rlo",
+     lang: "jp"},
+              
+     {data: "backwards",
+      direction: "rtl",
+      lang: "jp"}]
+}</code></pre>
+  </div>
+  <h4 id="rule-for-getting-text-content-with-normalized-white-space"><span class="secno">9.1.9 </span>Rule for Getting Text Content with Normalized White Space</h4>
+  <p class="no-toc no-num">The <dfn id="rule-for-getting-text-content-with-normalized-white-space-0">rule for getting text content with normalized white
+    space</dfn> is given in the following algorithm. The algorithm always returns a string,
+    which can be empty.</p>
+  <ol>
+    <li>
+      <p>Let <var>input</var> be the <code>Element</code> to be processed.</p>
+    </li>
+    <li>
+      <p>Let <var>result</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-text-content-0">rule for getting text
+        content</a> to <var>input</var>.</p>
+    </li>
+    <li>
+      <p>In <var>result</var>, convert any sequence of one or more <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#space-characters">space characters</a> into a single U+0020 SPACE.</p>
+    </li>
+    <li>
+      <p>In <var>result</var>, remove any leading or trailing U+0020 SPACE character.</p>
+    </li>
+    <li>
+      <p>Return <var>result</var>.</p>
+    </li>
+  </ol>
+  <div class="example">
+    <p>For example, the user agent would <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code> and <code>blink</code> elements, but their <code>Text</code> nodes would be extracted (together with directional and language information): </p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"
+ 		 xmlns:x="http://x.x.example/x" xml:lang="en"&gt;
+   &lt;name&gt;
+     The &lt;blink xml:lang="en-us"&gt;Awesome&lt;/blink&gt;
+     &lt;author email="dude@example.com"&gt;Super &lt;x:blink dir="rtl"&gt;Dude&lt;/x:blink&gt;&lt;/author&gt;
+     Widget&lt;/name&gt;
+&lt;/widget&gt;</code></pre>
+    <p>The resulting <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-name">widget name</a></var> would be "<samp>The Awesome Super
+      <bdo dir="rtl">Dude</bdo>
+      Widget</samp>" (please note that <q>Dude</q> is rendered right-to-left).</p>
+  </div>
+  <h4 id="rule-for-parsing-a-non-negative-integer"><span class="secno">9.1.10 </span>Rule for Parsing a Non-negative Integer</h4>
+  <p>The <dfn id="rule-for-parsing-a-non-negative-integer-0">rule for parsing a non-negative integer</dfn> is given in the following
+    algorithm.  This algorithm  returns the number zero, a positive integer, or an error.</p>
+  <ol>
+    <li>
+      <p>Let <var title="">input</var> be the string being parsed.</p>
+    </li>
+    <li>
+      <p>Let <var title="">result</var> have the value <code>0</code>.</p>
+    </li>
+    <li>
+      <p>If the length of <var title="">input</var> is <code>0</code>, return an
+        error.</p>
+    </li>
+    <li>
+      <p>Let <var title="">position</var> be a pointer into <var title="">input</var>,
+        initially pointing at first character of the string.</p>
+    </li>
+    <li>
+      <p>Let <var>nextchar</var> be the character in <var>input</var> at <var>position</var>.</p>
+    </li>
+    <li>
+      <p>If the <var>nextchar</var> is one of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#space-characters">space characters</a>,
+        increment <var title="">position</var>. If <var>position</var> is past the end of <var>input</var>, return an error and terminate this algorithm. Otherwise, go to step 5 in this algorithm.</p>
+    </li>
+    <li>
+      <p>If the <var>nextchar</var> is not one of U+0030 (<code>0</code>) .. U+0039
+        (<code>9</code>), then return <var>result</var>.</p>
+    </li>
+    <!-- Ok. At this point we know we have a number. It might have
+                           trailing garbage which we'll ignore, but it's a number, and we
+                           won't return an error. -->
+    <li>
+      <p>If the <var>nextchar</var> is one of U+0030 (<code>0</code>) .. U+0039
+        (<code>9</code>):</p>
+      <ol style="list-style-type:upper-alpha">
+        <li>
+          <p>Multiply <var title="">result</var> by ten.</p>
+        </li>
+        <li>
+          <p>Add the value of the <var>nextchar</var> to <var title="">result</var>.</p>
+        </li>
+        <li>
+          <p>Increment <var title="">position</var>.</p>
+        </li>
+        <li>
+          <p>If <var title="">position</var> is not past the end of <var title="">input</var>, go to 5 in this algorithm.</p>
+        </li>
+      </ol>
+    </li>
+    <li>
+      <p>Return <var title="">result</var>.</p>
+    </li>
+  </ol>
+  <h4 id="rule-for-identifying-the-media-type-of-a-file"><span class="secno">9.1.11 </span>Rule for Identifying the Media Type of a File</h4>
+  <p>The <dfn id="rule-for-identifying-the-media-type-of-a-file-0">rule for identifying the media type of a file</dfn> is given by the
+    following algorithm. The algorithm always returns a
+    string.</p>
+  <p class="note"><span class="notetitle">Note:</span>This rule is only to be applied
+    when explicitly instructed to by the specification (e.g., during <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a>). There
+    are situations where alternative means are defined by the specification to identify the
+    media type of a file (e.g., by the presence of the <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element's <code title="content type"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-type-attribute">type</a></code> attribute or deriving the media type of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-start-file">default start file</a> from the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-start-files-table">default start files table</a>).</p>
+  <ol>
+    <li>
+      <p>Let <var title="">file</var> be the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a> to be processed. </p>
+    </li>
+    <li>
+      <p>Let <var>content-type</var> be an empty string.</p>
+    </li>
+    <li>
+      <p>Let <var>extension</var> be an empty string.</p>
+    </li>
+    <li>
+      <p>Let <var>name</var> be the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name">file-name</a></code> component of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-relative-path">zip relative path</a> that identifies the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a></var>.</p>
+      <p class="example">For example, the <var>name</var> for "<code>some/zip/rel/path/hello.png</code>" would be "<code>hello.png</code>". </p>
+    </li>
+    <li>
+      <p>If the first character of the <var>name</var> is  a   U+002E 'FULL STOP'  character, and the file name contains no other U+002E 'FULL STOP'  character, then go to step 10 of this algorithm. </p>
+      <p class="example">For example, if the name is "<samp>.htaccess</samp>", jump to step 10 and derive the media type using   the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#sniff">[SNIFF]</a> specification. </p>
+    </li>
+    <li>
+      <p>If the first character or last character of the <var>name</var> is  not a   U+002E 'FULL STOP'  character, but <var>name</var> contains one or more U+002E 'FULL STOP'  characters, then let <var>extension</var> be the sequence of characters from the last U+002E 'FULL STOP' (inclusive) to the end of <var>name</var>. </p>
+      <p class="example">The value of <var>extension</var> for the file name "<samp>cat.html</samp>" would be ".<samp><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#html">html</a></samp>". The value of extension for "...html" would be ".html". And the value of <var>extension</var> for "hello." would be an empty string. </p>
+    </li>
+    <li>
+      <p>If the first character of the <var>name</var> is  a   U+002E 'FULL STOP'  character, and the file name contains another U+002E 'FULL STOP'  character, then let <var>extension</var> be the sequence of characters from the last U+002E 'FULL STOP' (inclusive) to the end of <var>name</var> (if any). </p>
+      <p class="example">For example, if the <var>name</var> is "<samp>.myhidden.html</samp>", then the extension would be "<samp><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#html">.html</a></samp>".</p>
+    </li>
+    <li>
+      <p>If <var>extension</var> is an empty string, go to step 10 in this algorithm.</p>
+    </li>
+    <li>
+      <p>Check that  each  character in the <var> extension</var> is either in the  U+0041-U+005A range or in the  U+0061-U+007A range (ASCII uppercase and lowercase characters, respectively) or in the U+0030-U+0039 range (ASCII numbers 0 to 9): </p>
+      <ol>
+        <li>
+          <p>If any  character in the <var>extension</var> is outside  the    U+0041-U+005A range or  the  U+0061-U+007A range or the U+0030-U+0039 range, then go to step 10 in this algorithm. </p>
+          <p class="example">For example, if the extension is "<samp>.pñg</samp>", the go to step 10 in this algorithm. </p>
+        </li>
+        <li>
+          <p> If all characters in the <var>extension</var> are in any of the  U+0041-U+005A range or in the  U+0061-U+007A range  or the U+0030-U+0039 range (e.g., "<code>Mp3</code>"), then attempt to case-insensitive match
+            the value of <var>extension</var> to one of the values in the file extension column in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-identification-table">file identification table</a>. If there is a match, then return let <var>content-type</var> be the corresponding value from the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> column. </p>
+        </li>
+        <li>
+          <p>Go to step 11.</p>
+        </li>
+      </ol>
+    </li>
+    <li>
+      <p> Let <var>content-type</var> be the result of processing <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a></var> through the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#sniff">[SNIFF]</a> specification. </p>
+    </li>
+    <li>Return the value of <var>content-type</var>.</li>
+  </ol>
+  <table>
+    <caption>
+    <dfn id="file-identification-table">File Identification Table</dfn>
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">file extension</th>
+        <th scope="col">media type</th>
+      </tr>
+    </thead>
+    <tbody><tr>
+      <td>.html</td>
+      <td>text/html</td>
+    </tr>
+    <tr>
+      <td>.htm</td>
+      <td>text/html</td>
+    </tr>
+    <tr>
+      <td>.css</td>
+      <td>text/css</td>
+    </tr>
+    <tr>
+      <td>.js</td>
+      <td>application/javascript</td>
+    </tr>
+    <tr>
+      <td>.xml</td>
+      <td>application/xml</td>
+    </tr>
+    <tr>
+      <td>.txt</td>
+      <td>text/plain</td>
+    </tr>
+    <tr>
+      <td>.wav</td>
+      <td>audio/x-wav</td>
+    </tr>
+    <tr>
+      <td>.xhtml</td>
+      <td>application/xhtml+xml</td>
+    </tr>
+    <tr>
+      <td>.xht</td>
+      <td>application/xhtml+xml</td>
+    </tr>
+    <tr>
+      <td>.gif</td>
+      <td>image/gif</td>
+    </tr>
+    <tr>
+      <td>.png</td>
+      <td>image/png</td>
+    </tr>
+    <tr>
+      <td>.ico</td>
+      <td>image/vnd.microsoft.icon</td>
+    </tr>
+    <tr>
+      <td>.svg</td>
+      <td>image/svg+xml</td>
+    </tr>
+    <tr>
+      <td>.jpg</td>
+      <td>image/jpeg</td>
+    </tr>
+    <tr>
+      <td>.mp3</td>
+      <td>audio/mpeg</td>
+    </tr>
+  </tbody></table>
+  <p>It is <em class="ct">optional</em> for a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported" title="supported">support</a> the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0" title="media type">media types</a> given in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-identification-table">file identification table</a>. </p>
+  <h4 id="rule-for-deriving-the-user-agent-locales"><span class="secno">9.1.12 </span>Rule for Deriving the <var title="">user agent locales</var></h4>
+  <p>The <dfn id="rule-for-deriving-the-user-agent-locales-0">rule for deriving the <var>user agent locales</var></dfn> is as follows: </p>
+  <ol>
+    <li>
+      <p>Let <var>unprocessed locales list</var> be a list that  contains the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#system">end-user's language ranges</a>.</p>
+    </li>
+    <li>
+      <p>For each <var>range</var> in the <var>unprocessed locales list</var>: </p>
+      <ol>
+        <li>
+          <p>If this <var>range</var> begins with the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#subtags" title="subtags">subtag</a> '<code>*</code>' (e.g. "<code>*-us</code>" or just "<code>*</code>"),  or contains any <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#space-characters">space characters</a>, skip
+            all the steps in this algorithm below, and move onto the next <var>range</var>.</p>
+        </li>
+        <li>
+          <p>If this <var>range</var> begins with the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#subtags" title="subtags">subtag</a> "<code>i</code>" or the <var>range</var> is marked as "deprecated" in the <a href="http://www.iana.org/assignments/language-subtag-registry">IANA Language Subtag
+            Registry</a>, or is or is null, skip
+            all the steps in this algorithm below, and move onto the next <var>range</var>. </p>
+        </li>
+        <li>
+          <p>If this <var>range</var> contains any <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#subtags" title="subtags">subtag</a> '<code>*</code>', remove the '<code>*</code>' and its preceding hyphen
+            (<code>U+002D</code>) (e.g., '<code>en-*-us</code>' becomes
+            '<code>en-us</code>').</p>
+        </li>
+        <li>
+          <p>While <var>range</var> contains <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#subtags" title="subtags">subtags</a>:</p>
+          <ol style="list-style:decimal">
+            <li>
+              <p>Add the value of the <var>range</var> to the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent
+                locales</a></var>.</p>
+            </li>
+            <li>
+              <p>Remove the right most <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#subtags" title="subtags">subtag</a> from <var>range</var> and append th
