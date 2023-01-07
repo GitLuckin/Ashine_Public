@@ -2944,4 +2944,169 @@ Distributed under the W3C Software License.
                 locales</a></var>.</p>
             </li>
             <li>
-              <p>Remove the right most <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#subtags" title="subtags">subtag</a> from <var>range</var> and append th
+              <p>Remove the right most <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#subtags" title="subtags">subtag</a> from <var>range</var> and append the resulting value to <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent
+                locales</a></var>. Continue removing the right most <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#subtags" title="subtags">subtag</a> and adding the result to <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent
+                locales</a></var> until there are no <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#subtags">subtags</a> left in <var>range</var>.</p>
+              <p class="example">For example, if the <var>range</var> was "<code>zh-hans-cn</code>",
+                then the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> become
+                "<code>zh-hans-cn,zh-hans,zh</code>".</p>
+            </li>
+            <li>
+              <p> Move onto the next <var>range</var> and go to step 1 in this
+                algorithm. </p>
+            </li>
+          </ol>
+        </li>
+      </ol>
+    </li>
+    <li>
+      <p>Append the value "<code>*</code>" to the end of <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent
+        locales</a></var>.</p>
+    </li>
+  </ol>
+  <p class="example">For example, an <var>unprocessed locales list</var> that contains
+    "<code>en-us,en-au,en,fr-ca,zh-hans-cn</code>" would result in a <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent
+    locales</a></var> that contains
+    "<code>en-us,en,en-au,en,en,fr-ca,fr,zh-hans-cn,zh-hans,zh,*</code>".</p>
+  <p class="example">For example, an <var>unprocessed locales list</var> that contains
+    "<code>en-us,en,fr-ca,en,en-ca</code>" would result in a <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> that contains "<code>en-us,en,en,fr-ca,fr,en,en-ca,en,*</code>". </p>
+  <h4 id="rule-for-determining-if-a-potential-zip-archive-is-a-zip-archive"><span class="secno">9.1.13 </span>Rule for Determining if a Potential Zip Archive is a Zip
+    Archive</h4>
+  <p>The <dfn id="rule-for-determining-if-a-potential-zip-archive-is-a-zip-archive-0">rule for determining if a potential Zip archive is a Zip archive</dfn> is
+    given by the following algorithm.</p>
+  <ol>
+    <li>
+      <p>Let <var>potential archive</var> be the acquired resource.</p>
+    </li>
+    <li>
+      <p>Check if the first four bytes of <var>potential archive</var> match the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#magic-numbers-for-a-zip-archive">magic numbers for a Zip archive</a> (<code>50 4B 03 04</code>). </p>
+    </li>
+    <li>
+      <p>If the first four bytes do not match the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#magic-numbers-for-a-zip-archive">magic numbers for a Zip
+        archive</a>, then return an error.</p>
+    </li>
+    <li>
+      <p>Otherwise, return <code>true</code>.</p>
+    </li>
+  </ol>
+  <p class="note"><span class="notetitle">Note:</span> A user agent can inspect the <var>potential archive</var> once it has acquired the first four bytes of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#potential-zip-archive">potential Zip archive</a> or can wait until all the data of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#potential-zip-archive">potential Zip archive</a> has been completely acquired.</p>
+  <h3 class="no-num done" id="step-1-acquire-a-potential-zip-archive"><dfn>Step 1</dfn> - Acquire a Potential Zip Archive</h3>
+  <p>Step 1 involves acquiring a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#potential-zip-archive">potential Zip archive</a> and confirming that
+    it is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip archive</a> by applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-determining-if-a-potential-zip-archive-is-a-zip-archive-0">rule for determining if a
+    potential Zip archive is a Zip archive</a>. A user agent will acquire a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#potential-zip-archive">potential Zip archive</a> from a data transfer protocol that either labels
+    resources with a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> (e.g. <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#http">[HTTP]</a>) or from a data
+    transfer protocol that does not label resources with a media type (e.g., BitTorrent
+    or Bluetooth).</p>
+  <h4 id="acquisition-of-a-potential-zip-archive-labeled-with-a-media-type"><span class="secno">9.1.1 </span><dfn>Acquisition of a Potential Zip archive Labeled with a Media Type</dfn></h4>
+  <p id="ta-GVVIvsdEUo">It is <em class="ct">recommended</em> that a user agent <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported" title="supported">support</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#acquisition-of-a-potential-zip-archive-labeled-with-a-media-type" title="acquisition of a potential Zip archive labeled with a media type">acquisition of a potential Zip archive from a protocol that labels resources with a media
+    type</a> (e.g., getting a widget package over <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#http">[HTTP]</a>). If a user agent <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported" title="supported">supports</a> acquisition of a potential Zip archive from a protocol that labels resources with a media
+    type, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> needs to process resources labeled with the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-widget-media-type">valid widget
+    media type</a> (<code>application/widget</code>), regardless of whether the
+    resource contains a file extension or not, by applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-determining-if-a-potential-zip-archive-is-a-zip-archive-0">rule for determining
+    if a potential Zip archive is a Zip archive</a>. During the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#acquisition-of-a-potential-zip-archive-labeled-with-a-media-type">acquisition of a potential Zip archive labeled with a media
+    type</a>, unless the user agent <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported" title="supported">supports</a> legacy or
+    proprietary <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0" title="media type">media types</a>, <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#unsupported">unsupported</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0" title="media type">media types</a> are in error and the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> treat the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#potential-zip-archive">potential Zip archive</a> as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>.</p>
+  <p id="ta-qxLSCRCHlN">If the result of  the user agent applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-determining-if-a-potential-zip-archive-is-a-zip-archive-0">rule for determining
+    if a potential Zip archive is a Zip archive</a> is <code>true</code>, meaning that the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#potential-zip-archive">potential Zip archive</a> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip archive</a>, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> proceed
+    to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-2-verify-the-zip-archive">Step 2</a>. Otherwise, if an error is returned, the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> treat the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#potential-zip-archive">potential Zip archive</a> as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>. </p>
+  <p class="example">For example, in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#http">[HTTP]</a>, where the <code>Content-Type</code> header matches <code>application/widget</code>.</p>
+  <p>If the protocol used for acquisition of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#potential-zip-archive">potential Zip archive</a> does
+    not provide, or otherwise include, a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a>, then a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">should</em> treat the acquired <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#potential-zip-archive">potential Zip archive</a> as if
+    it has been <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#acquisition-of-potential-zip-archive-not-labeled-with-a-media-type" title="Acquisition of potential Zip archive not labeled with a media type">acquired from a protocol that does not label resources with a media
+    type</a>.</p>
+  <div class="example">
+    <p>In this example, the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> of the <code>Content-Type</code> is
+      not one <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> by the user agent, so the user agent would treat the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#potential-zip-archive">potential Zip archive</a> as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>:</p>
+    <dl>
+      <dt>Request</dt>
+      <dd>
+        <pre><code>GET /foo.wgt HTTP/1.1
+Host: www.example.com
+Accept: application/widget</code></pre>
+      </dd>
+      <dt>Response</dt>
+      <dd>
+        <pre><code>HTTP/1.1 200 OK
+Date: Tue, 04 Sep 2007 00:00:38 GMT
+Last-Modified: Mon, 03 Sep 2007 06:47:19 GMT
+Content-Length: 1337
+Content-Type: application/x-gadget</code></pre>
+      </dd>
+    </dl>
+  </div>
+  <h4 id="acquisition-of-potential-zip-archive-not-labeled-with-a-media-type"><span class="secno">9.1.2 </span><dfn>Acquisition of Potential Zip Archive not Labeled with a Media
+    Type</dfn></h4>
+  <p id="ta-FDGQBROtzW">When acquiring a potential Zip archive that has not been labeled with a media type (e.g., from a file system), a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">should</em> attempt to process
+    the resource regardless of the file extension (including situations when the file
+    extension is absent) by applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-determining-if-a-potential-zip-archive-is-a-zip-archive-0">rule for determining if a potential Zip
+    archive is a Zip archive</a>. If the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-determining-if-a-potential-zip-archive-is-a-zip-archive-0">rule for determining if a potential Zip
+    archive is a Zip archive</a> return <code>true</code>, proceed to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-2-verify-the-zip-archive">Step
+    2</a>. Otherwise, if an error was returned, the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> treat the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#potential-zip-archive">potential Zip archive</a> as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>.</p>
+  <h3 class="no-num done" id="step-2-verify-the-zip-archive"><dfn>Step 2</dfn> - <dfn>Verify the Zip Archive</dfn></h3>
+  <p id="ta-uLHyIMvLwz">To verify that a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip archive</a> and its <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-entry" title="file entry">file
+    entries</a> conform to this specification, a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> apply the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-verifying-a-zip-archive-0">rule for verifying a zip archive</a>. If the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-verifying-a-zip-archive-0">rule for verifying a zip archive</a> returns <code>true</code>, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> go to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-3-set-the-configuration-defaults">Step 3</a>. Otherwise, if the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-verifying-a-zip-archive-0">rule for verifying a zip archive</a> returns an error, then  the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> treat the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-archive-0">Zip
+    archive</a> as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>.</p>
+  <h3 class="no-num" id="step-3-set-the-configuration-defaults"><dfn>Step 3</dfn> - Set the Configuration Defaults</h3>
+  <p>In <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-3-set-the-configuration-defaults">Step 3</a>, a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> set the following variables and
+    default values as defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#table-of-configuration-defaults">table of configuration defaults</a>. </p>
+  <p class="note"><span class="notetitle">Note:</span> When a <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code> value is assigned to a variable in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#table-of-configuration-defaults">table of
+    configuration defaults</a>, a user agent needs to treats
+    the value as <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code> (i.e., not as an empty string and not as the text string <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">"null"</a></code>).</p>
+  <table>
+    <caption>
+    <dfn id="table-of-configuration-defaults">Table of Configuration Defaults</dfn>
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Variable</th>
+        <th scope="col">Type</th>
+        <th scope="col">Overridden in</th>
+        <th scope="col">Description</th>
+      </tr>
+      <tr>
+        <th scope="row"><dfn id="author-email-var" title="author email var"><var>author email</var></dfn></th>
+        <td>String</td>
+        <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a></td>
+        <td> The value of the <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code> element's <code title="author email"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-email-attribute">email</a></code> attribute (if any).</td>
+      </tr>
+      <tr>
+        <th scope="row"><dfn id="author-href"><var>author href</var></dfn></th>
+        <td>IRI</td>
+        <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a></td>
+        <td>The value of the <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code> element's <code title="author-element href"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute">href</a></code> attribute (if any).</td>
+      </tr>
+      <tr>
+        <th scope="row"><dfn id="author-name"><var>author name</var></dfn></th>
+        <td>String</td>
+        <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a></td>
+        <td>A <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localizable-string">localizable string</a> that represents the content of the <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code> element (if any).</td>
+      </tr>
+      <tr>
+        <th scope="row"><dfn id="feature-list"><var>feature list</var></dfn></th>
+        <td>List</td>
+        <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a></td>
+        <td>A list of features that correspond to features that were requested via <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> elements (if any). Each item in the list corresponds to a <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element's <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> attribute, whether it is required, and any associated <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#parameter" title="parameter&#39;">parameters</a> (if any).</td>
+      </tr>
+      <tr>
+        <th scope="row"><dfn id="icons-0"><var>icons</var></dfn></th>
+        <td>List of file entries</td>
+        <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a>, <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-9-process-the-default-icons">Step 9</a></td>
+        <td>The icons of the widget as they correspond to the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-icon" title="default icon">default icons</a> and to the occurrence of <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#custom-icon" title="custom icon">custom icons</a> that are <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> by the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a> (if any).</td>
+      </tr>
+      <tr>
+        <th scope="row"><dfn id="start-file-encoding"><var>start file encoding</var></dfn></th>
+        <td>String</td>
+        <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a></td>
+        <td>The character encoding of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#custom-start-file-0">custom start file</a>, corresponding
+          to either the <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element's <code title="content encoding"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-encoding-attribute">encoding</a></code> attribute (if any), or the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-encoding">default encoding</a>.</td>
+      </tr>
+      <tr>
+        <th scope="row"><dfn id="start-file-content-type"><var>start file content-type</var></dfn></th>
+        <td>String</td>
+        <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-7-process-the-configuration-document">Step 7</a></td>
+        <td>The <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file">start file</a>, corresponding to the <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element's <code title="content type"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-type-attribute">type</a></code> attribute or to a media type derived from the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-start-files-table">default start
+          files table</a>.</td>
+      </tr>
+      <tr>
+        <th scope="row"><dfn id="widget-config-doc"><var>widget config doc</var></dfn></th>
+        
