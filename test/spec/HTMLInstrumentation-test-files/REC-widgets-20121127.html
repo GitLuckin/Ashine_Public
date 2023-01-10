@@ -3273,4 +3273,161 @@ Content-Type: application/x-gadget</code></pre>
   <p>In the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#algorithm-to-process-a-configuration-document-0">algorithm to process a configuration document</a>, the term <dfn id="in-error">in error</dfn> is used to mean that an element, or
     attribute, or <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a> in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> is
     non-conforming to the rules of this specification. How an element or an attribute is to
-    be treated when it is in error is always given when the term
+    be treated when it is in error is always given when the term is used; but will
+    generally require the user agent to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> any element, attribute, or <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a> that is in error.</p>
+  <p> To <dfn id="ignore">ignore</dfn> means to act as if the element, attribute, or file that is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a> is
+    absent (i.e., not declared or included by the author) in the widget package or configuration document. A user agent <em class="ct">must</em>, however, keep a record of all element types it has attempted to process even if they were ignored (this is to determine if the user agent has attempted to process an element of a given type already). </p>
+  <p>In the case the user agent is asked to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> element or node,  a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> :</p>
+  <ol>
+    <li>
+      <p>Stop processing the current <var>element</var>, <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore" title="ignore">ignoring</a> all of the <var>element</var>'s attributes and child nodes (if any), and proceed to the next <var>element</var> in the <var>elements list</var>.</p>
+    </li>
+    <li>
+      <p>Make a record  that it has attempted to process an element of that type.</p>
+    </li>
+  </ol>
+  <div class="example">
+    <p>In the following example, the user agent ignores both <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> elements. The user agent ignores the first  because it lacks a <code title="content src"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-src-attribute-0">src</a></code> attribute. The user agent ignores the second  because  it is not the first content element to be encountered by the user agent. </p>
+    <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+	&lt;!-- User agent ignores the first, but records 
+       that it has attempted to process a content element 
+   --&gt;
+
+  &lt;content/&gt;
+  
+  &lt;!-- The use agent knows that it has previously attempted 
+       to process a content element, hence this content element 
+       is ignored. 
+   --&gt;
+ 
+  &lt;content src="cats.html"/&gt;
+&lt;/widget&gt; </code></pre>
+  </div>
+  <p>To <dfn id="associate">associate</dfn> means that two or more pieces of information are bound and
+    stored together for the purpose of later processing (e.g., the name of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a>, and if it is <code title="feature required"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-required-attribute">required</a></code>, and any associated <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#parameter" title="parameter">parameters</a>). How associated data is represented is left
+    up-to the implementation (e.g., a user agent could use an array, an object, a hash map,
+    etc.).</p>
+  <p>The <dfn class="external" id="lookup"><a href="http://tools.ietf.org/html/bcp47#page-2-12">lookup</a></dfn> algorithm is defined in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#bcp47">[BCP47]</a>. It is used in this Step  to
+    match <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localized-content">localized content</a> in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> to the
+    language ranges held by the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> (if any).</p>
+  <h4 id="algorithm-to-process-a-configuration-document"><span class="secno">9.1.2 </span>Algorithm to Process a Configuration Document</h4>
+  <p>The <dfn id="algorithm-to-process-a-configuration-document-0">algorithm to process a configuration document</dfn> is as follows:</p>
+  <ol>
+    <li>
+      <p>Let <var>doc</var> be the result of loading the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-config-doc">widget config doc</a></var> as
+        a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#dom3core">[DOMCore]</a> <code>Document</code> using an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> parser that is both <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xmlns">[XMLNS]</a>-aware      and <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> aware. </p>
+    </li>
+    <li>
+      <p id="ta-klLDaEgJeU">If <var>doc</var> is not namespace well-formed <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a>, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> terminate this
+        algorithm and treat this <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a> as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>.</p>
+    </li>
+    <li>
+      <p>Let <var>root element</var> be the <code>documentElement</code> of <var>doc</var>.</p>
+    </li>
+    <li>
+      <p id="ta-ACCJfDGwDQ">If the <var>root element</var> is not a <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-namespace">widget namespace</a>, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> terminate this
+        algorithm and  treat this <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a> as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>.</p>
+    </li>
+    <li>
+      <p>Otherwise, the <var>element</var> is a <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element:</p>
+      <ol>
+        <li>
+          <p>If the <code>defaultlocale</code> attribute is used, then let <var> default locale </var> be the result of
+            applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for getting a single attribute value</a> to the <code>defaultlocale</code> attribute:</p>
+          <ol>
+            <li>
+              <p id="ta-defaultlocale-ignore">If the<var> default locale </var>is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a> or an empty string or already contained by the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> list, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the <code>defaultlocale</code> attribute. </p>
+            </li>
+            <li>
+              <p id="ta-defaultlocale-process">If <var>potential default locale </var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-language-tag">valid language tag</a> and the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> does not contain the value of <var> default locale</var>, the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> prepend the value of <var> potential default locale </var>into the the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> list as the second-last item (i.e., at position length - 1). </p>
+              <div class="example">
+                <p> For example,         
+                  
+                  if the <var> default locale </var>is the value "<code>fr</code>", and the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> contains the values "<code>jp,us,*</code>", then the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> list becomes "<code>jp,us,fr,*</code>". </p>
+                <p> For example,         
+                  
+                  if the <var> default locale </var>is the value "<code>en</code>", and the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> only contains the value "<code>*</code>", then the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> list becomes "<code>en,*</code>". </p>
+                <p> For example,         
+                  
+                  if the <var> default locale </var>is the value "<code>en</code>", and the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> already contains the values "<code>en,*</code>", then the user agent would ignore the <var> default locale </var>because it is already contained by the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> list. </p>
+              </div>
+            </li>
+          </ol>
+        </li>
+        <li>
+          <p id="ta-RawAIWHoMs">If the <code>id</code> attribute is used, then let <var>id</var> be the result of
+            applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for getting a single attribute value</a> to the <code>id</code> attribute. If <var>id</var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-iri">valid IRI</a>, then
+            let <var title="widget id var"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-id-var">widget id</a></var> be the value of the <var>id</var>. If the <var>id</var> is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-iri">valid IRI</a> or is an empty string, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the attribute.</p>
+        </li>
+        <li>
+          <p id="ta-VerEfVGeTc">If the <code>version</code> attribute is used, then let <var> version value</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for getting a single
+            attribute value</a> to the <code>version</code> attribute. If the <var>version</var> is an empty string, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the attribute; otherwise, let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-version">widget version</a></var> be the value of <var>version value</var>.</p>
+        </li>
+        <li>
+          <p id="ta-BxjoiWHaMr">If the <code>height</code> attribute is used, then let <var>normalized
+            height</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-parsing-a-non-negative-integer-0">rule for parsing a
+            non-negative integer</a> to the value of the attribute. If the <var>normalized height</var> is not <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a> and greater than <code>0</code>, then let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-height">widget height</a></var> be the value of <var>normalized
+            height</var>. If the <code>height</code> attribute is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a>, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the attribute.</p>
+        </li>
+        <li>
+          <p id="ta-UScJfQHPPy">If the <code>width</code> attribute is used, then let <var>normalized
+            width</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-parsing-a-non-negative-integer-0">rule for parsing a non-negative
+            integer</a> to the value of the attribute. If the <var>normalized
+            width</var> is not <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a> and greater than <code>0</code>, then let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-width">widget width</a></var> be the value of <var>normalized width</var>. If the <code>width</code> attribute is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a>, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the attribute.</p>
+        </li>
+        <li>
+          <p id="ta-viewmodes">If the <code>viewmodes</code> attribute is used, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> let <var>viewmodes
+            list</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-list-of-keywords-from-an-attribute-0">rule for getting a list of
+            keywords from an attribute</a>:</p>
+          <ol>
+            <li>
+              <p>From the <var>viewmode list</var>, remove
+                any <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#unsupported">unsupported</a> items. </p>
+            </li>
+            <li>
+              <p>From the <var>viewmode list</var>, remove
+                any duplicated items from right to left.</p>
+              <p class="example">For example, <var>viewmode list</var> with a value of "<code>windowed  fullscreen windowed floating fullscreen windowed</code>" would become "<code>windowed  fullscreen floating</code>".</p>
+            </li>
+            <li>
+              <p>Let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-window-modes">widget window
+                modes</a></var> be the value of <var>viewmodes list</var>.</p>
+            </li>
+          </ol>
+        </li>
+      </ol>
+    </li>
+    <li>
+      <p id="ta-MFcsScFEaC">If the <code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code> element does not contain
+        any child elements, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> terminate this
+        algorithm and go to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-8-locate-the-start-file">Step
+        8</a>.</p>
+    </li>
+    <li>
+      <p>Otherwise, let <dfn id="element-list"><var>element list</var></dfn> be an empty list. </p>
+    </li>
+    <li>
+      <p>For each <var>range</var> in the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var>, starting from
+        the first and moving to the last:</p>
+      <ol>
+        <li>
+          <p>If the value of <var>range</var> is not "*", then retaining <a href="http://www.w3.org/TR/xpath/#dt-document-order">document order</a>, let <var>matching elements</var> be the result of applying <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#lookup">lookup</a> to the  child  elements that are defined as being <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localizable-via-xml:lang">localizable via <code>xml:lang</code></a> (i.e., the <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code>, <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code>, and <code title="license element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-license-element-and-its-attributes">license</a></code> elements) that are direct descendants of the <var>root
+            element</var> and whose <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code> attribute matches the current <var>range</var>. Append <var>matching elements</var> to the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#element-list">element list</a></var>.</p>
+          <p class="note"><span class="notetitle">Note:</span> In the context of this specification, the above conformance requirement is intended to match the <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code>, <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code>, and <code title="license element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-license-element-and-its-attributes">license</a></code> elements. However, it is written in an abstract manner to provide a hook for future specifications that want to define elements that also support being <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#localizable-via-xml:lang">localizable via xml:lang</a>.</p>
+        </li>
+        <li>If the value of  range is "*", retaining <a href="http://www.w3.org/TR/xpath/#dt-document-order">document order</a>, let <var>unlocalized elements</var> be all child elements that are direct
+          descendants of the <var>root element</var> that do not have an implicit or explicit <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></var> attribute (i.e., match <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-content">default content</a>). Append <var>unlocalized elements</var> to the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#element-list">element list</a></var>.
+          <div class="example">
+            <p>For example, consider the following configuration document.</p>
+            <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt;
+&lt;name&gt;El Widget!&lt;/name&gt;
+&lt;name xml:lang="fr"&gt;Le Widget&lt;/name&gt;
+&lt;name xml:lang="en"&gt;The Widget&lt;/name&gt;
+&lt;/widget&gt; </code></pre>
+            <p>For a use agent whose <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> contains "<code>en,fr,*</code>", the <var>matching elements</var> would be in the following order: </p>
+            <ol>
+              <li><code>&lt;name xml:lang="en"&gt;The Widget&lt;/name&gt;</code></li>
+              <li><code>&lt;name xml:lang="fr"&gt;Le Widget&lt;/name&gt;</code></li>
+              <li><code>&lt;name&gt;El Widget!&lt;/name&gt;</code></li>
+            </ol>
+            <p>For a use agent whose <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-local
