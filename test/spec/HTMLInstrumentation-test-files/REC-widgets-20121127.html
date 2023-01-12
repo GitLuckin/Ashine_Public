@@ -3430,4 +3430,164 @@ Content-Type: application/x-gadget</code></pre>
               <li><code>&lt;name xml:lang="fr"&gt;Le Widget&lt;/name&gt;</code></li>
               <li><code>&lt;name&gt;El Widget!&lt;/name&gt;</code></li>
             </ol>
-            <p>For a use agent whose <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-local
+            <p>For a use agent whose <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> contains "<code>en,*</code>", the <var>matching elements</var> would be in the following order: </p>
+            <ol>
+              <li><code>&lt;name xml:lang="en"&gt;The Widget&lt;/name&gt;</code></li>
+              <li><code>&lt;name&gt;El Widget!&lt;/name&gt;</code></li>
+            </ol>
+            <p>For a use agent whose <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent-locales">user agent locales</a></var> contains "<code>jp,*</code>", the <var>matching elements</var> would be in the following order: </p>
+            <ol>
+              <li><code>&lt;name&gt;El Widget!&lt;/name&gt;</code></li>
+            </ol>
+          </div>
+        </li>
+      </ol>
+    </li>
+    <li>
+      <p>For each <var>element</var> in the <var>elements list</var>, if the <var>element</var> is one of the following:</p>
+      <dl class="procedure">
+        <dt>A <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element:</dt>
+        <dd>
+          <p id="ta-LYLMhryBBT">If this is not the first <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element encountered by the user agent, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>. </p>
+        </dd>
+        <dd>
+          <p id="ta-AYLMhryBnD">If this is the first <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element encountered by the user agent, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em>:</p>
+          <ol>
+            <li>
+              <p>Record that an attempt has been made by the user agent to process a <code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code> element.</p>
+            </li>
+            <li>
+              <p>Let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-name">widget name</a></var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-text-content-with-normalized-white-space-0">rule for
+                getting text content with normalized white space</a> to this
+                element.</p>
+            </li>
+            <li>
+              <p>If the <code title="name short"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-short-attribute">short</a></code> attribute is used, then let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-short-name">widget short
+                name</a></var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for getting a single
+                attribute value</a> to the <code title="name short"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-short-attribute">short</a></code> attribute.</p>
+            </li>
+          </ol>
+        </dd>
+        <dt>A <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> element:</dt>
+        <dd>
+          <p id="ta-UEMbyHERkI">If this is not the first <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> element encountered by the user agent, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>.</p>
+        </dd>
+        <dd>
+          <p id="ta-VdCEyDVSA">If this is the first <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> element encountered by the user agent, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em>: </p>
+          <ol>
+            <li>
+              <p>Record that an attempt has been made by the user agent to process a <code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code> element. </p>
+            </li>
+            <li>
+              <p>Let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-description">widget description</a></var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-text-content-0">rule for getting text content</a> to this element.</p>
+            </li>
+          </ol>
+        </dd>
+        <dt>A <code title="license element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-license-element-and-its-attributes">license</a></code> element:</dt>
+        <dd>
+          <p id="ta-vcYJAPVEym">If this is not the first <code title="license element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-license-element-and-its-attributes">license</a></code> element encountered by the user agent, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>.</p>
+        </dd>
+        <dd>
+          <p id="ta-YUMJAPVEgI">If this is the first <code title="license element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-license-element-and-its-attributes">license</a></code> element
+            used,  then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em>:</p>
+          <ol>
+            <li>
+              <p> Record that an attempt has been made by the user agent to process a <code title="license element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-license-element-and-its-attributes">license</a></code> element. </p>
+            </li>
+            <li>
+              <p>Let <var>license text</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-text-content-0">rule for
+                getting text content</a> to this element. <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#associate">Associate</a> <var>license text</var> with <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-license">widget license</a></var>. </p>
+            </li>
+            <li>
+              <p>If the <code title="license href"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute-0">href</a></code> attribute is used, then let <var>potential license href</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for getting a
+                single attribute value</a> to the <code title="license href"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute-0">href</a></code> attribute.</p>
+            </li>
+            <li>
+              <p> If <var>potential license href</var> is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-iri">valid IRI</a> or a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-path">valid
+                path</a>, then the <code title="license href"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute-0">href</a></code> attribute is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a> and the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the attribute. </p>
+            </li>
+            <li>
+              <p>If <var>potential license href</var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-iri">valid IRI</a>, then let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-license-href">widget license href</a></var> be the value of <var>potential license href</var>. </p>
+            </li>
+            <li>
+              <p>If <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute-0">license href</a></var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-path">valid path</a>, then let <var title=""> file</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-finding-a-file-within-a-widget-package-0">rule for
+                finding a file within a widget package</a> to <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute-0">license href</a></var>. </p>
+            </li>
+            <li>
+              <p>If <var title="">file</var> is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#processable-file">processable file</a>,
+                as determined by applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-identifying-the-media-type-of-a-file-0">rule for identifying the media type of a
+                file</a>, then <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>. </p>
+            </li>
+            <li>
+              <p>Otherwise, let <var title="">widget license</var> <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a></var> be the value of <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a></var>. </p>
+            </li>
+          </ol>
+        </dd>
+        <dt>An <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code> element:</dt>
+        <dd>
+          <p id="ta-iipTwNshRg">If the <code title="icon src"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-src-attribute">src</a></code> attribute of this <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code> element is absent, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>.</p>
+        </dd>
+        <dd>
+          <p id="ta-roCaKRxZhS">Let <var>path</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for getting a
+            single attribute value</a> to the <code title="icon src"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-src-attribute">src</a></code> attribute of this <code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code> element. If path is
+            not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-path">valid path</a> or is an empty string, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>. </p>
+        </dd>
+        <dd>
+          <p id="ta-iuJHnskSHq">Let <var title="">file</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-finding-a-file-within-a-widget-package-0">rule for
+            
+            finding a file within a widget package</a> to <var>path</var>. If <var title="">file</var> is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#processable-file">processable file</a>, as
+            determined by applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-identifying-the-media-type-of-a-file-0">rule for identifying the media type of a
+            file</a>, or already exists in the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#icons-0">icons</a></var> list, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this element. </p>
+        </dd>
+        <dd>
+          <p>Otherwise,</p>
+          <ol>
+            <li>
+              <p id="ta-eHUaPbgfKg">If the <code title="icon height"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-height-attribute-0">height</a></code> attribute is used, then let <var>potential <code>height</code></var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-parsing-a-non-negative-integer-0">rule for parsing a non-negative integer</a> to the attribute's
+                value. If the <var>potential <code>height</code></var> is not <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in
+                error</a> and greater than <code>0</code>, then <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#associate">associate</a> the <var>potential <code>height</code></var> with <var title="">file</var>.
+                Otherwise, the <code title="icon height"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-height-attribute-0">height</a></code> attribute is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a> and the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the attribute.</p>
+            </li>
+            <li>
+              <p id="ta-nYAcofihvj">If the <code title="icon width"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-width-attribute-0">width</a></code> attribute is used, then let <var>potential width</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-parsing-a-non-negative-integer-0">rule for
+                parsing a non-negative integer</a> to the attribute's value. If the <var>potential width</var> is not <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a> and greater than <code>0</code>, then <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#associate">associate</a> the <var>potential width</var> with <var title="">file</var>. Otherwise, the <code title="icon width"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-width-attribute-0">width</a></code> attribute is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in
+                error</a> and the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the attribute.</p>
+            </li>
+            <li>
+              <p>Add <var title="">file</var> and any <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#associate" title="associate">associated</a> <var>potential width</var> and/or <var>potential height</var> to the list of <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#icons-0">icons</a></var>.</p>
+            </li>
+          </ol>
+        </dd>
+        <dt>An <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code> element:</dt>
+        <dd>
+          <p id="ta-sdwhMozwIc">If this is not the first <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code> element encountered by the user agent, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>.</p>
+        </dd>
+        <dd>
+          <p id="ta-argMozRiC">If this is the first <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code> element
+            used,  then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em>: </p>
+          <ol>
+            <li>
+              <p> Record that an attempt has been made by the user agent to process a <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code> element. </p>
+            </li>
+            <li>
+              <p>If the <code title="author-element href"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute">href</a></code> attribute is used,
+                then let <var>href-value</var> be the value of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for
+                getting a single attribute value</a> to the <code title="author-element href"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute">href</a></code> attribute.</p>
+            </li>
+            <li>
+              <p>If <var>href-value</var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-iri">valid IRI</a>, then let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#author-href">author href</a></var> be the value of the <code title="author-element href"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute">href</a></code> attribute. Otherwise, if <var>href-value</var> is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-iri">valid IRI</a>, then <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the <code title="author-element href"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute">href</a></code> attribute.</p>
+            </li>
+            <li>
+              <p>If the <code title="author email"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-email-attribute">email</a></code> attribute is used, then let <var title="author email var"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#author-email-var">author
+                email</a></var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for getting a single attribute value</a> to the <code title="author email"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-email-attribute">email</a></code> attribute.</p>
+            </li>
+            <li>
+              <p>Let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#author-name">author name</a></var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-text-content-with-normalized-white-space-0">rule for
+                getting text content with normalized white space</a> to this
+                element.</p>
+            </li>
+          </ol>
+        </dd>
+        <dt>A <code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code> element:</dt>
+        <dd>
+          <p id="ta-DwhJBIJRQN">If a <code title="preference value"><a href="ht
