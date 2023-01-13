@@ -3590,4 +3590,142 @@ Content-Type: application/x-gadget</code></pre>
         </dd>
         <dt>A <code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code> element:</dt>
         <dd>
-          <p id="ta-DwhJBIJRQN">If a <code title="preference value"><a href="ht
+          <p id="ta-DwhJBIJRQN">If a <code title="preference value"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-value-attribute-0">value</a></code> attribute of the <code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code> element is used, but the <code title="preference name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute-1">name</a></code> attribute is absent, then this <code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code> element is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a> and the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>. Otherwise, the user agent <em class="ct">must</em>: </p>
+        </dd>
+        <dd>
+          <ol>
+            <li>
+              <p>Let <var>name</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule
+                for getting a single attribute value</a> to the <code title="preference name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute-1">name</a></code> attribute.</p>
+            </li>
+            <li>
+              <p>If the <var>name</var> is an empty string, then this <var>element</var> is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a>; <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>. </p>
+            </li>
+            <li>
+              <p>If <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-preferences">widget preferences</a></var> already contains a preference whose name case-sensitively matches the value of <var>name</var>,  then this <var>element</var> is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a>; <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>. </p>
+            </li>
+            <li>
+              <p>If <var>name</var> was not <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a>, let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#preference">preference</a></var> be an empty object.</p>
+            </li>
+            <li>
+              <p>Associate <var>name</var> with <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#preference">preference</a></var>. </p>
+            </li>
+            <li>
+              <p>Let <var>value</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule
+                for getting a single attribute value</a> to the <code title="preference value"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-value-attribute-0">value</a></code> attribute.</p>
+            </li>
+            <li>
+              <p><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#associate">Associate</a> <var>value</var> with <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#preference">preference</a></var>.</p>
+            </li>
+            <li>
+              <p>If a <code title="preference readonly"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-readonly-attribute">readonly</a></code> attribute is used, then let <var>readonly</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for
+                getting a single attribute value</a> to the <code title="preference readonly"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-readonly-attribute">readonly</a></code> attribute. If <var>readonly</var> is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-boolean-value">valid boolean
+                value</a>, then let the value of <var>readonly</var> be the value
+                '<code>false</code>'. </p>
+            </li>
+            <li>
+              <p><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#associate">Associate</a> <var>readonly</var> with
+                the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#preference">preference</a></var>.</p>
+            </li>
+            <li>
+              <p>Add the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#preference">preference</a></var> and the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#associate" title="associate">associated</a> <var>name</var>, <var>value</var> and <var>readonly</var> variables the list of <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-preferences">widget preferences</a></var>.</p>
+            </li>
+          </ol>
+        </dd>
+      </dl>
+      <dl class="procedure">
+        <dt id="process-content-elemenent">A <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element:</dt>
+        <dd>
+          <p id="ta-hkWmGJgfve">If this is not the first <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element encountered by the user agent, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>.</p>
+        </dd>
+        <dd>
+          <p>If this is the first <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element,  then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em>:</p>
+        </dd>
+        <dd>
+          <ol>
+            <li>
+              <p> Record that an attempt has been made by the user agent to process a <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element. </p>
+            </li>
+            <li>
+              <p id="ta-LTUJGJFCOU">If the <code title="content src"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-src-attribute-0">src</a></code> attribute of the <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element is absent or an empty string, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>.</p>
+            </li>
+            <li>
+              <p>Let <var>path</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for getting
+                a single attribute value</a> to the value of the <code>src</code> attribute.</p>
+            </li>
+            <li>
+              <p id="ta-pIffQywZin">If <var>path</var> is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-path">valid path</a>, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>.</p>
+            </li>
+            <li>
+              <p id="ta-LQcjNKBLUZ">If <var>path</var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-path">valid path</a>, then let <var title="">file</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-finding-a-file-within-a-widget-package-0">rule for finding a file
+                within a widget package</a> to <var>path</var>. If <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a></var> is <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code> or in error, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>.</p>
+            </li>
+            <li>
+              <p>If the <code title="content type"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-type-attribute">type</a></code> attribute of the <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element is absent, then check
+                if <var title="">file</var> is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> by the user agent by
+                applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-identifying-the-media-type-of-a-file-0">rule for identifying the media type of a file</a>. If
+                the <var title="">file</var> is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a>, then let the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-start-file">widget
+                start file</a></var> be the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a> referenced by the <code title="content src"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-src-attribute-0">src</a></code> attribute and let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file-content-type">start file
+                content-type</a></var> be the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> as
+                was derived by applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-identifying-the-media-type-of-a-file-0">rule for identifying the media type of a
+                file</a>.</p>
+            </li>
+            <li>
+              <p id="ta-dPOgiLQKNK">If the <code title="content encoding"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-encoding-attribute">encoding</a></code> attribute is used, then let <var>content-encoding</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for
+                getting a single attribute value</a> to the value of the <code>encoding</code> attribute. If the character encoding  represented by the value of <var>content-encoding</var> is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> by the user agent, then let the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file-encoding">start file
+                encoding</a></var> be the value of <var>content-encoding</var>. If <var>content-encoding</var> is an empty string or <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#unsupported">unsupported</a> by the user agent,
+                then a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the <code title="content encoding"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-encoding-attribute">encoding</a></code> attribute.</p>
+            </li>
+            <li>
+              <p id="ta-paIabGIIMC">If the <code title="content type"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-type-attribute">type</a></code> attribute is used, then let <var>content-type</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for
+                getting a single attribute value</a> to the value of the <code title="content type"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-type-attribute">type</a></code> attribute. If the value of <var>content-type</var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> by the user agent, then
+                let the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file-content-type">start file content-type</a></var> be the value of <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-type-attribute">content
+                type</a></var>. If value of <var>content-type</var> is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid">invalid</a> or <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#unsupported">unsupported</a> by the user agent, then a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> treat the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a> as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>. </p>
+            </li>
+            <li>
+              <p id="ta-aaaaaaaaaa"> If the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file-encoding">start file encoding</a></var> was set in step 7 of this algorithm as a result of processing a valid and <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> value for the <code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code> element's <code title="content encoding"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-encoding-attribute">encoding</a></code> attribute, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> skip this step in this algorithm. Otherwise, if the value of <var>content-type</var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> by the user agent and if <var>content-type</var> contains one or more <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#mime">[MIME]</a> <code title="mime parameter"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#mime-parameter">parameter</a></code> components whose purpose is to  declare the character encoding of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file">start file</a> (e.g., the value "<samp>text/html;charset=Windows-1252</samp>",  where <samp>charset</samp> is a parameter component whose purpose is to declare the character encoding of the start file), then let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file-encoding">start file encoding</a></var> be the value of the last <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> <code title="mime parameter"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#mime-parameter">parameter</a></code> components whose purpose is to  declare the character encoding of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file">start file</a>. </p>
+              <div class="example">
+                <p>In the following example, the user agent would set the start file encoding to ISO-8859-1 and would ignore the charset parameter used in the type attribute. </p>
+                <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt; <br>  &lt;content src      = "start.php" 
+           type     = "text/html;charset=Windows-1252" 
+           encoding = "ISO-8859-1" /&gt;<br>&lt;/widget&gt;</code></pre>
+                <p>In the following example the user agent would set the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file-encoding">start file encoding</a></var> to <code>Windows-1252</code>, if the user agent <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported" title="supported">supports</a> that character encoding. </p>
+                <pre><code>&lt;widget xmlns="http://www.w3.org/ns/widgets"&gt; 
+  &lt;content src  = "start.php" 
+           type = "text/html;charset=Windows-1252"/&gt;
+&lt;/widget&gt;</code></pre>
+              </div>
+            </li>
+          </ol>
+        </dd>
+      </dl>
+      <dl class="procedure">
+        <dt>A <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">param</a></code> element:</dt>
+        <dd>
+          <p id="ta-KNiLPOKdgQ"> If this <code title="param elemement">param</code> element  is not a direct child of a <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <code title="param element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-param-element-and-its-attributes">param</a></code> <var>element</var>.</p>
+        </dd>
+        <dd>
+          <p class="note"><span class="notetitle">Note:</span> How a param element is to be processed when it is inside a feature element is defined below.</p>
+        </dd>
+      </dl>
+      <dl class="procedure">
+        <dt>A <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element:</dt>
+        <dd>
+          <p id="ta-rZdcMBExBX">The <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> process a feature element in the following manner: </p>
+        </dd>
+        <dd>
+          <ol>
+            <li>
+              <p>If the <code title="feature name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute">name</a></code> attribute of this <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element is absent, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>.</p>
+            </li>
+            <li>
+              <p>Let <var>required-feature</var> be the value <code>true</code>. </p>
+            </li>
+            <li>
+              <p>If a <code title="feature required"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-required-attribute">required</a></code> attribute is used, then let <var>potentialy-required-feature</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for
+                getting a single attribute value</a> to the <code title="feature required"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-required-attribute">required</a></code> attribute. If the value of <var>potentialy-required-feature</var> is the value "<code>false</code>", then let <var>required-feature</var> be the value
+                '<code>false</code>'. </p>
+            </li>
+            <li>
+              <p>Let <var>feature-name</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for
+                getting a single attribute value</
