@@ -3728,4 +3728,173 @@ Content-Type: application/x-gadget</code></pre>
             </li>
             <li>
               <p>Let <var>feature-name</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for
-                getting a single attribute value</
+                getting a single attribute value</a> to the value of the <code title="feature name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute">name</a></code> attribute.</p>
+              <p class="note"><span class="notetitle">Note:</span> This specification allows <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> elements with the same <code title="feature name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute">name</a></code> attribute value to be declared more than once. Handling of duplicate <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature-request" title="feature request">feature requests</a> is left up to the implementation or the specification that defines the feature. </p>
+            </li>
+            <li>
+              <p id="ta-paWbGHyVrG">If <var>feature-name</var> is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-iri">valid IRI</a>, and <var>required-feature</var> is <code>true</code>, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> treat this widget as
+                an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>. </p>
+            </li>
+            <li>
+              <p id="ta-ignore-unrequired-feature-with-invalid-name">If <var>feature-name</var> is not a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#valid-iri">valid IRI</a>, and <var>required-feature</var> is <code>false</code>, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this element. </p>
+            </li>
+            <li>
+              <p id="ta-vOBaOcWfll">If <var>feature-name</var> is not <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> by the user
+                agent, and <var>required-feature</var> is <code>true</code>, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> treat this widget as
+                an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>.</p>
+            </li>
+            <li>
+              <p id="ta-luyKMFABLX">If <var>feature-name</var> is not <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> by the user
+                agent, and <var>required-feature</var> is <code>false</code>, then  the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>.</p>
+            </li>
+            <li>
+              <p>Let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a></var> be an object that represents this <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a>. <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#associate">Associate</a> <var>required-feature</var> and <var>feature-name</var> with the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a></var> object.</p>
+            </li>
+            <li>
+              <p>If the <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element contains any <code title="param element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-param-element-and-its-attributes">param</a></code> elements as direct descendants, then, for each child <code title="param element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-param-element-and-its-attributes">param</a></code> element that is a direct descendants of this <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element, starting from the first moving to
+                the last in <a href="http://www.w3.org/TR/xpath/#dt-document-order">document
+                order</a>:</p>
+              <ol style="list-style-type:upper-alpha">
+                <li>
+                  <p id="ta-EGkPfzCBOz">If  either the a <code title="param name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute-0">name</a></code> attribute or  the <code title="param value"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-value-attribute">value</a></code> attribute is missing, then this <code title="param element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-param-element-and-its-attributes">param</a></code> element is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in error</a> and the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>.</p>
+                </li>
+                <li>
+                  <p>Let <var>param-name</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule
+                    for getting a single attribute value</a> to the <code title="param name"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-attribute-0">name</a></code> attribute. </p>
+                </li>
+                <li>
+                  <p id="ta-CEGwkNQcWo">If <var>param-name</var> is an
+                    empty string, then this <code title="param element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-param-element-and-its-attributes">param</a></code> element is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in
+                    error</a> and the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>element</var>. </p>
+                </li>
+                <li>
+                  <p>Let <var>param-value</var> be the result of
+                    applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-getting-a-single-attribute-value-0">rule for getting a single attribute value</a> to
+                    the <code title="param value"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-value-attribute">value</a></code> attribute.</p>
+                </li>
+                <li>
+                  <p>L:et <var>param</var> be an object that represents this paramenter. </p>
+                </li>
+                <li>
+                  <p><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#associate">Associate</a> <var>param-name</var> and <var>param-value</var> with <var>param</var>.</p>
+                </li>
+                <li>
+                  <p><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#associate">Associate</a> <var>param</var> with <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a></var>.</p>
+                </li>
+              </ol>
+            </li>
+            <li>
+              <p>Append <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature">feature</a></var>, to the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#feature-list">feature list</a></var>.</p>
+            </li>
+          </ol>
+        </dd>
+        <dt><dfn id="process-any-element">Any other type of element</dfn>:</dt>
+        <dd>
+          <p id="ta-bbbbbbbbbb">If the user agent <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported" title="supported">supports</a> the element, then the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> process it in accordance with whatever specification defines that element (if any). Otherwise, the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> the element.</p>
+        </dd>
+      </dl>
+    </li>
+  </ol>
+  <h3 class="no-num done" id="step-8-locate-the-start-file"><dfn>Step 8</dfn> - Locate the Start File</h3>
+  <p id="ta-BnWPqNvNVo">If <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-start-file">widget start file</a></var> of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#table-of-configuration-defaults">table of configuration defaults</a> contains a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a> (i.e. <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-start-file">widget start file</a></var> is not <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code>), then a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> skip <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-8-locate-the-start-file">Step 8</a> and go
+    to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-9-process-the-default-icons">Step 9</a>. </p>
+  <p id="ta-RGNHRBWNZV">If <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-start-file">widget start file</a></var> does not contain a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a>, the <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> apply the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#algorithm-to-locate-a-default-start-file">algorithm to locate a default start file</a>.</p>
+  <p>The <dfn id="algorithm-to-locate-a-default-start-file">algorithm to locate a default start file</dfn> is as follows: </p>
+  <ol>
+    <li>
+      <p>For each <var>file name</var> in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-start-files-table">default start files table</a> (from
+        top to bottom) that has a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> that is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> by
+        the user agent:</p>
+      <ol>
+        <li>
+          <p>Let <var>potential-start-file</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-finding-a-file-within-a-widget-package-0">rule
+            for finding a file within a widget package</a> to <var>file name</var>.</p>
+        </li>
+        <li>
+          <p>If <var>potential-start-file</var> is <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#null">null</a></code> or <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#in-error">in
+            error</a>, <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ignore">ignore</a> this <var>file name</var> and move onto the
+            next <var>file name</var> in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-start-files-table">default start files table</a>.</p>
+        </li>
+        <li>
+          <p>If <var>potential</var><var>-start-file</var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file">file</a>, then:</p>
+          <ol>
+            <li>
+              <p>Let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-start-file">widget start file</a></var> be the value of <var>potential-</var><var>start-file</var>.</p>
+            </li>
+            <li>
+              <p>Let <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#start-file-content-type">start file content-type</a></var> be the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> given in the media type column of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-start-files-table">default start files
+                table</a>.</p>
+            </li>
+            <li>
+              <p>Terminate this algorithm and go to <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-9-process-the-default-icons">Step 9</a>.</p>
+            </li>
+          </ol>
+        </li>
+      </ol>
+    </li>
+    <li>
+      <p>If after searching for every <var title="">file</var> in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-start-files-table">default start
+        files table</a> no default start file is found, then treat this widget as an <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#invalid-widget-package-0">invalid widget package</a>.</p>
+    </li>
+  </ol>
+  <h3 class="no-num done" id="step-9-process-the-default-icons"><dfn>Step 9</dfn> - Process the Default Icons</h3>
+  <p>This step describes how to locate the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-icons-table" title="default icons table">default
+    icons</a>.</p>
+  <p id="ta-FAFYMEGELU">In <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#step-9-process-the-default-icons">Step 9</a>, a <a class="product-ua" href="http://www.w3.org/TR/2012/REC-widgets-20121127/#user-agent">user agent</a> <em class="ct">must</em> apply the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#algorithm-to-locate-the-default-icons">algorithm to locate the default icons</a>.</p>
+  <p>The <dfn id="algorithm-to-locate-the-default-icons">algorithm to locate the default icons</dfn> is as follows:</p>
+  <ol>
+    <li>
+      <p>For each <var>file name</var> in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-icons-table">default icons table</a> (from top to
+        bottom) that has a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> that is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported">supported</a> by the user
+        agent:</p>
+      <ol>
+        <li>
+          <p>Let <var>potential-icon</var> be the result of applying the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#rule-for-finding-a-file-within-a-widget-package-0">rule for
+            finding a file within a widget package</a> to <var>file name</var>.</p>
+        </li>
+        <li>
+          <p>If the <var>potential-icon</var> is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#processable-file">processable file</a>, determined
+            by the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#media-type-0">media type</a> given in the media type column of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-icons-table">default icons table</a>, and the <var>potential-icon</var> does not already exist in the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#icons-0">icons</a></var> list of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#table-of-configuration-defaults">table of configuration defaults</a>, then append the value of <var>potential-icon</var> to the <var><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#icons-0">icons</a></var> list of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#table-of-configuration-defaults">table of
+            configuration defaults</a>. </p>
+        </li>
+        <li>
+          <p>Move onto the next <var>file name</var> in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#default-icons-table">default icons
+            table</a>.</p>
+        </li>
+      </ol>
+    </li>
+  </ol>
+  <h2 class="no-num" id="appendix">Appendix</h2>
+  <h3 class="no-num" id="media-type-registration-for-application/widget">Media Type Registration for <code>application/widget</code></h3>
+  <p>This appendix is the MIME media type registration for "<code>application/widget</code>". This registration has been <a href="http://www.iana.org/assignments/media-types/application/">approved</a> by the Internet Assigned Numbers Authority (<abbr title="Internet Assigned Numbers Authority">IANA</abbr>) . </p>
+  <p>Registration with <abbr title="Internet Assigned Numbers Authority">IANA</abbr> was conducted in conformance with <a href="http://www.ietf.org/rfc/rfc4288.txt">BCP 13</a> and <a href="http://www.w3.org/2002/06/registering-mediatype.html">W3CRegMedia</a>. </p>
+  <dl>
+    <dt>Type name: </dt>
+    <dd>
+      <p><code>application</code></p>
+    </dd>
+    <dt>subtype name:</dt>
+    <dd>
+      <p><code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget">widget</a></code></p>
+    </dd>
+    <dt>Required parameters:</dt>
+    <dd>
+      <p>None.</p>
+    </dd>
+    <dt> Optional parameters:</dt>
+    <dd>
+      <p> None.</p>
+    </dd>
+    <dt>Encoding considerations:</dt>
+    <dd>
+      <p>Widget packages are binary data and thus are encoded for MIME 
+        transmission. As a widget package is binary, it requires encoding on transports not capable of
+        handling binary. The same guidelines that apply to <code>application/octet-stream</code> apply to widget packages (see <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#mime">[MIME]</a>). </p>
+    </dd>
+    <dt>Security  considerations:</dt>
+    <dd>
+      <p>In addition to the security considerations specified for Zip files in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-mime">[Zip-MIME]</a> registration, there are a number of security considerations that need to be taken into account when dealing with <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package" title="widget package">widget packages</a> and <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0" title="configuration document">configuration documents</a>. </p>
+      <p>As the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0"> configuration document</a> format is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> and will commonly be encoded using <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#unicode">[Unicode]</a>, the security considerations described in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml-mime">[XML-MIME]</a> and <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#refsUTR">[UTR36]</a> apply. In addition, implementers need to impose their own implementation-specific limits on the values of otherwise unconstrained attribute types, e.g. to prevent denial of service attacks, to guard against running out of memory, or to work around platform-specific limitations.</p>
+      <p>The configuration document allows authors, through the <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element, to request permission to enable  third-party runtime components and APIs. As these features are outside the scope of this specification, significant caution needs to be taken when granting a widget the capability to use a feature. Features themselves  define their own security considerations. </p>
+      <p><span class="widget package">Widget packages</span> will generally contain ECMAscript, HTML, CSS files, and other media, which are executed in a sand boxed environment. As such, implementers need to be aware of the security implications for the types they <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported" title="supported">support</a>. Specifically, implementers need to consider the security implications outlined in the [CSS-MIME] specification, the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ecmascript-mime">[ECMAScript-MIME]</a> specification, and the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#html-mime">[HTML-MIME]</a> specification. </p>
+      <p>As widget packages can contain content that is able to simultaneously interact with the local device and  a remote host, implementers need to consider the privacy implications resulting from  exposing pri
