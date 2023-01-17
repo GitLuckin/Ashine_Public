@@ -3897,4 +3897,235 @@ Content-Type: application/x-gadget</code></pre>
       <p>As the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0"> configuration document</a> format is <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml">[XML]</a> and will commonly be encoded using <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#unicode">[Unicode]</a>, the security considerations described in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#xml-mime">[XML-MIME]</a> and <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#refsUTR">[UTR36]</a> apply. In addition, implementers need to impose their own implementation-specific limits on the values of otherwise unconstrained attribute types, e.g. to prevent denial of service attacks, to guard against running out of memory, or to work around platform-specific limitations.</p>
       <p>The configuration document allows authors, through the <code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code> element, to request permission to enable  third-party runtime components and APIs. As these features are outside the scope of this specification, significant caution needs to be taken when granting a widget the capability to use a feature. Features themselves  define their own security considerations. </p>
       <p><span class="widget package">Widget packages</span> will generally contain ECMAscript, HTML, CSS files, and other media, which are executed in a sand boxed environment. As such, implementers need to be aware of the security implications for the types they <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#supported" title="supported">support</a>. Specifically, implementers need to consider the security implications outlined in the [CSS-MIME] specification, the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#ecmascript-mime">[ECMAScript-MIME]</a> specification, and the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#html-mime">[HTML-MIME]</a> specification. </p>
-      <p>As widget packages can contain content that is able to simultaneously interact with the local device and  a remote host, implementers need to consider the privacy implications resulting from  exposing pri
+      <p>As widget packages can contain content that is able to simultaneously interact with the local device and  a remote host, implementers need to consider the privacy implications resulting from  exposing private information to a remote host.  Mitigation and in-depth defensive measures are an implementation responsibility and not prescribed by this specification. However, in designing these measures, implementers are advised to enable user awareness of information sharing, and to provide easy access to interfaces that enable revocation of permissions. </p>
+      <p> As this specification relies on the standardized heuristics for determining the content type of files defined in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#sniff">[SNIFF]</a> specification, implementers need to consider  the security considerations discussed in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#sniff">[SNIFF]</a> specification.</p>
+      <p>As this specification allows for the declaration of IRIs within certain elements of a configuration documents, implementers need to consider  the security considerations discussed in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iri">[IRI]</a> specification. Implementations intending to display <abbr title="Internationalized Resource Identifiers">IRIs</abbr> and <abbr title="Internationalized domain name">IDNA</abbr> addresses found in the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> are strongly encouraged to follow the security advice given in <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#refsUTR">[UTR36]</a>. This could include, for example,  behaving as if the <code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code> attribute had no effect on any <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iri-attribute" title="IRI attribute">IRI attributes</a>,, <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#path-attribute" title="path attribute">path attributes</a>, and the <code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code> element's <code title="author email"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-email-attribute">email</a></code> attribute.</p>
+      <p>In addition, user agents  need to be careful about trusting path components  
+        found in the widget package. Such path components might be interpreted  
+        by operating systems as pointing at security critical files outside  
+        the widget environment proper, and naive unpacking of widget  
+        packages into the file system might lead to undesirable and security  
+        relevant effects, such as overwriting of  system files. </p>
+    </dd>
+    <dt>Interoperability considerations:</dt>
+    <dd>
+      <p>Some issues can arise with regards to character encodings of file names, the length of zip relative paths, and the use of certain strings as file names. </p>
+      <p>This specification does not put a restriction on the byte length of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-relative-path">Zip
+        relative path</a>, so a user agent <em class="ct">should</em> to be able to deal with <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-relative-path" title="Zip relative path">Zip relative paths</a> that have lengths longer than 250 bytes. As some operating systems have restrictions on how long a path length can be, authors need to keep the lengths of relative paths at less than 250 bytes. Unicode code points may
+        require more than one byte to encode a character, which can result in a path whose
+        length is less than 250 characters but whose size is greater than 250 bytes. </p>
+      <p>Authors need to be aware that, at the time of publication, there are
+        interoperability issues with regards to using characters outside the <code>safe-chars</code> range for file or folder names in a Zip archive when using
+        Zipping tools bundled with operating systems. The interoperability issues have
+        arisen from non-conforming implementations of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip">[ZIP]</a> specification
+        across operating systems: very few, if any, correctly support encoding file names
+        in Unicode.</p>
+      <p>In the case where the Zip relative path is encoded using <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#utf-8">[UTF-8]</a>, the <dfn class="external" id="language-encoding-flag-(efs)">language encoding flag (EFS)</dfn> needs to be set.</p>
+      <p>If an author chooses to use the <code>utf8-chars</code>, they need to thoroughly
+        test their widgets on various platforms prior to distribution; otherwise it is
+        suggested that authors restrict file and folder names to the <code>safe-chars</code> (characters in the US-ASCII range). In addition, having
+        excessively long path names (e.g. over 120 characters) can also result in
+        interoperability issues on some operating systems. </p>
+      <p> Authors need to avoid using <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-forbidden-characters">Zip forbidden
+        characters</a> when naming the files used by a widget. These characters are reserved to
+        maintain interoperability across various file systems and with <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#uri">[URI]</a>s.</p>
+      <p>Authors need to avoid using the following words as either a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#folder"><code>folder</code></a> or
+        a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#file-name"><code>file-name</code></a> in a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#zip-relative-path">Zip relative path</a> as they
+        are reserved by some operating systems (case-insensitive): CON, PRN, AUX, NUL,
+        COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4, LPT5,
+        LPT6, LPT7, LPT8, LPT9, CLOCKS$. For example, the following names are ok:
+        "CON-tact.txt", "printer.lpt1", "DCOM1.pdf". However, "com3.txt" "Lpt1", "CoM9.gif"
+        
+        would not be.</p>
+      <p>In addition,  authors need to avoid having a "." U+002E FULL STOP as the last character of a
+        file or folder name as some operating systems will remove the character when the
+        file is extracted from the Zip archive onto the device. Furthermore, avoid having
+        the space character (<a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#sp">SP</a>) at the start or end of a file name; and take
+        caution when using the "+" U+002B PLUS SIGN, as it might cause issues on some
+        operating systems.</p>
+    </dd>
+    <dt>Published specification:</dt>
+    <dd>
+      <p><a href="http://www.w3.org/TR/widgets/">http://www.w3.org/TR/widgets/</a></p>
+    </dd>
+    <dt>Applications that use this media type:</dt>
+    <dd>
+      <p>User agents that claim conformance to this specification. </p>
+    </dd>
+    <dt>Magic number(s):</dt>
+    <dd>
+      <p><code>50 4B 03 04</code></p>
+    </dd>
+    <dt> File extension(s):</dt>
+    <dd>
+      <p>wgt</p>
+    </dd>
+    <dt>Macintosh file type code(s):</dt>
+    <dd>
+      <p>None. </p>
+    </dd>
+    <dt>Person &amp; email address to contact for further information:</dt>
+    <dd>
+      <p>Steven Pemberton, <a href="mailto:member-webapps@w3.org">member-webapps@w3.org</a></p>
+    </dd>
+    <dt>Intended usage: </dt>
+    <dd>
+      <p>Common. </p>
+    </dd>
+    <dt>Restrictions on usage: </dt>
+    <dd>
+      <p>None.</p>
+    </dd>
+    <dt>Author:</dt>
+    <dd>
+      <p><a href="http://www.w3.org/2008/webapps/">The W3C's Web Applications Working Group</a></p>
+    </dd>
+  </dl>
+  <h3 class="no-num" id="linking-to-a-widget-package-from-a-html-document">Linking To a Widget Package From a HTML Document</h3>
+  <p><em>This section is non-normative.</em></p>
+  <p><em>This section only applies to HTML user agents <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#html">[HTML]</a>.</em></p>
+  <p><dfn id="auto-discovery">Auto-discovery</dfn> enables a user agent to identify and install a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a> that is associated with an HTML page. When a page points to
+    a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a>, user agents <em class="ct">should</em> expose the presence of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a> to the end-user and allow the end-user to install the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget">widget</a>.</p>
+  <p>The link type "<code title="">widget</code>" indicates that a link of this type
+    references a document that is a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-package">widget package</a>. In HTML, it may be
+    specified for the <code title="">a</code>, <code title="">area</code> and <code title="">link</code> elements to create a hyperlink.</p>
+  <div class="example">
+    <p>For example:</p>
+    <pre><code>&lt;a rel="widget"
+   href="http://example.org/exampleWidget"&gt;
+   The Example Widget
+&lt;/a&gt;</code>
+</pre>
+  </div>
+  <h3 class="no-num" id="table-of-elements-and-their-attributes">Table of Elements and Their Attributes</h3>
+  <p><em>This section is non-normative.</em></p>
+  <p>This table lists all elements and respective attributes, as well as child-parent relationships, that make up the language of the <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a> format defined in this specification. </p>
+  <table>
+    <tbody><tr>
+      <th scope="col">Element</th>
+      <th scope="col">Description</th>
+      <th scope="col">Parent</th>
+      <th scope="col">Expected Children</th>
+      <th scope="col">Attributes</th>
+      <th scope="col">Type</th>
+    </tr>
+    <tr>
+      <td rowspan="8"><code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code></td>
+      <td rowspan="8">The root element of a <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#configuration-document-0">configuration document</a>.</td>
+      <td rowspan="8">none. </td>
+      <td rowspan="8"><ul>
+          <li><code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code></li>
+          <li><code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code></li>
+          <li><code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author </a></code></li>
+          <li><code title="license element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-license-element-and-its-attributes">license </a></code></li>
+          <li><code title="icon element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-icon-element-and-its-attributes">icon</a></code></li>
+          <li><code title="content element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-content-element-and-its-attributes">content</a></code></li>
+          <li><code title="feature element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-feature-element-and-its-attributes">feature</a></code></li>
+          <li><code title="preference element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-preference-element-and-its-attributes">preference</a></code></li>
+        </ul></td>
+      <td><code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-attribute" title="language attribute">language</a></td>
+    </tr>
+    <tr>
+      <td><code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword-attribute" title="keyword attribute">keyword</a></td>
+    </tr>
+    <tr>
+      <td><code title="widget id"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-id-attribute">id</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iri-attribute" title="IRI attribute">IRI</a></td>
+    </tr>
+    <tr>
+      <td><code title="widget version"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-version">version</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#version-attribute" title="version attribute">version</a></td>
+    </tr>
+    <tr>
+      <td><code title="widget height"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-height">height</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#numeric-attribute" title="numeric attribute">numeric</a></td>
+    </tr>
+    <tr>
+      <td><code title="widget width"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#widget-width">width</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#numeric-attribute" title="numeric attribute">numeric</a></td>
+    </tr>
+    <tr>
+      <td><code title="widget viewmodes"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-viewmodes-attribute">viewmodes</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword-list-attribute" title="keyword list attribute">Keyword list</a></td>
+    </tr>
+    <tr>
+      <td><code title="widget defaultlocale"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-defaultlocale-attribute">defaultlocale</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-attribute" title="language attribute">language</a></td>
+    </tr>
+    <tr>
+      <td rowspan="3"><code title="name element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-name-element-and-its-attributes">name</a></code></td>
+      <td rowspan="3">The name of the widget. </td>
+      <td rowspan="3"><code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code></td>
+      <td rowspan="3"><ul>
+          <li><code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code>, </li>
+          <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#text-node">text node</a></li>
+        </ul></td>
+      <td><code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-attribute" title="language attribute">language</a></td>
+    </tr>
+    <tr>
+      <td><code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword-attribute" title="keyword attribute">keyword</a></td>
+    </tr>
+    <tr>
+      <td><code title="name short"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-short-attribute">short</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#displayable-string-attribute" title="displayable-string attribute">displayable-string</a></td>
+    </tr>
+    <tr>
+      <td rowspan="2"><code title="description element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-description-element-and-its-attributes">description</a></code></td>
+      <td rowspan="2">Some text that describes the purpose of the widget.</td>
+      <td rowspan="2"><code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code></td>
+      <td rowspan="2"><ul>
+          <li><code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code></li>
+          <li> <a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#text-node">text node</a></li>
+        </ul></td>
+      <td><code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-attribute" title="language attribute">language</a></td>
+    </tr>
+    <tr>
+      <td><code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword-attribute" title="keyword attribute">keyword</a></td>
+    </tr>
+    <tr>
+      <td rowspan="4"><code title="author element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-author-element-and-its-attributes">author</a></code></td>
+      <td rowspan="4">The person or person that created the widget.</td>
+      <td rowspan="4"><code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code></td>
+      <td rowspan="4"><ul>
+          <li><code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code></li>
+          <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#text-node">text node</a></li>
+        </ul></td>
+      <td><code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-attribute" title="language attribute">language</a></td>
+    </tr>
+    <tr>
+      <td><code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword-attribute" title="keyword attribute">keyword</a></td>
+    </tr>
+    <tr>
+      <td><code title="author-element href"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute">href</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iri-attribute" title="IRI attribute">IRI</a></td>
+    </tr>
+    <tr>
+      <td><code title="author email"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-email-attribute">email</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#string-attribute" title="string attribute">string</a></td>
+    </tr>
+    <tr>
+      <td rowspan="3"><code title="license element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-license-element-and-its-attributes">license</a></code></td>
+      <td rowspan="3">The license under which the widget is distributed.</td>
+      <td rowspan="3"><code title="widget element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-widget-element-and-its-attributes">widget</a></code></td>
+      <td rowspan="3"><ul>
+          <li><code title="span element"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-span-element-and-its-attributes">span</a></code></li>
+          <li><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#text-node">text node</a></li>
+        </ul></td>
+      <td><code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-xml:lang-attribute">xml:lang</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#language-attribute" title="language attribute">language</a></td>
+    </tr>
+    <tr>
+      <td><code><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-dir-attribute">dir</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#keyword-attribute" title="keyword attribute">keyword</a></td>
+    </tr>
+    <tr>
+      <td><code title="license href"><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#the-href-attribute-0">href</a></code></td>
+      <td><a href="http://www.w3.org/TR/2012/REC-widgets-20121127/#iri-attribute" title="IRI attribute">IRI</a> or <
