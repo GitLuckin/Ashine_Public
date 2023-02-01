@@ -103,4 +103,233 @@ define(function (require, exports, module) {
                 // trigger a rename
                 oldFile.rename(newFilename, function (err) {
                     if (err) {
-                       
+                        renameDeferred.reject(err);
+                    } else {
+                        renameDeferred.resolve();
+                    }
+                });
+                await awaitsForDone(renameDeferred.promise(), "old file rename");
+
+                html = LanguageManager.getLanguage("html");
+
+                // language should change
+                expect(doc.getLanguage()).toBe(html);
+                expect(spy).toHaveBeenCalled();
+                expect(spy.calls.count()).toEqual(1);
+                expect(dmspy.calls.count()).toEqual(1);
+
+                // check callback args (arg 0 is a jQuery event)
+                expect(spy.calls.mostRecent().args[1]).toBe(javascript);
+                expect(spy.calls.mostRecent().args[2]).toBe(html);
+
+                // cleanup
+                doc.releaseRef();
+
+                await SpecRunnerUtils.closeTestWindow();
+                await SpecRunnerUtils.removeTempDirectory();
+            }, 30000);
+
+            it("should update the document's language when a language is added", async function () {
+                var unknown,
+                    doc,
+                    spy,
+                    schemeLanguage,
+                    promise;
+
+                // Create a scheme script file
+                doc = SpecRunnerUtils.createMockActiveDocument({ filename: "/file.scheme" });
+
+                // Initial language will be unknown (scheme is not a default language)
+                unknown = LanguageManager.getLanguage("unknown");
+
+                // listen for event
+                spy = jasmine.createSpy("languageChanged event handler");
+                doc.on("languageChanged", spy);
+
+                // sanity check language
+                expect(doc.getLanguage()).toBe(unknown);
+
+                // make active
+                doc.addRef();
+
+                // Add the scheme language, DocumentManager should update all open documents
+                promise = LanguageManager.defineLanguage("scheme", {
+                    name: "Scheme",
+                    mode: "scheme",
+                    fileExtensions: ["scheme"]
+                }).done(function (language) {
+                    schemeLanguage = language;
+                });
+
+                await awaitsForDone(promise, "loading scheme mode", 1000);
+
+                // language should change
+                expect(doc.getLanguage()).toBe(schemeLanguage);
+                expect(spy).toHaveBeenCalled();
+                expect(spy.calls.count()).toEqual(1);
+
+                // check callback args (arg 0 is a jQuery event)
+                expect(spy.calls.mostRecent().args[1]).toBe(unknown);
+                expect(spy.calls.mostRecent().args[2]).toBe(schemeLanguage);
+
+                // make sure LanguageManager keeps track of it
+                expect(LanguageManager.getLanguageForPath(doc.file.fullPath)).toBe(schemeLanguage);
+
+                // cleanup
+                doc.releaseRef();
+            });
+
+            it("should update the document's language when a language is modified", function () {
+                var unknown,
+                    doc,
+                    spy,
+                    modifiedLanguage;
+
+                // Create a foo script file
+                doc = SpecRunnerUtils.createMockActiveDocument({ filename: "/test.foo" });
+
+                // Initial language will be unknown (foo is not a default language)
+                unknown = LanguageManager.getLanguage("unknown");
+
+                // listen for event
+                spy = jasmine.createSpy("languageChanged event handler");
+                doc.on("languageChanged", spy);
+
+                // sanity check language
+                expect(doc.getLanguage()).toBe(unknown);
+
+                // make active
+                doc.addRef();
+
+                modifiedLanguage = LanguageManager.getLanguage("html");
+                modifiedLanguage.addFileExtension("foo");
+
+                // language should change
+                expect(doc.getLanguage()).toBe(modifiedLanguage);
+                expect(spy).toHaveBeenCalled();
+                expect(spy.calls.count()).toEqual(1);
+                expect(LanguageManager.getLanguageForPath(doc.file.fullPath)).toBe(modifiedLanguage);
+
+                // check callback args (arg 0 is a jQuery event)
+                expect(spy.calls.mostRecent().args[1]).toBe(unknown);
+                expect(spy.calls.mostRecent().args[2]).toBe(modifiedLanguage);
+
+                // cleanup
+                doc.releaseRef();
+            });
+
+            it("should update the document's language via setLanguageOverride(), then keep it locked", function () {
+                var unknownLang = LanguageManager.getLanguage("unknown"),
+                    phpLang = LanguageManager.getLanguage("php"),
+                    doc,
+                    modifiedLanguage,
+                    spy;
+
+                doc = SpecRunnerUtils.createMockActiveDocument({ filename: "/test.foo2" });
+
+                // listen for event
+                spy = jasmine.createSpy("languageChanged event handler");
+                doc.on("languageChanged", spy);
+
+                // sanity check language
+                expect(doc.getLanguage()).toBe(unknownLang);
+
+                // make active
+                doc.addRef();
+
+                LanguageManager.setLanguageOverrideForPath(doc.file.fullPath, phpLang);
+
+                // language should change
+                expect(doc.getLanguage()).toBe(phpLang);
+                expect(spy.calls.count()).toEqual(1);
+                expect(spy.calls.mostRecent().args[1]).toBe(unknownLang);
+                expect(spy.calls.mostRecent().args[2]).toBe(phpLang);
+                expect(LanguageManager.getLanguageForPath(doc.file.fullPath)).toBe(phpLang);
+
+                // add 'foo2' extension to some other language
+                modifiedLanguage = LanguageManager.getLanguage("html");
+                modifiedLanguage.addFileExtension("foo2");
+
+                // language should NOT change
+                expect(doc.getLanguage()).toBe(phpLang);
+                expect(spy.calls.count()).toEqual(1);
+                expect(LanguageManager.getLanguageForPath(doc.file.fullPath)).toBe(phpLang);
+
+                // cleanup
+                doc.releaseRef();
+            });
+
+            it("should unlock the document's language for updates after setLanguageOverride(null)", function () {
+                var unknownLang = LanguageManager.getLanguage("unknown"),
+                    phpLang = LanguageManager.getLanguage("php"),
+                    doc,
+                    modifiedLanguage,
+                    spy;
+
+                doc = SpecRunnerUtils.createMockActiveDocument({ filename: "/test.foo3" });
+
+                // listen for event
+                spy = jasmine.createSpy("languageChanged event handler");
+                doc.on("languageChanged", spy);
+
+                // sanity check language
+                expect(doc.getLanguage()).toBe(unknownLang);
+
+                // make active
+                doc.addRef();
+
+                LanguageManager.setLanguageOverrideForPath(doc.file.fullPath, phpLang);
+
+                // language should change
+                expect(doc.getLanguage()).toBe(phpLang);
+                expect(spy.calls.count()).toEqual(1);
+                expect(spy.calls.mostRecent().args[1]).toBe(unknownLang);
+                expect(spy.calls.mostRecent().args[2]).toBe(phpLang);
+                expect(LanguageManager.getLanguageForPath(doc.file.fullPath)).toBe(phpLang);
+
+                LanguageManager.setLanguageOverrideForPath(doc.file.fullPath, null);
+
+                // language should revert
+                expect(doc.getLanguage()).toBe(unknownLang);
+                expect(spy.calls.count()).toEqual(2);
+                expect(spy.calls.mostRecent().args[1]).toBe(phpLang);
+                expect(spy.calls.mostRecent().args[2]).toBe(unknownLang);
+                expect(LanguageManager.getLanguageForPath(doc.file.fullPath)).toBe(unknownLang);
+
+                // add 'foo3' extension to some other language
+                modifiedLanguage = LanguageManager.getLanguage("html");
+                modifiedLanguage.addFileExtension("foo3");
+
+                // language should change
+                expect(doc.getLanguage()).toBe(modifiedLanguage);
+                expect(spy.calls.count()).toEqual(3);
+                expect(spy.calls.mostRecent().args[1]).toBe(unknownLang);
+                expect(spy.calls.mostRecent().args[2]).toBe(modifiedLanguage);
+                expect(LanguageManager.getLanguageForPath(doc.file.fullPath)).toBe(modifiedLanguage);
+
+                // override again
+                LanguageManager.setLanguageOverrideForPath(doc.file.fullPath, phpLang);
+
+                expect(doc.getLanguage()).toBe(phpLang);
+                expect(spy.calls.count()).toBe(4);
+                expect(spy.calls.mostRecent().args[1]).toBe(modifiedLanguage);
+                expect(spy.calls.mostRecent().args[2]).toBe(phpLang);
+                expect(LanguageManager.getLanguageForPath(doc.file.fullPath)).toBe(phpLang);
+
+                // remove override, should restore to modifiedLanguage
+                LanguageManager.setLanguageOverrideForPath(doc.file.fullPath, null);
+
+                expect(doc.getLanguage()).toBe(modifiedLanguage);
+                expect(spy.calls.count()).toBe(5);
+                expect(spy.calls.mostRecent().args[1]).toBe(phpLang);
+                expect(spy.calls.mostRecent().args[2]).toBe(modifiedLanguage);
+                expect(LanguageManager.getLanguageForPath(doc.file.fullPath)).toBe(modifiedLanguage);
+
+                // cleanup
+                doc.releaseRef();
+            });
+
+        });
+
+    });
+});
