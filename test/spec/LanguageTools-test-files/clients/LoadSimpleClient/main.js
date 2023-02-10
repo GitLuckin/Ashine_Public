@@ -30,9 +30,8 @@ define(function (require, exports, module) {
         ExtensionUtils = brackets.getModule("utils/ExtensionUtils");
 
     var clientFilePath = ExtensionUtils.getModulePath(module, "client.js"),
-        clientName = "CommunicationTestClient",
-        clientPromise = null,
-        client = null;
+        clientName = "LoadSimpleClient",
+        clientPromise = null;
 
     AppInit.appReady(function () {
         clientPromise = LanguageTools.initiateToolingService(clientName, clientFilePath, ['unknown']);
@@ -42,27 +41,11 @@ define(function (require, exports, module) {
         var retval = $.Deferred();
 
         if ($.isFunction(clientPromise.promise)) {
-            clientPromise.then(function (textClient) {
-                client = textClient;
-
-                client.sendCustomRequest({
-                    messageType: "brackets",
-                    type: "setModulePath",
-                    params: {
-                        modulePath: ExtensionUtils.getModulePath(module)
-                    }
-                }).then(retval.resolve);
-
-
-            }, retval.reject);
+            clientPromise.then(retval.resolve, retval.reject);
         } else {
             retval.reject();
         }
 
         return retval;
-    };
-
-    exports.getClient = function () {
-        return client;
     };
 });

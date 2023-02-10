@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2019 - present Adobe. All rights reserved.
  *
@@ -30,7 +31,7 @@ define(function (require, exports, module) {
         ExtensionUtils = brackets.getModule("utils/ExtensionUtils");
 
     var clientFilePath = ExtensionUtils.getModulePath(module, "client.js"),
-        clientName = "CommunicationTestClient",
+        clientName = "OptionsTestClient",
         clientPromise = null,
         client = null;
 

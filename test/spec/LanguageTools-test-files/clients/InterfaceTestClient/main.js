@@ -30,7 +30,7 @@ define(function (require, exports, module) {
         ExtensionUtils = brackets.getModule("utils/ExtensionUtils");
 
     var clientFilePath = ExtensionUtils.getModulePath(module, "client.js"),
-        clientName = "CommunicationTestClient",
+        clientName = "InterfaceTestClient",
         clientPromise = null,
         client = null;
 
@@ -44,16 +44,7 @@ define(function (require, exports, module) {
         if ($.isFunction(clientPromise.promise)) {
             clientPromise.then(function (textClient) {
                 client = textClient;
-
-                client.sendCustomRequest({
-                    messageType: "brackets",
-                    type: "setModulePath",
-                    params: {
-                        modulePath: ExtensionUtils.getModulePath(module)
-                    }
-                }).then(retval.resolve);
-
-
+                retval.resolve();
             }, retval.reject);
         } else {
             retval.reject();
