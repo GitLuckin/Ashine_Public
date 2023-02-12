@@ -245,4 +245,297 @@ define(function (require, exports, module) {
             it("EditorManager should listen to currentFileChange events", async function () {
                 promise = MainViewManager._open(MainViewManager.ACTIVE_PANE, FileSystem.getFileForPath(testPath + "/test.js"));
                 await awaitsForDone(promise, "MainViewManager.doOpen");
-                expect(EditorManager.getCurrentFullEditor()).toBeT
+                expect(EditorManager.getCurrentFullEditor()).toBeTruthy();
+                expect(EditorManager.getCurrentFullEditor().document.file.name).toEqual("test.js");
+                MainViewManager._closeAll(MainViewManager.ALL_PANES);
+                expect(EditorManager.getCurrentFullEditor()).toBe(null);
+            });
+        });
+        describe("Splitting Views", function () {
+            it("should create a new pane", async function () {
+                var paneCreateListener = jasmine.createSpy(),
+                    paneLayoutChangeListener = jasmine.createSpy();
+
+                MainViewManager.on("paneCreate", paneCreateListener);
+                MainViewManager.on("paneLayoutChange", paneLayoutChangeListener);
+                MainViewManager.setLayoutScheme(1, 2);
+                expect(MainViewManager.getPaneCount()).toEqual(2);
+                expect(MainViewManager.getPaneIdList().length).toEqual(2);
+                expect(MainViewManager.getPaneIdList()[1]).toEqual("second-pane");
+                expect(MainViewManager.getAllOpenFiles().length).toEqual(0);
+
+                expect(paneCreateListener.calls.count()).toBe(1);
+                expect(paneLayoutChangeListener.calls.count()).toBe(1);
+
+                expect(paneCreateListener.calls.all()[0].args[1]).toEqual("second-pane");
+                expect(paneLayoutChangeListener.calls.all()[0].args[1]).toEqual("VERTICAL");
+                MainViewManager.off("paneCreate", paneCreateListener);
+                MainViewManager.off("paneLayoutChange", paneLayoutChangeListener);
+            });
+            it("should should show interstitial page", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                var interstitials = _$(".not-editor");
+                expect(interstitials.length).toEqual(2);
+                expect(_$(interstitials[0]).css("display")).not.toEqual("none");
+                expect(_$(interstitials[1]).css("display")).not.toEqual("none");
+            });
+            it("should destroy a pane", async function () {
+                // when we migrated to jasmine 2.0, this test was not activating the pane. assuming that all tests are
+                // working correctly, the tests has been tweaked to match reality. We stopped reloading the test window
+                // after each test to improve performance. This caused the issue to prop.
+                var paneDestroyListener = jasmine.createSpy(),
+                    paneLayoutChangeListener = jasmine.createSpy();
+
+                MainViewManager.on("paneDestroy", paneDestroyListener);
+                MainViewManager.on("paneLayoutChange", paneLayoutChangeListener);
+                MainViewManager.setLayoutScheme(1, 2);
+                expect(MainViewManager.getPaneCount()).toEqual(2);
+                expect(MainViewManager.getPaneIdList().length).toEqual(2);
+                expect(MainViewManager.getPaneIdList()[1]).toEqual("second-pane");
+                MainViewManager.setLayoutScheme(1, 1);
+                expect(MainViewManager.getPaneCount()).toEqual(1);
+                expect(MainViewManager.getPaneIdList().length).toEqual(1);
+                expect(MainViewManager.getPaneIdList()[0]).toEqual("first-pane");
+
+                expect(paneDestroyListener.calls.count()).toBe(1);
+                expect(paneLayoutChangeListener.calls.count()).toBe(1);
+
+                expect(paneDestroyListener.calls.all()[0].args[1]).toEqual("second-pane");
+                MainViewManager.off("paneDestroy", paneDestroyListener);
+                MainViewManager.off("paneLayoutChange", paneLayoutChangeListener);
+            });
+            it("should show two files", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                expect(MainViewManager._getPaneIdForPath(testPath + "/test.js")).toEqual("first-pane");
+                expect(MainViewManager._getPaneIdForPath(testPath + "/test.css")).toEqual("second-pane");
+                expect(MainViewManager.getWorkingSetSize("first-pane")).toEqual(1);
+                expect(MainViewManager.getWorkingSetSize("second-pane")).toEqual(1);
+                MainViewManager.setActivePaneId("first-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE).name).toEqual("test.js");
+                expect(EditorManager.getCurrentFullEditor().document.file.name).toEqual("test.js");
+                MainViewManager.setActivePaneId("second-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE).name).toEqual("test.css");
+                expect(EditorManager.getCurrentFullEditor().document.file.name).toEqual("test.css");
+            });
+            it("should flip the view to the other pane", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                expect(MainViewManager._getPaneIdForPath(testPath + "/test.js")).toEqual("first-pane");
+                MainViewManager.setActivePaneId("first-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE).name).toEqual("test.js");
+                MainViewManager.setActivePaneId("second-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE)).toEqual(null);
+                MainViewManager._getPane("first-pane").$headerFlipViewBtn.trigger("click");
+                MainViewManager.setActivePaneId("first-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE)).toEqual(null);
+                MainViewManager.setActivePaneId("second-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE).name).toEqual("test.js");
+                MainViewManager._getPane("second-pane").$headerFlipViewBtn.trigger("click");
+                MainViewManager.setActivePaneId("first-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE).name).toEqual("test.js");
+                MainViewManager.setActivePaneId("second-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE)).toEqual(null);
+            });
+            it("should show the file instead of flipping if file is already open", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                MainViewManager._getPane("first-pane").$headerFlipViewBtn.trigger("click");
+                MainViewManager.setActivePaneId("first-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE).name).toEqual("test.js");
+                expect(EditorManager.getCurrentFullEditor().document.file.name).toEqual("test.js");
+                MainViewManager.setActivePaneId("second-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE).name).toEqual("test.js");
+                expect(EditorManager.getCurrentFullEditor().document.file.name).toEqual("test.js");
+            });
+            it("should merge two panes to the right", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                expect(MainViewManager.getWorkingSetSize("first-pane")).toEqual(1);
+                expect(MainViewManager.getWorkingSetSize("second-pane")).toEqual(1);
+                MainViewManager.setLayoutScheme(1, 1);
+                expect(MainViewManager._getPaneIdForPath(testPath + "/test.js")).toEqual("first-pane");
+                expect(MainViewManager._getPaneIdForPath(testPath + "/test.css")).toEqual("first-pane");
+            });
+            it("should merge two panes to the left", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                expect(MainViewManager.getWorkingSetSize("first-pane")).toEqual(1);
+                expect(MainViewManager.getWorkingSetSize("second-pane")).toEqual(1);
+                MainViewManager.setActivePaneId("first-pane");
+                MainViewManager.setLayoutScheme(1, 1);
+                expect(MainViewManager._getPaneIdForPath(testPath + "/test.js")).toEqual("first-pane");
+                expect(MainViewManager._getPaneIdForPath(testPath + "/test.css")).toEqual("first-pane");
+            });
+            it("should close the view when clicked", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                expect(MainViewManager._getPaneIdForPath(testPath + "/test.js")).toEqual("first-pane");
+                MainViewManager.setActivePaneId("first-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE).name).toEqual("test.js");
+                MainViewManager._getPane("first-pane").$headerCloseBtn.trigger("click");
+                MainViewManager.setActivePaneId("first-pane");
+                expect(MainViewManager.getCurrentlyViewedFile(MainViewManager.ACTIVE_PANE)).toEqual(null);
+            });
+            it("should collapse the panes when close button is clicked on a pane with no files", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                MainViewManager._getPane("first-pane").$headerCloseBtn.trigger("click");
+                expect(MainViewManager.getLayoutScheme()).toEqual({rows: 1, columns: 1});
+            });
+            it("should switch pane when Commands.CMD_SWITCH_PANE_FOCUS is called", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                $('#first-pane').click();
+                CommandManager.execute(Commands.CMD_SWITCH_PANE_FOCUS);
+                expect(MainViewManager.getActivePaneId()).toEqual("second-pane");
+                $('#second-pane').click();
+                CommandManager.execute(Commands.CMD_SWITCH_PANE_FOCUS);
+                expect(MainViewManager.getActivePaneId()).toEqual("first-pane");
+                MainViewManager.setLayoutScheme(2, 1);
+                $('#first-pane').click();
+                CommandManager.execute(Commands.CMD_SWITCH_PANE_FOCUS);
+                expect(MainViewManager.getActivePaneId()).toEqual("second-pane");
+                $('#second-pane').click();
+                CommandManager.execute(Commands.CMD_SWITCH_PANE_FOCUS);
+                expect(MainViewManager.getActivePaneId()).toEqual("first-pane");
+            });
+            it("should activate pane when editor gains focus", async function () {
+                var editors = {},
+                    handler = function (e, doc, editor, paneId) {
+                        editors[doc.file.name] = editor;
+                    };
+
+                EditorManager.on("_fullEditorCreatedForDocument", handler);
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                editors["test.css"].focus();
+                expect(MainViewManager.getActivePaneId()).toEqual("second-pane");
+                editors["test.js"].focus();
+                expect(MainViewManager.getActivePaneId()).toEqual("first-pane");
+                editors = null;
+                EditorManager.off("_fullEditorCreatedForDocument", handler);
+            });
+            it("should activate pane when inline editor gains focus", async function () {
+                var inlineEditor,
+                    editors = {},
+                    handler = function (e, doc, editor, paneId) {
+                        editors[doc.file.name] = editor;
+                    };
+
+                EditorManager.on("_fullEditorCreatedForDocument", handler);
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.html",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                MainViewManager.setActivePaneId("first-pane");
+
+                // open inline editor at specified offset index
+                var inlineEditorResult = SpecRunnerUtils.toggleQuickEditAtOffset(editors["test.html"], {line: 8, ch: 14});
+                await awaitsForDone(inlineEditorResult, "inline editor opened", 1000);
+
+                MainViewManager.setActivePaneId("second-pane");
+                inlineEditor = EditorManager.getInlineEditors(editors["test.html"])[0];
+                inlineEditor.focus();
+                expect(MainViewManager.getActivePaneId()).toEqual("first-pane");
+            });
+            it("should activate pane when pane is clicked", async function () {
+                var activePaneChangeListener = jasmine.createSpy();
+
+                MainViewManager.on("activePaneChange", activePaneChangeListener);
+                MainViewManager.setLayoutScheme(1, 2);
+                _$("#second-pane").click();
+                expect(MainViewManager.getActivePaneId()).toEqual("second-pane");
+                _$("#first-pane").click();
+                expect(MainViewManager.getActivePaneId()).toEqual("first-pane");
+                expect(activePaneChangeListener.calls.count()).toBe(2);
+                MainViewManager.off("activePaneChange", activePaneChangeListener);
+            });
+            it("should enforce bounds", function () {
+                expect(MainViewManager.setLayoutScheme(1, 4)).toBeFalsy();
+                expect(MainViewManager.setLayoutScheme(4, -2)).toBeFalsy();
+                expect(MainViewManager.setLayoutScheme(0, 0)).toBeFalsy();
+                expect(MainViewManager.setLayoutScheme(-1, -1)).toBeFalsy();
+                expect(MainViewManager.setLayoutScheme(4, 1)).toBeFalsy();
+                expect(MainViewManager.setLayoutScheme(1, 1)).toBeTruthy();
+                expect(MainViewManager.setLayoutScheme(1, 2)).toBeTruthy();
+                expect(MainViewManager.setLayoutScheme(2, 1)).toBeTruthy();
+            });
+            it("should toggle layout", async function () {
+                var paneLayoutChangeListener = jasmine.createSpy();
+
+                MainViewManager.on("paneLayoutChange", paneLayoutChangeListener);
+                MainViewManager.setLayoutScheme(1, 2);
+                expect(MainViewManager.getLayoutScheme()).toEqual({rows: 1, columns: 2});
+                expect(paneLayoutChangeListener.calls.all()[0].args[1]).toEqual("VERTICAL");
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                MainViewManager.setLayoutScheme(2, 1);
+                expect(MainViewManager.getLayoutScheme()).toEqual({rows: 2, columns: 1});
+                expect(paneLayoutChangeListener.calls.all()[1].args[1]).toEqual("HORIZONTAL");
+                expect(paneLayoutChangeListener.calls.count()).toBe(2);
+                MainViewManager.off("paneLayoutChange", paneLayoutChangeListener);
+            });
+        });
+        describe("Targeted Pane API tests", function () {
+            it("should count open views", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                expect(MainViewManager.getWorkingSetSize(MainViewManager.ALL_PANES)).toEqual(2);
+                expect(MainViewManager.getWorkingSetSize(MainViewManager.ACTIVE_PANE)).toEqual(1);
+            });
+            it("should find file in view", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                expect(MainViewManager.findInAllWorkingSets(testPath + "/test.js").shift().paneId).toEqual("second-pane");
+            });
+            it("should reopen file in view", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN, 
