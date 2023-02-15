@@ -538,4 +538,295 @@ define(function (require, exports, module) {
                 promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
                     paneId: "second-pane" });
                 await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
-                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN, 
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                // With same doc split doc should be opened in first pane as well
+                expect(MainViewManager._getPaneIdForPath(testPath + "/test.js")).toEqual("first-pane");
+            });
+            it("should close all files in pane", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                MainViewManager._closeAll("second-pane");
+                expect(MainViewManager.getAllOpenFiles().length).toEqual(1);
+                MainViewManager._closeAll("first-pane");
+                expect(MainViewManager.getAllOpenFiles().length).toEqual(0);
+            });
+            it("should allow closed files to reopen in new pane", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                MainViewManager._close("second-pane", FileSystem.getFileForPath(testPath + "/test.js"));
+                expect(MainViewManager.getAllOpenFiles().length).toEqual(1);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.js").fullPath)).toEqual("first-pane");
+            });
+            it("should add to the appropriate workingset", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                MainViewManager.setActivePaneId("second-pane");
+                MainViewManager.addToWorkingSet(MainViewManager.ACTIVE_PANE, getFileObject("test.js"));
+                let ws = MainViewManager.findInAllWorkingSets(testPath + "/test.js");
+                expect(ws[0].paneId).toEqual("first-pane");
+                expect(ws[1].paneId).toEqual("second-pane");
+            });
+            it("should add list to the appropriate workingset", async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.html",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                MainViewManager.setActivePaneId("second-pane");
+                MainViewManager.addListToWorkingSet(MainViewManager.ACTIVE_PANE, [getFileObject("test.js"),
+                    getFileObject("test.css"),
+                    getFileObject("test.html")]);
+                let ws = MainViewManager.findInAllWorkingSets(testPath + "/test.js");
+                expect(ws[0].paneId).toEqual("first-pane");
+                expect(ws[1].paneId).toEqual("second-pane");
+                ws = MainViewManager.findInAllWorkingSets(testPath + "/test.css");
+                expect(ws[0].paneId).toEqual("first-pane");
+                expect(ws[1].paneId).toEqual("second-pane");
+                ws = MainViewManager.findInAllWorkingSets(testPath + "/test.html");
+                expect(ws.length).toEqual(1);
+                expect(ws[0].paneId).toEqual("second-pane");
+            });
+        });
+        describe("workingSetList Management tests", function () {
+            beforeEach(async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+            });
+            it("should add file to FOCUSED pane", async function () {
+                MainViewManager.setActivePaneId("first-pane");
+                MainViewManager.addToWorkingSet(MainViewManager.ACTIVE_PANE, getFileObject("test.js"));
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.js").fullPath)).toEqual("first-pane");
+                MainViewManager.setActivePaneId("second-pane");
+                MainViewManager.addToWorkingSet(MainViewManager.ACTIVE_PANE, getFileObject("test.css"));
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.css").fullPath)).toEqual("second-pane");
+            });
+            it("should add files to FOCUSED pane", async function () {
+                MainViewManager.setActivePaneId("first-pane");
+                MainViewManager.addListToWorkingSet(MainViewManager.ACTIVE_PANE, [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.js").fullPath)).toEqual("first-pane");
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.css").fullPath)).toEqual("first-pane");
+                MainViewManager.setActivePaneId("second-pane");
+                MainViewManager.addListToWorkingSet(MainViewManager.ACTIVE_PANE, [getFileObject("test.txt"),
+                    getFileObject("test.html")]);
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.txt").fullPath)).toEqual("second-pane");
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.html").fullPath)).toEqual("second-pane");
+            });
+            it("should add file to appropriate pane", async function () {
+                MainViewManager.setActivePaneId("second-pane");
+                MainViewManager.addToWorkingSet("first-pane", getFileObject("test.js"));
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.js").fullPath)).toEqual("first-pane");
+                MainViewManager.setActivePaneId("first-pane");
+                MainViewManager.addToWorkingSet("second-pane", getFileObject("test.css"));
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.css").fullPath)).toEqual("second-pane");
+            });
+            it("should add files to appropriate pane", async function () {
+                MainViewManager.setActivePaneId("second-pane");
+                MainViewManager.addListToWorkingSet("first-pane", [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.js").fullPath)).toEqual("first-pane");
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.css").fullPath)).toEqual("first-pane");
+                MainViewManager.setActivePaneId("first-pane");
+                MainViewManager.addListToWorkingSet("second-pane", [getFileObject("test.txt"),
+                    getFileObject("test.html")]);
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.txt").fullPath)).toEqual("second-pane");
+                expect(MainViewManager._getPaneIdForPath(getFileObject("test.html").fullPath)).toEqual("second-pane");
+            });
+            it("should not add list of files to ALL_PANES ", async function () {
+                expect(function () {
+                    MainViewManager.addListToWorkingSet(MainViewManager.ALL_PANES, [getFileObject("test.js"),
+                        getFileObject("test.css")]);
+                }).toThrow();
+                expect(MainViewManager.findInWorkingSet(MainViewManager.ALL_PANES, getFileObject("test.js").fullPath)).toEqual(-1);
+                expect(MainViewManager.findInWorkingSet(MainViewManager.ALL_PANES, getFileObject("test.css").fullPath)).toEqual(-1);
+            });
+            it("should not add a file to ALL_PANES ", async function () {
+                expect(function () {
+                    MainViewManager.addToWorkingSet(MainViewManager.ALL_PANES, getFileObject("test.css"));
+                }).toThrow();
+                expect(MainViewManager.findInWorkingSet(MainViewManager.ALL_PANES, getFileObject("test.css").fullPath)).toEqual(-1);
+            });
+            it("should remove the view when removing a file from a workingset", async function () {
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+
+                MainViewManager.addListToWorkingSet("first-pane", [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                MainViewManager._close(MainViewManager.ALL_PANES, getFileObject("test.css"));
+                expect(MainViewManager.getCurrentlyViewedFile("first-pane").name).toEqual("test.js");
+            });
+            it("should remove the file when removing from a targeted pane", async function () {
+                MainViewManager.addListToWorkingSet("first-pane", [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                MainViewManager._close("first-pane", getFileObject("test.css"));
+                expect(MainViewManager.findInWorkingSet(MainViewManager.ALL_PANES, getFileObject("test.css").fullPath)).toEqual(-1);
+            });
+            it("should remove the file when removing from the FOCUSED pane", async function () {
+                MainViewManager.addListToWorkingSet("first-pane", [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                MainViewManager.setActivePaneId("first-pane");
+                MainViewManager._close(MainViewManager.ACTIVE_PANE, getFileObject("test.js"));
+                expect(MainViewManager.findInWorkingSet(MainViewManager.ALL_PANES, getFileObject("test.js").fullPath)).toEqual(-1);
+            });
+            it("should remove the file when removing from ALL_PANES", async function () {
+                MainViewManager.addListToWorkingSet("first-pane", [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                MainViewManager.setActivePaneId("first-pane");
+                MainViewManager._close(MainViewManager.ALL_PANES, getFileObject("test.js"));
+                expect(MainViewManager.findInWorkingSet(MainViewManager.ALL_PANES, getFileObject("test.js").fullPath)).toEqual(-1);
+            });
+            //
+
+            it("should remove the view when removing files from a workingset", async function () {
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+                promise = CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN);
+
+                MainViewManager.addListToWorkingSet("first-pane", [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                MainViewManager._closeList(MainViewManager.ALL_PANES, [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                expect(Object.keys(MainViewManager._getPane("first-pane")._views).length).toEqual(0);
+            });
+            it("should remove files from the workingset", async function () {
+                MainViewManager.addListToWorkingSet("first-pane", [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                MainViewManager._closeList(MainViewManager.ALL_PANES, [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                expect(MainViewManager.getWorkingSetSize("first-pane")).toEqual(0);
+            });
+            it("should remove files from the workingset", async function () {
+                MainViewManager.addListToWorkingSet("first-pane", [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                MainViewManager._closeList(MainViewManager.ALL_PANES, [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                expect(MainViewManager.getWorkingSetSize("first-pane")).toEqual(0);
+            });
+            it("should remove files when removing from a targeted pane", async function () {
+                MainViewManager.addListToWorkingSet("first-pane", [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                MainViewManager._closeList("first-pane", [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                expect(MainViewManager.getWorkingSetSize("first-pane")).toEqual(0);
+            });
+            it("should remove the file when removing from the FOCUSED pane", async function () {
+                MainViewManager.addListToWorkingSet("first-pane", [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                MainViewManager.setActivePaneId("first-pane");
+                MainViewManager._closeList(MainViewManager.ACTIVE_PANE, [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                expect(MainViewManager.getWorkingSetSize("first-pane")).toEqual(0);
+            });
+            it("should remove the file when removing from ALL_PANES", async function () {
+                MainViewManager.addToWorkingSet("first-pane", getFileObject("test.js"));
+                MainViewManager.addToWorkingSet("second-pane", getFileObject("test.css"));
+                MainViewManager._closeList(MainViewManager.ALL_PANES, [getFileObject("test.js"),
+                    getFileObject("test.css")]);
+                expect(MainViewManager.getWorkingSetSize("first-pane")).toEqual(0);
+                expect(MainViewManager.getWorkingSetSize("second-pane")).toEqual(0);
+            });
+            it("should find file in view", async function () {
+                MainViewManager.addToWorkingSet("second-pane", getFileObject("test.js"));
+                MainViewManager.setActivePaneId("first-pane");
+                expect(MainViewManager.findInAllWorkingSets(getFileObject("test.js").fullPath).shift().paneId).toEqual("second-pane");
+                expect(MainViewManager.findInWorkingSet(MainViewManager.ACTIVE_PANE, getFileObject("test.js").fullPath)).toEqual(-1);
+                expect(MainViewManager.findInWorkingSet("second-pane", getFileObject("test.js").fullPath)).not.toEqual(-1);
+                expect(MainViewManager.findInWorkingSet("first-pane", getFileObject("test.js").fullPath)).toEqual(-1);
+                expect(MainViewManager.findInWorkingSet(MainViewManager.ALL_PANES, getFileObject("test.css").fullPath)).toEqual(-1);
+            });
+        });
+
+        describe("Traversing Files", function () {
+            beforeEach(async function () {
+                MainViewManager.setLayoutScheme(1, 2);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.css",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.html",
+                    paneId: "second-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                MainViewManager.addToWorkingSet("first-pane", getFileObject("test.js"));
+                MainViewManager.addToWorkingSet("first-pane", getFileObject("test.css"));
+                MainViewManager.addToWorkingSet("second-pane", getFileObject("test.html"));
+            });
+
+            it("should traverse in list order", async function () {
+                // Make test.js the active file
+                promise = new $.Deferred();
+                DocumentManager.getDocumentForPath(testPath + "/test.js")
+                    .done(function (doc) {
+                        MainViewManager._edit("first-pane", doc);
+                        promise.resolve();
+                    });
+                await awaitsForDone(promise, "MainViewManager._edit");
+                var traverseResult = MainViewManager.traverseToNextViewInListOrder(1);
+
+                expect(traverseResult.file).toEqual(getFileObject("test.css"));
+                expect(traverseResult.pane).toEqual("first-pane");
+            });
+
+            it("should traverse between panes in list order", async function () {
+                var traverseResult = MainViewManager.traverseToNextViewInListOrder(1);
+
+                expect(traverseResult.file).toEqual(getFileObject("test.js"));
+                expect(traverseResult.pane).toEqual("first-pane");
+            });
+
+            it("should traverse to the first Working Set item if a file not in the Working Set is being viewed", async function () {
+                // Close test.js to then reopen it without being in the Working Set
+                CommandManager.execute(Commands.FILE_CLOSE, { file: getFileObject("test.js") });
+                promise = CommandManager.execute(Commands.FILE_OPEN,  { fullPath: testPath + "/test.js",
+                    paneId: "first-pane" });
+                await awaitsForDone(promise, Commands.FILE_OPEN);
+                MainViewManager.setActivePaneId("first-pane");
+
+                var traverseResult = MainViewManager.traverseToNextViewInListOrder(1);
+
+                expect(traverseResult.file).toEqual(getFileObject("test.css"));
+                expect(traverseResult.pane).toEqual("first-pane");
+            });
+
+            it("should traverse between panes in reverse list order", async function () {
+                // Make test.js the active file
+                promise = new $.Deferred();
+                DocumentManager.getDocumentForPath(testPath + "/test.js")
+                    .done(function (doc) {
+                        MainViewManager._edit("first-pane", doc);
+                        promise.resolve();
+                    });
+                await awaitsForDone(promise, "MainViewManager._edit");
+                var traverseResult = MainViewManager.traverseToNextViewInListOrder(-1);
+
+                expect(traverseResult.file).toEqual(getFileObject("test.html"));
+ 
