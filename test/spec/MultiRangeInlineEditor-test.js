@@ -568,4 +568,79 @@ define(function (require, exports, module) {
                 var $ruleListSections = getRuleListSections();
                 $ruleListSections.eq(1).click(); // collapse doc2 section
                 expect($ruleListSections.eq(0).find(".disclosure-triangle.expanded").length).toBe(1);  // verify doc1 section still expanded
-                expect($ruleListSections.eq(1).find(".disclosure-triangle:not(.expand
+                expect($ruleListSections.eq(1).find(".disclosure-triangle:not(.expanded)").length).toBe(1); // verify doc2 section now collapsed
+
+                inlineEditor.addAndSelectRange(".foo", doc1, 1, 1); // add new item to doc1 section
+
+                var newRanges = inlineEditor._getRanges();
+                expect(newRanges.length).toBe(3);
+                expect(inlineEditor._getSelectedRange()).toBe(newRanges[1]);  // new range should be 2nd in list & be selected
+                expect(inlineEditor.editor.document).toBe(doc1);
+
+                $ruleListSections = getRuleListSections();
+                expect($ruleListSections.length).toBe(2);  // still just 2 sections
+                expect($ruleListSections.eq(0).find(".disclosure-triangle.expanded").length).toBe(1);  // doc1 section still expanded
+                expect($ruleListSections.eq(1).find(".disclosure-triangle:not(.expanded)").length).toBe(1); // doc2 section still collapsed
+            });
+
+            it("should auto-expand collapsed section when adding new range to it", function () {
+                var doc1 = SpecRunnerUtils.createMockDocument("div{}\n", "css", "/a.css"),
+                    doc2 = SpecRunnerUtils.createMockDocument("#bar{}\n.foo{}\n",        "css", "/b.css"),
+                    mockRanges = [
+                        {
+                            document: doc1,
+                            name: "div",
+                            lineStart: 0,
+                            lineEnd: 0
+                        },
+                        {
+                            document: doc2,
+                            name: "#bar",
+                            lineStart: 0,
+                            lineEnd: 0
+                        }
+                    ];
+
+                inlineEditor = new MultiRangeInlineEditor(mockRanges);
+                inlineEditor.load(hostEditor);
+
+                var $ruleListSections = getRuleListSections();
+                $ruleListSections.eq(1).click(); // collapse doc2 section
+                expect($ruleListSections.eq(0).find(".disclosure-triangle.expanded").length).toBe(1);  // verify doc1 section still expanded
+                expect($ruleListSections.eq(1).find(".disclosure-triangle:not(.expanded)").length).toBe(1); // verify doc2 section now collapsed
+
+                inlineEditor.addAndSelectRange(".foo", doc2, 1, 1); // add new item to doc2 section
+
+                var newRanges = inlineEditor._getRanges();
+                expect(newRanges.length).toBe(3);
+                expect(inlineEditor._getSelectedRange()).toBe(newRanges[2]);  // new range should be 3rd in list & be selected
+                expect(inlineEditor.editor.document).toBe(doc2);
+
+                $ruleListSections = getRuleListSections();
+                expect($ruleListSections.length).toBe(2);  // still just 2 sections
+                expect($ruleListSections.eq(0).find(".disclosure-triangle.expanded").length).toBe(1);  // doc1 section still expanded
+                expect($ruleListSections.eq(1).find(".disclosure-triangle.expanded").length).toBe(1);  // doc2 section now collapsed also
+            });
+
+            it("should be empty if no ranges are specified", function () {
+                inlineEditor = new MultiRangeInlineEditor([]);
+                inlineEditor.load(hostEditor);
+
+                // There are no ranges to select.
+                expect(inlineEditor._selectedRangeIndex).toBe(-1);
+                expect(inlineEditor.editor).toBeNull();
+
+                // Messages div should be visible, editors div should have no child editor.
+                expect(inlineEditor.$htmlContent.find(".inline-editor-message").length).toBe(1);
+                expect(inlineEditor.$htmlContent.find(".inline-editor-holder").children().length).toBe(0);
+
+                // Rule list should be invisible.
+                expect(inlineEditor.$htmlContent.find(".related-container").length).toBe(0);
+            });
+
+            // TODO: test removing a range (only occurs with TextRange "lostSync")
+            // TODO: test hiding rule list when removing 2nd to last range
+            // TODO: test auto-closing when removing last range
+        });
+    });
+});
