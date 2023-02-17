@@ -104,4 +104,40 @@ define(function (require, exports, module) {
                 let echoVal;
                 exports.on('echoNotify1', (evt, val)=>{
                     echoVal = val;
-               
+                });
+                exports.triggerPeer("echoNotify1", "yo1");
+                await awaitsFor(function () {
+                    return echoVal === "yo1";
+                }, "waiting for worker to notify main", 500);
+            });
+
+            it("Should trigger notification in worker and main thread even if some handlers errored", async function () {
+                let echoVal;
+                exports.on('echoNotify2', (evt, val)=>{
+                    echoVal = val;
+                });
+
+                exports.triggerPeer("echoNotify2", "yo2");
+                await awaitsFor(function () {
+                    return echoVal === "yo2";
+                }, "waiting for worker to notify main", 500);
+
+                // check if the notification works again after error in worker
+                echoVal = "";
+                exports.triggerPeer("echoNotify2", "yo2");
+                await awaitsFor(function () {
+                    return echoVal === "yo2";
+                }, "waiting for worker to notify main", 500);
+            });
+        });
+
+        describe("loadScriptInWorker API tests", function () {
+            it("Should be able to load a script in worker", async function () {
+                await exports.loadScriptInWorker('./WorkerComm-worker-script.js');
+                let result = await exports.execPeer("scriptHi", "scriptInjected");
+                expect(result).toBe("scriptInjected");
+            });
+
+        });
+    });
+});
